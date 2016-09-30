@@ -1,0 +1,69 @@
+{
+  "manifestVersion": 1,
+  "id": "import-export-kanban",
+  "version": "0.0.0",
+  "name": "Import-Export Kanban Config",
+  "scopes": [ "vso.profile", "vso.work", "vso.work_write" ],
+  "description": "This extension will allow you to easily import and/or export Kanban board settings to a team, from another team",
+  "publisher": "",
+  "public": false,
+  "icons": {
+    "default": "img/logo.png"
+  },
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "tags": [
+    "Agile",
+    "Board",
+    "Kanban"
+  ],
+  "links": {
+    "support": { "uri": "http://aka.ms/vsarcontact" }
+  },
+  "branding": {
+    "color": "rgb(51,65,133)",
+    "theme": "dark"
+  },
+  "files": [
+    {
+      "path": "css",
+      "addressable": true
+    },
+    {
+      "path": "img",
+      "addressable": true
+    },
+    {
+      "path": "scripts",
+      "addressable": true
+    },
+    {
+      "path": "index.html",
+      "addressable": true
+    }
+  ],
+  "categories": [
+    "Plan and track"
+  ],
+  "contributions": [
+    {
+      "id": "import-export-kanban",
+      "targets": [
+        "ms.vss-work-web.backlog-board-pivot-filter-menu"
+      ],
+      "type": "ms.vss-web.action",
+      "description": "Import-Export Kanban Config",
+      "properties": {
+        "text": "Import-Export Kanban Config",
+        "title": "Allows you to import/export your Kanban config from/to another team",
+        "icon": "img/show-properties.png",
+        "uri": "index.html",
+        "group": "actions",
+        "registeredObjectId": "import-export-kanban-menu"
+      }
+    }
+  ]
+}

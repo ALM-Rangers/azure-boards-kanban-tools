@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>TypeScript HTML App</title>
+    <link rel="stylesheet" href="css/app.css" type="text/css" />
+    <script src="scripts/VSS.SDK.js"></script>
+    <!--
+    To collect end-user usage analytics about your application,
+    insert the following script into each page you want to track.
+    Place this code immediately before the closing </head> tag,
+    and before any other scripts. Your first data will appear
+    automatically in just a few seconds.
+
+    -->
+    <script type="text/javascript">
+        var appInsights = window.appInsights || function (config) {
+            function r(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, u = document, e = window, o = "script", s = u.createElement(o), i, f; for (s.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", u.getElementsByTagName(o)[0].parentNode.appendChild(s), t.cookie = u.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;) r("track" + i.pop()); return r("setAuthenticatedUserContext"), r("clearAuthenticatedUserContext"), config.disableExceptionTracking || (i = "onerror", r("_" + i), f = e[i], e[i] = function (config, r, u, e, o) { var s = f && f(config, r, u, e, o); return s !== !0 && t["_" + i](config, r, u, e, o), s }), t
+        }({
+            instrumentationKey: "<<YOUR AI KEY>>"
+        });
+
+        //TODO: DISABLE FOR NOW UNTIL WE GET THE CORRECT API KEY
+        //window.appInsights = appInsights;
+        //appInsights.trackPageView();
+    </script>
+</head>
+<body>
+    <script type="text/javascript">
+        // Initialize the VSS sdk
+        VSS.init({
+            setupModuleLoader: true,
+            moduleLoaderConfig: {
+                paths: {
+                    "Scripts": "scripts"
+                }
+            }
+        });
+
+        // Wait for the SDK to be initialized
+        //VSS.ready(function () {
+        //    require(["Scripts/app"], function (app) { });
+        //});
+
+        // Use an IIFE to create an object that satisfies the IContributedMenuSource contract
+        var menuContributionHandler = (function () {
+            "use strict";
+            return {
+                // This is a callback that gets invoked when a user clicks the newly contributed menu item
+                // The actionContext parameter contains context data surrounding the circumstances of this
+                // action getting invoked.
+                execute: function (actionContext) {
+                    alert("Hello, world");
+                }
+            };
+        }());
+
+        // Associate the menuContributionHandler object with the "import-export-kanban-menu" menu contribution from the manifest.
+        VSS.register("import-export-kanban-menu", menuContributionHandler);
+
+    </script>
+
+    <h1>TypeScript HTML App</h1>
+
+    <div id="content"></div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+Import-Export-Kanban/Import-Export-Kanban/node_modules/
+*.map
+Import-Export-Kanban/Import-Export-Kanban/scripts/app.js
+Import-Export-Kanban/Import-Export-Kanban/bin/
+*.vsix
+Import-Export-Kanban/Import-Export-Kanban/obj/
