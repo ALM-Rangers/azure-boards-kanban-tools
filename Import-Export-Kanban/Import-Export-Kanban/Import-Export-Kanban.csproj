@@ -43,6 +43,7 @@
   <ItemGroup>
     <None Include=".vscode\tasks.json" />
     <Content Include="img\show-properties.png" />
+    <Content Include="scripts\TelemetryClient.js" />
     <Content Include="web.config" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
