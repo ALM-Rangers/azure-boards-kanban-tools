@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Select Team</title>
+        <script src="scripts/VSS.SDK.js"></script>
+    </head>
+<body>
+    <div id="teamSelectorCombo" style="display: inline-block; width: 200px;"></div>
+    <script>
+        VSS.init({
+            setupModuleLoader: true,
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true,
+            usePlatformStyles: true,
+            moduleLoaderConfig: {
+                paths: {
+                    Scripts: 'scripts'
+                }
+            }
+        });
+
+        VSS.ready(function() {
+            require(['Scripts/select-team-dialog'], function (app) {
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+</body>
+</html>

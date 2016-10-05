@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF8">
+    <title>Import Export Kanban</title>
+    <script src="scripts/VSS.SDK.js"></script>
+</head>
+<body>
+    <script>
+        VSS.init({
+            setupModuleLoader: true,
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true,
+            usePlatformStyles: true,
+            moduleLoaderConfig: {
+                paths: {
+                    Scripts: 'scripts'
+                }
+            }
+        });
+
+        VSS.ready(function() {
+            require(['Scripts/import-export'], function (app) {
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+</body>
+</html>

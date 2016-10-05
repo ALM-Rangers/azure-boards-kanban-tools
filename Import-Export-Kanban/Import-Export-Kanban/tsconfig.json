@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "amd",
+        "target": "es5",
+        "rootDirs": [
+            "scripts",
+            "typings"
+        ],
+        "sourceMap": true
+    },
+    "exclude": [
+        "node_modules",
+        "typings"
+    ]
+}

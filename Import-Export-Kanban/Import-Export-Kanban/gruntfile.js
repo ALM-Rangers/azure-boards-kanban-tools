@@ -42,6 +42,13 @@ module.exports = function (grunt) {
                 ]
             }
         },
+        ts: {
+            build: {
+                src: ["scripts/**/*.ts"],
+                tsconfig: true
+            }
+        },
+        clean: ["scripts/**/*.js", "*.vsix"],
         jasmine: {
             src: ["scripts/**/*.js", "sdk/scripts/*.js"],
             specs: "test/**/*[sS]pec.js",
@@ -52,5 +59,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-exec");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-contrib-jasmine");
+    grunt.loadNpmTasks("grunt-contrib-clean");
+    grunt.loadNpmTasks("grunt-ts");
 
+
+    grunt.registerTask("build", ["ts:build", "copy"]);
+    grunt.registerTask("me-package", ["clean", "build", "exec:package"]);
+    grunt.registerTask("me-publish", ["me-package", "exec:publish"])
 };

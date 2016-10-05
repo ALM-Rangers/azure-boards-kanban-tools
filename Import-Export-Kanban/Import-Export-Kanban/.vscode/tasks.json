@@ -1,13 +1,20 @@
-// A task runner configuration.
 {
     "version": "0.1.0",
-    "command": "grunt",
+    "command": "cmd",
+    "args": [
+        "/C"
+    ],
     "isShellCommand": true,
+    "showOutput": "always",
+    "suppressTaskName": true,
     "tasks": [
         {
-            "taskName": "exec:package",
-            "isBuildCommand": true,
-            "problemMatcher": "$msCompile"
+            "taskName": "Grunt Build",
+            "args": ["grunt build"]
+        },
+        {
+            "taskName": "Publish Extension",
+            "args": ["grunt me-publish"]
         }
     ]
 }

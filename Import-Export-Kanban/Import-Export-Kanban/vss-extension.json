@@ -41,7 +41,11 @@
       "addressable": true
     },
     {
-      "path": "index.html",
+      "path": "import-export.html",
+      "addressable": true
+    },
+    {
+      "path": "select-team-dialog.html",
       "addressable": true
     }
   ],
@@ -60,10 +64,19 @@
         "text": "Import-Export Kanban Config",
         "title": "Allows you to import/export your Kanban config from/to another team",
         "icon": "img/show-properties.png",
-        "uri": "index.html",
+        "uri": "import-export.html",
         "group": "actions",
         "registeredObjectId": "import-export-kanban-menu"
       }
-    }
+    },
+		{
+			"id": "select-team-dialog",
+			"type": "ms.vss-web.control",
+			"description": "The control to select the team to export the board settings to.",
+			"targets": [],
+			"properties": {
+				"uri": "select-team-dialog.html"
+			}
+		}
   ]
 }
