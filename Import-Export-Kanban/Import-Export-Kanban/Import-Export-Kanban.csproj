@@ -49,6 +49,7 @@
     <Content Include="web.config" />
     <Content Include="tsconfig.json" />
     <Content Include="typings.json" />
+    <Content Include="settings.tfx.json" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
