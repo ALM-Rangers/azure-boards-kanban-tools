@@ -4,3 +4,11 @@ Import-Export-Kanban/Import-Export-Kanban/scripts/app.js
 Import-Export-Kanban/Import-Export-Kanban/bin/
 *.vsix
 Import-Export-Kanban/Import-Export-Kanban/obj/
+*.user
+*.suo
+Import-Export-Kanban/Import-Export-Kanban/settings.tfx.json
+Import-Export-Kanban/Import-Export-Kanban/vss-extension-me.json
+Import-Export-Kanban/Import-Export-Kanban/scripts/**/*.js
+!Import-Export-Kanban/Import-Export-Kanban/scripts/**/VSS.SDK.js
+
+**/.tscache

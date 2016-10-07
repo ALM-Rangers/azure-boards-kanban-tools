@@ -41,10 +41,15 @@
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".vscode\settings.json" />
     <None Include=".vscode\tasks.json" />
     <Content Include="img\show-properties.png" />
-    <Content Include="scripts\TelemetryClient.js" />
+    <Content Include="import-export.html" />
+    <Content Include="select-team-dialog.html" />
     <Content Include="web.config" />
+    <Content Include="tsconfig.json" />
+    <Content Include="typings.json" />
+    <Content Include="settings.tfx.json" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
@@ -55,14 +60,16 @@
   <ItemGroup>
     <Content Include="css\app.css" />
     <Content Include="img\logo.png" />
-    <Content Include="index.html" />
     <Content Include="scripts\VSS.SDK.js" />
     <Content Include="test\TestSpec.js" />
     <None Include="readme.md" />
     <None Include="package.json" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="scripts\app.ts" />
+    <TypeScriptCompile Include="scripts\import-export.ts" />
+    <TypeScriptCompile Include="scripts\select-team-dialog.ts" />
+    <TypeScriptCompile Include="scripts\TelemetryClient.ts" />
+    <TypeScriptCompile Include="typings\ai\ai.d.ts" />
     <TypeScriptCompile Include="typings\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="typings\q\q.d.ts" />
     <TypeScriptCompile Include="typings\knockout\knockout.d.ts" />
@@ -71,7 +78,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="vss-extension.json" />
-    <None Include="settings.tfx.json" />
     <None Include="gruntfile.js" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -80,7 +86,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>52265</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
