@@ -12,3 +12,4 @@ Import-Export-Kanban/Import-Export-Kanban/scripts/**/*.js
 !Import-Export-Kanban/Import-Export-Kanban/scripts/**/VSS.SDK.js
 
 **/.tscache
+*.DS_Store
