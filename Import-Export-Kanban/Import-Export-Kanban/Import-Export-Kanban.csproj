@@ -41,15 +41,30 @@
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include=".vscode\settings.json" />
-    <None Include=".vscode\tasks.json" />
     <Content Include="img\show-properties.png" />
-    <Content Include="import-export.html" />
-    <Content Include="select-team-dialog.html" />
+    <Content Include="libs\ai.0.js" />
+    <Content Include="libs\q.js" />
+    <Content Include="libs\VSS.SDK.min.js" />
+    <Content Include="marketplace\logo.png" />
+    <Content Include="scripts\packageDev.js" />
+    <Content Include="scripts\packageRelease.js" />
+    <Content Include="src\import-export.html" />
+    <Content Include="src\select-team-dialog.html" />
     <Content Include="web.config" />
     <Content Include="tsconfig.json" />
     <Content Include="typings.json" />
-    <Content Include="settings.tfx.json" />
+    <Content Include="configs\dev.json" />
+    <Content Include="configs\release.json" />
+    <Content Include="webpack.config.js" />
+    <Content Include="typings\globals\applicationinsights-js\typings.json" />
+    <Content Include="typings\globals\jquery\typings.json" />
+    <Content Include="typings\globals\knockout\typings.json" />
+    <Content Include="typings\globals\q\typings.json" />
+    <Content Include="typings\globals\react\typings.json" />
+    <Content Include="typings\globals\require\typings.json" />
+    <Content Include="typings\globals\tfs\typings.json" />
+    <Content Include="typings\globals\vss\typings.json" />
+    <Content Include="webpack.prod.config.js" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
@@ -59,26 +74,26 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="css\app.css" />
-    <Content Include="img\logo.png" />
-    <Content Include="scripts\VSS.SDK.js" />
     <Content Include="test\TestSpec.js" />
-    <None Include="readme.md" />
     <None Include="package.json" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="scripts\import-export.ts" />
-    <TypeScriptCompile Include="scripts\select-team-dialog.ts" />
-    <TypeScriptCompile Include="scripts\TelemetryClient.ts" />
-    <TypeScriptCompile Include="typings\ai\ai.d.ts" />
-    <TypeScriptCompile Include="typings\jquery\jquery.d.ts" />
-    <TypeScriptCompile Include="typings\q\q.d.ts" />
-    <TypeScriptCompile Include="typings\knockout\knockout.d.ts" />
-    <TypeScriptCompile Include="typings\requirejs\require.d.ts" />
-    <TypeScriptCompile Include="typings\tsd.d.ts" />
+    <None Include="vss-extension.json" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="vss-extension.json" />
-    <None Include="gruntfile.js" />
+    <TypeScriptCompile Include="src\board_configuration.ts" />
+    <TypeScriptCompile Include="src\import_export.ts" />
+    <TypeScriptCompile Include="src\select_team_dialog.ts" />
+    <TypeScriptCompile Include="src\TelemetryClient.ts" />
+    <TypeScriptCompile Include="typings\globals\applicationinsights-js\index.d.ts" />
+    <TypeScriptCompile Include="typings\globals\jquery\index.d.ts" />
+    <TypeScriptCompile Include="typings\globals\knockout\index.d.ts" />
+    <TypeScriptCompile Include="typings\globals\q\index.d.ts" />
+    <TypeScriptCompile Include="typings\globals\react\index.d.ts" />
+    <TypeScriptCompile Include="typings\globals\require\index.d.ts" />
+    <TypeScriptCompile Include="typings\globals\tfs\index.d.ts" />
+    <TypeScriptCompile Include="typings\globals\vss\index.d.ts" />
+    <TypeScriptCompile Include="typings\index.d.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')" />
@@ -86,16 +101,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>False</UseIIS>
-          <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>52265</DevelopmentServerPort>
-          <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:52265/</IISUrl>
-          <NTLMAuthentication>False</NTLMAuthentication>
-          <UseCustomServer>False</UseCustomServer>
-          <CustomServerUrl>
-          </CustomServerUrl>
-          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+          <SaveServerSettingsInUserFile>True</SaveServerSettingsInUserFile>
         </WebProjectProperties>
       </FlavorProperties>
     </VisualStudio>

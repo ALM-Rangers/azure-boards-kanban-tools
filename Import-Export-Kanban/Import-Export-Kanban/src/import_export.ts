@@ -1,8 +1,8 @@
-/// <reference path="../typings/tsd.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
 import Service = require("VSS/Service");
-import Controls = require("VSS/Controls");
 import CoreRestClient = require("TFS/Core/RestClient");
+import Board = require("./board_configuration");
 
 export class ImportExportKanbanAction {
     private _dialogControlInstance: any;
@@ -17,24 +17,28 @@ export class ImportExportKanbanAction {
             let hostDialogOptions: IHostDialogOptions = {
                 title: "Select Team",
                 width: 500,
-                height: 500,
+                height: 300,
                 okText: "Export",
                 getDialogResult: () => {
-
+                    return this._dialogControlInstance.getSelectedTeam();
                 },
                 okCallback: (result) => {
+                    let board = new Board.BoardConfiguration();
+                    board.getCurrentConfiguration().then((settings) => {
+                        alert("Got board");
+                    });
                 }
             };
 
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then((dialog) => {
                 dialog.updateOkButton(true);
+                alert("open dialog!!");
                 dialog.getContributionInstance("selectTeamDialog").then((dialogControlInstance) => {
                     this._dialogControlInstance = dialogControlInstance;
                     let client = CoreRestClient.getClient();
                     var teamlist: string[] = new Array();
                     client.getTeams(webContext.project.id).then((teams) => {
-                        teams.forEach((team) =>
-                        {
+                        teams.forEach((team) => {
                             teamlist.push(team.name);
                         });
                         this._dialogControlInstance.setTeams(teamlist);

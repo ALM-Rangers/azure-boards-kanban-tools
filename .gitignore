@@ -1,15 +1,17 @@
-Import-Export-Kanban/Import-Export-Kanban/node_modules/
+node_modules/
 *.map
-Import-Export-Kanban/Import-Export-Kanban/scripts/app.js
-Import-Export-Kanban/Import-Export-Kanban/bin/
+bin/
 *.vsix
-Import-Export-Kanban/Import-Export-Kanban/obj/
+obj/
 *.user
 *.suo
-Import-Export-Kanban/Import-Export-Kanban/settings.tfx.json
-Import-Export-Kanban/Import-Export-Kanban/vss-extension-me.json
-Import-Export-Kanban/Import-Export-Kanban/scripts/**/*.js
-!Import-Export-Kanban/Import-Export-Kanban/scripts/**/VSS.SDK.js
 
 **/.tscache
 *.DS_Store
+
+dist/
+typings/
+libs/
+**/src/*.js
+**/src/*.js.map
+npm-debug.log

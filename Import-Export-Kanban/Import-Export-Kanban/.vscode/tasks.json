@@ -9,12 +9,28 @@
     "suppressTaskName": true,
     "tasks": [
         {
-            "taskName": "Grunt Build",
-            "args": ["grunt build"]
+            "taskName": "Run Dev",
+            "args": [
+                "npm run dev"
+            ]
         },
         {
-            "taskName": "Publish Extension",
-            "args": ["grunt me-publish"]
+            "taskName": "Package Dev",
+            "args": [
+                "npm run package:dev"
+            ]
+        },
+        {
+            "taskName": "Publish Dev",
+            "args": [
+                "npm run publish:dev"
+            ]
+        },
+        {
+            "taskName": "Publish Release",
+            "args": [
+                "npm run publish:release"
+            ]
         }
     ]
 }

@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF8">
-    <title>Import Export Kanban</title>
-    <script src="scripts/VSS.SDK.js"></script>
+    <meta charset="UTF-8">
+    <title>Select Team</title>
+    <script src="../libs/VSS.SDK.min.js"></script>
+    <script src="../libs/q.js"></script>
+    <script src="../libs/ai.0.js"></script>
 </head>
+
 <body>
+    <div id="teamSelectorCombo" style="display: inline-block; width: 200px;"></div>
     <script>
         VSS.init({
             setupModuleLoader: true,
@@ -20,10 +25,11 @@
         });
 
         VSS.ready(function() {
-            require(['Scripts/import-export'], function (app) {
+            require(['src/select_team_dialog'], function (app) {
                 VSS.notifyLoadSucceeded();
             });
         });
     </script>
 </body>
+
 </html>

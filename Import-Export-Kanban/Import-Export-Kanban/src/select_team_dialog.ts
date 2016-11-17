@@ -1,4 +1,4 @@
-/// <reference path="../typings/tsd.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
@@ -19,6 +19,10 @@ export class SelectTeamDialog {
         });
 
         this._teamSelectorCombo.setSource(this._allTeams);
+    }
+
+    public getSelectedTeam(): string {
+        return this._teamSelectorCombo.getInputText();
     }
 
     public setTeams(allTeams: string[]): void {
