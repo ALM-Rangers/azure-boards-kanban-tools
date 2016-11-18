@@ -8,9 +8,9 @@
     "clean": "npm run clean:vsix && rimraf dist",
     "dev": "webpack-dev-server --hot --progress --colors --https",
     "package:dev": "node ./scripts/packageDev",
-    "publish:dev": "npm run clean:vsix && npm run package:dev && node ./scripts/publishDev",
+    "publish:dev": "npm run clean:vsix && npm run package:dev && node ./scripts/packageDev",
     "build:release": "npm run clean && mkdir dist && webpack --progress --colors --config webpack.prod.config.js --output-path ./dist -p",
-    "package:release": "npm run build:release && node ./scripts/publishDev",
+    "package:release": "npm run build:release && node ./scripts/packageRelease",
     "copy:libs": "cpx node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js libs && cpx node_modules/q/q.js libs && cpx node_modules/applicationinsights-js/dist/ai.0.js libs",
     "test": "karma start --single-run",
     "postinstall": "npm run copy:libs && typings install"

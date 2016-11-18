@@ -1,6 +1,6 @@
 {
     "public": false,
     "baseUri": "https://localhost:8080",
-    "name": "Import-Export Kanban Config - Dev",
+    "name": "Dev: Import-Export Kanban Config",
     "publisher": "alm-rangers"
 }
