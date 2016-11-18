@@ -21,15 +21,9 @@
             ]
         },
         {
-            "taskName": "Publish Dev",
+            "taskName": "Package Release",
             "args": [
-                "npm run publish:dev"
-            ]
-        },
-        {
-            "taskName": "Publish Release",
-            "args": [
-                "npm run publish:release"
+                "npm run package:release"
             ]
         }
     ]
