@@ -46,7 +46,7 @@ module.exports = {
             { from: "./libs", to: "libs" },
             { from: "./marketplace", to: "marketplace" },
             { from: "./img", to: "img" },
-            { from: "./vss-extension.json", to: "vss-extension-release.json" }
+            { from: "./vss-extension.json", to: "vss-extension.json" }
         ])
     ]
 }
