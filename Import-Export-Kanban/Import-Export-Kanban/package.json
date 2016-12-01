@@ -12,7 +12,7 @@
     "build:release": "npm run clean && mkdir dist && webpack --progress --colors --config webpack.prod.config.js --output-path ./dist -p",
     "package:release": "npm run build:release && node ./scripts/packageRelease",
     "copy:libs": "cpx node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js libs && cpx node_modules/q/q.js libs && cpx node_modules/applicationinsights-js/dist/ai.0.js libs",
-    "test": "karma start --single-run",
+    "test": "snyk test && karma start --single-run",
     "postinstall": "npm run copy:libs && typings install"
   },
   "devDependencies": {
@@ -28,7 +28,8 @@
     "typings": "^2.0.0",
     "typescript": "~2.0.9",
     "webpack": "^1.13.3",
-    "webpack-dev-server": "^1.16.2"
+    "webpack-dev-server": "^1.16.2",
+    "snyk": "^1.21.0"
   },
   "dependencies": {
     "applicationinsights-js": "^1.0.4",
