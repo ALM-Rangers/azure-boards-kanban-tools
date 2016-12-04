@@ -12,7 +12,7 @@ export class ImportExportKanbanAction {
 
         VSS.getService<IHostDialogService>("ms.vss-web.dialog-service").then((hostDialogService) => {
             let extensionContext: IExtensionContext = VSS.getExtensionContext();
-            let dialogControlContributionId: string = extensionContext.publisherId + '.' + extensionContext.extensionId + '.select-team-dialog';
+            let dialogControlContributionId: string = extensionContext.publisherId + "." + extensionContext.extensionId + ".select-team-dialog";
 
             let hostDialogOptions: IHostDialogOptions = {
                 title: "Select Team",
@@ -24,19 +24,22 @@ export class ImportExportKanbanAction {
                 },
                 okCallback: (result) => {
                     let board = new Board.BoardConfiguration();
-                    board.getCurrentConfiguration().then((settings) => {
-                        alert("Got board");
+                    board.getCurrentConfiguration(result).then((settings) => {
+                        board.applySettings(webContext.team.name, settings).then((result) => {
+                            console.log("settings applied");
+                        }).catch((reason) => {
+                            console.log("apply failed - " + reason);
+                        });
                     });
                 }
             };
 
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then((dialog) => {
                 dialog.updateOkButton(true);
-                alert("open dialog!!");
                 dialog.getContributionInstance("selectTeamDialog").then((dialogControlInstance) => {
                     this._dialogControlInstance = dialogControlInstance;
                     let client = CoreRestClient.getClient();
-                    var teamlist: string[] = new Array();
+                    let teamlist: string[] = new Array();
                     client.getTeams(webContext.project.id).then((teams) => {
                         teams.forEach((team) => {
                             teamlist.push(team.name);
@@ -45,7 +48,7 @@ export class ImportExportKanbanAction {
                     });
                 });
             });
-        })
+        });
     }
 }
 

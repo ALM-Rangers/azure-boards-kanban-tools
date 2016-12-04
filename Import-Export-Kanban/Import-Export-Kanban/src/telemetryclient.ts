@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------
+// ---------------------------------------------------------------------
 // <copyright file="TelemetryClient.ts">
 //    This code is licensed under the MIT License.
 //    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF 
@@ -7,7 +7,7 @@
 //    PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // </copyright>
 // <summary>Application Insights Telemetry Client Class</summary>
-//---------------------------------------------------------------------
+// ---------------------------------------------------------------------
 /// <reference path="../typings/index.d.ts" />
 
 
@@ -34,7 +34,7 @@ class TelemetryClient {
 
     }
 
-    //private appInsightsClient: Microsoft.ApplicationInsights.AppInsights;
+    // private appInsightsClient: Microsoft.ApplicationInsights.AppInsights;
 
     private Init() {
         // var snippet: any = {
