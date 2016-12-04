@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Copy Settings</title>
+    <link rel="stylesheet" href="../css/app.css">
+    <script src="../libs/VSS.SDK.min.js"></script>
+    <script src="../libs/q.js"></script>
+    <script src="../libs/ai.0.js"></script>
+</head>
+
+<body>
+    <div id="step1">
+        TODO: SHOW AND SELECT AVAILABLE OPERATIONS
+    </div>
+    <div id="step2" style="display: none;">
+        Select Team
+        <div id="teamSelectorCombo" style="display: inline-block; width: 200px;"></div>
+    </div>
+    <div id="step3" style="display: none;">
+        TODO: confirmation step
+    </div>
+
+    <div id="navigation" class="wizardNavigation"></div>
+    <script>
+        VSS.init({
+            setupModuleLoader: true,
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true,
+            usePlatformStyles: true,
+            moduleLoaderConfig: {
+                paths: {
+                    Scripts: 'scripts'
+                }
+            }
+        });
+
+        VSS.ready(function () {
+            require(['src/copySettingsWizard'], function (app) {
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+</body>
+
+</html>
