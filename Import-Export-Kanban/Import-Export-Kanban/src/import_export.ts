@@ -4,6 +4,8 @@ import Service = require("VSS/Service");
 import CoreRestClient = require("TFS/Core/RestClient");
 import Board = require("./board_configuration");
 
+import Telemetry = require("./telemetryclient");
+
 export class ImportExportKanbanAction {
     private _dialogControlInstance: any;
 
@@ -33,6 +35,8 @@ export class ImportExportKanbanAction {
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then((dialog) => {
                 dialog.updateOkButton(true);
                 alert("open dialog!!");
+                
+                Telemetry.TelemetryClient.getClient().trackEvent("Main dialog opened");
                 dialog.getContributionInstance("selectTeamDialog").then((dialogControlInstance) => {
                     this._dialogControlInstance = dialogControlInstance;
                     let client = CoreRestClient.getClient();
