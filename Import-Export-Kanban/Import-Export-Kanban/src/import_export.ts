@@ -40,14 +40,17 @@ export class ImportExportKanbanAction {
                     });
 
                     //TODO: in the future this will receive the user settings
-                    this._dialogControlInstance.onCopy(() => {
-
+                    this._dialogControlInstance.onCopy((selectedTeam: string) => {
                         //TODO: inline for now. should be move to it's own function later on
                         this._dialog.close();
 
                         let board = new Board.BoardConfiguration();
-                        board.getCurrentConfiguration("").then((settings) => {
-                            alert("Got board");
+                        board.getCurrentConfiguration(selectedTeam).then((settings) => {
+                            board.applySettings(webContext.team.name, settings).then((result) => {
+                                console.log("settings applied");
+                            }).catch((reason) => {
+                                console.log("apply failed - " + reason);
+                            });
                         });
 
                         //TODO: do work and show progress bar

@@ -24,9 +24,9 @@ export class copySettingsWizard {
     private _navigationControl: any;
 
     private _currentStep: number = 1;
-    
+
     private _onCancelCallback: Function;
-    private _onCopyCallback: Function;
+    private _onCopyCallback: (team: string) => any;
     private _onTitleChangeCallback: Function;
 
     constructor() {
@@ -146,7 +146,7 @@ export class copySettingsWizard {
      * If the caller has defined the onOk callback, then the callback is called.
      */
     private _onOk() {
-        if (this._onCopyCallback) this._onCopyCallback();
+        if (this._onCopyCallback) this._onCopyCallback(this._selectedTeam);
     }
 
     /**
@@ -183,7 +183,7 @@ export class copySettingsWizard {
     }
 
     private getSelectedTeam(): string {
-        return this._teamSelectorCombo.getInputText();
+        return this._selectedTeam;
     }
 
     private setTeams(allTeams: string[]): void {
@@ -207,7 +207,7 @@ export class copySettingsWizard {
     *
     * @param {Function} callback
     */
-    public onCopy(callback: Function) {
+    public onCopy(callback: (team: string) => any): void {
         this._onCopyCallback = callback;
     }
 
