@@ -29,9 +29,9 @@ export class ImportExportKanbanAction {
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then((dialog) => {
 
                 this._dialog = dialog;
-
-                dialog.getContributionInstance("copySettingsWizard").then((dialogControlInstance) => {
                 Telemetry.TelemetryClient.getClient().trackEvent("Main dialog opened");
+                dialog.getContributionInstance("copySettingsWizard").then((dialogControlInstance) => {
+                
                     this._dialogControlInstance = dialogControlInstance;
 
                     this._dialogControlInstance.onCancel(() => {
