@@ -8,7 +8,8 @@
             "url": "https://localhost:9090",
             "sourceMaps": true,
             "webRoot": "${workspaceRoot}",
-            "diagnosticLogging": true
+            "diagnosticLogging": true,
+            "userDataDir": "${workspaceRoot}/out/chrome"
         },
         {
             "name": "Attach to Chrome, with sourcemaps",
