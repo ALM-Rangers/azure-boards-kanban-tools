@@ -2,6 +2,7 @@
 
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
+import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
 
 import * as NavigationControl from "./NavigationControl"
@@ -17,26 +18,24 @@ import * as NavigationControl from "./NavigationControl"
 export class copySettingsWizard {
     private static NUMBER_TAGS = 3;
 
-    private _allTeams: string[];
-    private _teamSelectorCombo: Combos.Combo;
-    private _selectedTeam: string;
-
-    private _navigationControl: any;
+    private _teamSelector: TeamSelector.TeamSelectorControl;
+    private _navigationControl: NavigationControl.NavigationControl;
 
     private _currentStep: number = 1;
-    
+
     private _onCancelCallback: Function;
     private _onCopyCallback: Function;
     private _onTitleChangeCallback: Function;
 
     constructor() {
-        this._teamSelectorCombo = Controls.create(Combos.Combo, $("#teamSelectorCombo"), {
-            mode: "drop",
-            allowEdit: false,
-            type: "list",
-            change: () => {
-                this._selectedTeam = this._teamSelectorCombo.getInputText();
-                this._onTeamSelection(this._selectedTeam);
+
+        this._teamSelector = Controls.create(TeamSelector.TeamSelectorControl, $("#teamSelector"), {
+            selectionType: TeamSelector.TeamSelectionMode.MultiSelection, // We have to select either one of those. We can change the type later when we know the type
+            selectionChanged: (numberSelectedTeams: number) => {
+                this._onTeamSelectionChanged();
+            },
+            dataLoaded: () => {
+                this._onTeamsLoaded();
             }
         });
 
@@ -56,21 +55,34 @@ export class copySettingsWizard {
             }
         };
 
-        this._fillTeamCombo();
-
-        this._navigationControl = NavigationControl.NavigationControl.enhance(NavigationControl.NavigationControl, $("#navigation"), { Navigation: navigate });
-
-        this._teamSelectorCombo.setSource(this._allTeams);
+        this._navigationControl = Controls.create(NavigationControl.NavigationControl, $("#navigation"), { Navigation: navigate });
     }
 
-    private _onTeamSelection(newTeamName: string) {
-        this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: true, isVisible: true });
+    /**
+     * Internal event called when a team selection is changed (a team has either been selected or unselected)
+     *
+     * Based if there are team selections or not, we enabled or disable the next button
+     */
+    private _onTeamSelectionChanged() {
+
+        let numberSelectedTeams = this._teamSelector.getNumberSelectedTeams();
+
+        if (this._currentStep === 2) {
+            this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: numberSelectedTeams > 0, isVisible: true });
+        }
     }
 
-    private _getNumberSelectedTeams(): number {
-        if (this._selectedTeam) return 1;
-
-        return 0;
+    /**
+     * Called when the data is loaded.
+     *
+     * If the data is loaded after the user has already transioned to step 2, we may need to change the selection mode
+     */
+    private _onTeamsLoaded() {
+        if (this._currentStep === 2) {
+            //TODO: set selection type based on option selected on step 1
+            //TODO: refactor and call a method?
+            //this._teamSelector.changeSelectionType(TeamSelector.TeamSelectionType.SingleSelection);
+        }
     }
 
     /**
@@ -90,7 +102,6 @@ export class copySettingsWizard {
         switch (newStep) {
             case 1:
                 this._setStepTitle("Copy Kanban board settings");
-                //TODO: 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: false, isVisible: false });
 
                 break;
@@ -98,9 +109,12 @@ export class copySettingsWizard {
                 //TODO: the title should be different based on the operation
                 this._setStepTitle("Select Team to copy settings from");
 
+                //TODO: set selection type based on option selected on step 1
+                //this._teamSelector.changeSelectionType(TeamSelector.TeamSelectionType.SingleSelection);
+
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
 
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._getNumberSelectedTeams() > 0, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._teamSelector.getNumberSelectedTeams() > 0, isVisible: true });
 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
                 break;
@@ -112,6 +126,8 @@ export class copySettingsWizard {
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: false, isVisible: false });
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: true, isVisible: true });
                 break;
+            default:
+                throw "unknown step number: " + newStep;
         }
 
         this._currentStep = newStep;
@@ -168,31 +184,6 @@ export class copySettingsWizard {
         if (this._onTitleChangeCallback) this._onTitleChangeCallback(title);
     }
 
-    private _fillTeamCombo() {
-        let webContext = VSS.getWebContext();
-
-        let client = CoreRestClient.getClient();
-        var teamlist: string[] = new Array();
-        client.getTeams(webContext.project.id).then((teams) => {
-            teams.forEach((team) => {
-                teamlist.push(team.name);
-            });
-            this.setTeams(teamlist);
-        });
-
-    }
-
-    private getSelectedTeam(): string {
-        return this._teamSelectorCombo.getInputText();
-    }
-
-    private setTeams(allTeams: string[]): void {
-        this._allTeams = allTeams;
-        if (this._teamSelectorCombo != null) {
-            this._teamSelectorCombo.setSource(this._allTeams);
-        }
-    }
-
     /**
      * Dinamically set a callback for the cancel button
      *
@@ -210,7 +201,6 @@ export class copySettingsWizard {
     public onCopy(callback: Function) {
         this._onCopyCallback = callback;
     }
-
 
     /**
     * Dinamically set a callback to be notified when a title changes

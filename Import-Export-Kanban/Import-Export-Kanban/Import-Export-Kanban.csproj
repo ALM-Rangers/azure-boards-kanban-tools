@@ -85,6 +85,7 @@
     <TypeScriptCompile Include="src\board_configuration.ts" />
     <TypeScriptCompile Include="src\import_export.ts" />
     <TypeScriptCompile Include="src\copySettingsWizard.ts" />
+    <TypeScriptCompile Include="src\TeamSelectorControl.ts" />
     <TypeScriptCompile Include="src\select_team_dialog.ts" />
     <TypeScriptCompile Include="src\TelemetryClient.ts" />
     <TypeScriptCompile Include="src\NavigationControl.ts" />

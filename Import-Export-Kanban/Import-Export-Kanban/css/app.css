@@ -6,8 +6,19 @@ span {
     font-style: italic;
 }
 
+/* Navigation */
 .wizardNavigation {
     position: absolute;
     right: 0px;
     bottom: 10px;
+}
+
+/* Team Selector */
+.teamSelectorContainer {
+    position: absolute;
+    top: 44px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    overflow: auto;
 }
