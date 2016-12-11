@@ -130,12 +130,16 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      */
     private _createTeamListElement(teams: Contracts.WebApiTeam[]): void {
 
+        let webContext = VSS.getWebContext();
+
         let $teamsContainer = $("<div class='teamSelectorContainer'/>").appendTo(this._element);
 
         teams.sort((t1, t2) => {
             return t1.name.localeCompare(t2.name);
         }).forEach((team) => {
-            this._createTeamElement($teamsContainer, team);
+            if (webContext.team.id !== team.id) { // We don't show the current project
+                this._createTeamElement($teamsContainer, team);
+            }
         });
     }
 
