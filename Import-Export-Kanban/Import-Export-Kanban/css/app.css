@@ -6,6 +6,40 @@ span {
     font-style: italic;
 }
 
+/* Wizard Steps */
+
+.settingsContainer {
+    width: 100%;
+    font-style: inherit;
+    padding: 3px;
+    border-width: 1px;
+    border-color: black;
+    border-style: inset;
+}
+
+.settingsInput {
+    background-color: lightgrey;
+    width: 0%;
+    border-width: 1px;
+    border-color: black;
+    border-style: inset;
+    vertical-align: top;
+}
+
+.settingsInputSelected {
+    background-color: lightblue !important;
+}
+
+.settingsDescription {
+    border-width: 1px;
+    border-color: black;
+    border-style: inset;
+}
+
+.noBullets {
+    list-style-type: none;
+}
+
 /* Navigation */
 .wizardNavigation {
     position: absolute;

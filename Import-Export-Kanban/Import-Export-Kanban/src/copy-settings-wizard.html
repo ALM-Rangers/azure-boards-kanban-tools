@@ -12,13 +12,51 @@
 
 <body>
     <div id="step1">
-        TODO: SHOW AND SELECT AVAILABLE OPERATIONS
+        <table class="settingsContainer">
+            <tr>
+                <td class="settingsInput">
+                    <input id="FromAnotherTeam" type="radio" name="boardSettings" value="FromAnotherTeam" />
+                </td>
+                <td class="settingsDescription">
+                    <label for="FromAnotherTeam">
+                        <strong>Copy board settings from another team</strong>
+                        <br />
+                        Will allow you to select another team from the same team project and apply the settings from their Kanban board to yours
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <td class="settingsInput">
+                    <input id="ToOtherTeams" type="radio" name="boardSettings" value="ToOtherTeams" />
+                </td>
+                <td class="settingsDescription">
+                    <label for="ToOtherTeams">
+                        <strong>Copy board settings to other teams(s)</strong>
+                        <br />
+                        Will allow you to select another team(s) from the same team project and apply your Kanban board settings to theirs.
+                    </label>
+                </td>
+            </tr>
+        </table>
     </div>
     <div id="step2" style="display: none;">
         <div id="teamSelector"></div>
     </div>
     <div id="step3" style="display: none;">
-        TODO: confirmation step
+        <div id="specificMessage"></div>
+        <div>&nbsp;</div>
+        <strong>All existing data on destination team(s) will be overwritten.</strong>
+        <div>&nbsp;</div>
+        <div>
+            The following board settings will be copied
+
+            <ul class="noBullets">
+                <li>Cards</li>
+                <li>Board</li>
+                <li>General</li>
+            </ul>
+        </div>
+
     </div>
 
     <div id="navigation" class="wizardNavigation"></div>
@@ -42,5 +80,7 @@
         });
     </script>
 </body>
+
+
 
 </html>

@@ -5,14 +5,23 @@ import Combos = require("VSS/Controls/Combos");
 import CoreRestClient = require("TFS/Core/RestClient");
 import Contracts = require("TFS/Core/Contracts");
 
-
 export enum TeamSelectionMode {
     SingleSelection,
     MultiSelection
 }
 
 interface TeamsMap {
-    [teamId: string]: Contracts.WebApiTeam
+    [teamId: string]: SelectedTeam
+}
+
+export class SelectedTeam {
+    public team: Contracts.WebApiTeam;
+    public teamProject: ContextIdentifier;
+
+    constructor(team: Contracts.WebApiTeam, teamProject: ContextIdentifier) {
+        this.team = team;
+        this.teamProject = teamProject;
+    }
 }
 
 export interface TeamSelectorOptions {
@@ -70,6 +79,10 @@ export class TeamSelectorControl extends UIControls.BaseControl {
 
         client.getTeams(webContext.project.id).then((teams) => {
 
+            teams.forEach((team) => {
+                this._teamsList[team.id] = new SelectedTeam(team, webContext.project);
+            });
+
             this._createNumberSelectedTeamsCounterElement();
             this._createTeamListElement(teams);
 
@@ -112,7 +125,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      *
      * The teams are added by alphabetical order
      *
-     * @param {Contracts.WebApiTeam[]} teams - the list of teams
+     * @param {SelectedTeam[]} teams - the list of teams
      * @returns
      */
     private _createTeamListElement(teams: Contracts.WebApiTeam[]): void {
@@ -122,7 +135,6 @@ export class TeamSelectorControl extends UIControls.BaseControl {
         teams.sort((t1, t2) => {
             return t1.name.localeCompare(t2.name);
         }).forEach((team) => {
-            this._teamsList[team.id] = team;
             this._createTeamElement($teamsContainer, team);
         });
     }
@@ -241,7 +253,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
         let teamPlural = numberSelectedTeams > 1 ? "s" : "";
         this._element.find("#" + this._getNumberSelectedTeamCounterId()).text(numberSelectedTeams + " Selected Team" + teamPlural);
     }
-    
+
     /**
      * Event that is called everytime a team selection changes (either a selection or unselection).
      *
@@ -272,7 +284,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
         searchValue = searchValue.toLowerCase();
 
         for (let teamId of Object.keys(this._teamsList)) {
-            let team = this._teamsList[teamId];
+            let team = this._teamsList[teamId].team;
 
             this._setTeamVisibility(team, searchValue === "" || team.name.toLowerCase().indexOf(searchValue) !== -1);
         }
@@ -308,9 +320,9 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      *
      * @returns - The list of teams
      */
-    public getSelectedTeams(): Contracts.WebApiTeam[] {
+    public getSelectedTeams(): SelectedTeam[] {
 
-        let selectedTeams: Contracts.WebApiTeam[] = [];
+        let selectedTeams: SelectedTeam[] = [];
 
         this._element.find('input[name="' + this._getInputName() + '"]').each((idx, element) => {
             if (element.checked) {
@@ -321,6 +333,16 @@ export class TeamSelectorControl extends UIControls.BaseControl {
         });
 
         return selectedTeams;
+    }
+
+    /**
+     * Returns the current team. The team where the wizard has been launched from
+     * @returns the current team
+     */
+    public getCurrentTeam(): SelectedTeam {
+        let webContext = VSS.getWebContext();
+
+        return this._teamsList[webContext.team.id];
     }
 
     /**

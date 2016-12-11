@@ -3,11 +3,12 @@
 import Service = require("VSS/Service");
 import CoreRestClient = require("TFS/Core/RestClient");
 import Board = require("./board_configuration");
+import CopySettingsWizard = require("./copySettingsWizard");
 
 import Telemetry = require("./telemetryclient");
 
 export class ImportExportKanbanAction {
-    private _dialogControlInstance: any;
+    private _dialogControlInstance: CopySettingsWizard.copySettingsWizard;
 
     private _dialog: IExternalDialog;
 
@@ -31,8 +32,8 @@ export class ImportExportKanbanAction {
                 this._dialog = dialog;
                 Telemetry.TelemetryClient.getClient().trackEvent("Main dialog opened");
                 dialog.getContributionInstance("copySettingsWizard").then((dialogControlInstance) => {
-                
-                    this._dialogControlInstance = dialogControlInstance;
+
+                    this._dialogControlInstance = <CopySettingsWizard.copySettingsWizard>dialogControlInstance;
 
                     this._dialogControlInstance.onCancel(() => {
                         this._dialog.close();
@@ -42,10 +43,10 @@ export class ImportExportKanbanAction {
                         this._dialog.setTitle(title);
                     });
 
-                    //TODO: in the future this will receive the user settings
-                    this._dialogControlInstance.onCopy(() => {
+                    this._dialogControlInstance.onCopy((copySettings: CopySettingsWizard.copySettings) => {
 
-                        //TODO: inline for now. should be move to it's own function later on
+                        //TODO: inline for now. should be move to it's own function later on to perform the copy and drive the UI
+
                         this._dialog.close();
 
                         let board = new Board.BoardConfiguration();
