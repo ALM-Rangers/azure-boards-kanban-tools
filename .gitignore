@@ -14,5 +14,6 @@ typings/
 libs/
 **/src/*.js
 **/src/*.js.map
+**/out/chrome
 npm-debug.log
 ~$*.pptx

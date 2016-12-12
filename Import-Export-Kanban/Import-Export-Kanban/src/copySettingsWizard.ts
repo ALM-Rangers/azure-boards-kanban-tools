@@ -2,41 +2,84 @@
 
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
+import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
 
-import * as NavigationControl from "./NavigationControl"
+import * as NavigationControl from "./NavigationControl";
+
+export enum CopyBoardSettingsSettings {
+    None = 0,
+    FromAnotherTeam,
+    ToOtherTeams
+}
+
+/* Allways keep the number in synch with the correct order (also needs to be sequential) */
+enum WizardStep {
+    Settings = 1,
+    TeamSelection = 2,
+    Confirmation = 3
+}
+
+/**
+ * Represents the operation and the user selected data to perform the copy operation.
+ *
+ *
+ * @param {TeamSelector.SelectedTeam | TeamSelector.SelectedTeam[]} sourceTeam - the team from where the settings will be copied from
+ * @param {TeamSelector.SelectedTeam} destinationTeam - the team or teams (depending on the operation type) where the settings will be copied to
+ * @param {CopyBoardSettingsSettings} copyType - Type of copy operation that is going to be performed.
+ */
+export class copySettings {
+
+    public copyType: CopyBoardSettingsSettings;
+
+    public source: TeamSelector.SelectedTeam;
+    public destination: TeamSelector.SelectedTeam | TeamSelector.SelectedTeam[];
+
+    constructor(source: TeamSelector.SelectedTeam, destination: TeamSelector.SelectedTeam | TeamSelector.SelectedTeam[], copyType: CopyBoardSettingsSettings) {
+        this.source = source;
+        this.destination = destination;
+        this.copyType = copyType;
+    }
+}
 
 /**
  * Implements a wizard for the copy operation.
  *
  * Only implements the UI (collecting input from the user (including validations).
  *
+ * The wizard has 3 steps
+ *  - step 1 - Settings. What kind of copy will be performed
+ *  - step 2 - Team selection. select the teams or teams (depends on the settings from step 1)
+ *  - step 3 - Confirmation. Show a summary of the operation that is going to be perform and allow user confirmation.
+ *
  * The caller can get the data collected from the user via a callback
- * @returns
+ *
  */
 export class copySettingsWizard {
-    private static NUMBER_TAGS = 3;
+    /** The maximum teams that will be shown on the confirmation step when multiple teams are selected. If settings will be copied
+    * from more than this number, than an ... will be shown
+    */
+    private static MAX_NUMBER_TEAMS_TO_LIST = 15;
 
-    private _allTeams: string[];
-    private _teamSelectorCombo: Combos.Combo;
-    private _selectedTeam: string;
+    private _teamSelector: TeamSelector.TeamSelectorControl;
+    private _navigationControl: NavigationControl.NavigationControl;
 
-    private _navigationControl: any;
-
-    private _currentStep: number = 1;
+    private _currentStep: WizardStep = 1;
+    private _selectedOption: CopyBoardSettingsSettings;
 
     private _onCancelCallback: Function;
-    private _onCopyCallback: (team: string) => any;
+    private _onCopyCallback: (settings: copySettings) => void;
     private _onTitleChangeCallback: Function;
 
     constructor() {
-        this._teamSelectorCombo = Controls.create(Combos.Combo, $("#teamSelectorCombo"), {
-            mode: "drop",
-            allowEdit: false,
-            type: "list",
-            change: () => {
-                this._selectedTeam = this._teamSelectorCombo.getInputText();
-                this._onTeamSelection(this._selectedTeam);
+
+        this._teamSelector = Controls.create(TeamSelector.TeamSelectorControl, $("#teamSelector"), {
+            selectionType: TeamSelector.TeamSelectionMode.MultiSelection, // We have to select either one of those. We can change the type later when we know the type
+            selectionChanged: (numberSelectedTeams: number) => {
+                this._onTeamSelectionChanged();
+            },
+            dataLoaded: () => {
+                this._onTeamsLoaded();
             }
         });
 
@@ -45,8 +88,7 @@ export class copySettingsWizard {
                 isEnabled: false, isVisible: false, onClick: () => { this._onBack(); }
             },
             nextButton: {
-                isEnabled: true, //TODO: set to false. This should be only enabled after the user has selected the operation on step 1
-                isVisible: true, onClick: () => { this._onNext(); }
+                isEnabled: false, isVisible: true, onClick: () => { this._onNext(); }
             },
             okButton: {
                 isEnabled: true, isVisible: false, label: "Copy Settings", onClick: () => { this._onOk(); }
@@ -56,21 +98,60 @@ export class copySettingsWizard {
             }
         };
 
-        this._fillTeamCombo();
+        this._navigationControl = Controls.create(NavigationControl.NavigationControl, $("#navigation"), { Navigation: navigate });
 
-        this._navigationControl = NavigationControl.NavigationControl.enhance(NavigationControl.NavigationControl, $("#navigation"), { Navigation: navigate });
-
-        this._teamSelectorCombo.setSource(this._allTeams);
+        this._attachStepOneEvents();
     }
 
-    private _onTeamSelection(newTeamName: string) {
-        this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: true, isVisible: true });
+    private _attachStepOneEvents() {
+        $('input[name="boardSettings"]')
+            .click((event) => { this._onSettingsChanged(event); });
     }
 
-    private _getNumberSelectedTeams(): number {
-        if (this._selectedTeam) return 1;
+    /**
+     * Event called when a new option setting is selected.
+     *
+     * Changes the background color of the container where input element is located and enables the next step
+     *
+     * @param {type} checkedElementEvent
+     */
+    private _onSettingsChanged(checkedElementEvent: JQueryEventObject): void {
 
-        return 0;
+        let $selectedElement = $(checkedElementEvent.target);
+        let selectedOption: string = $selectedElement.val();
+
+        if (selectedOption) {
+            $(".settingsInput").removeClass("settingsInputSelected");
+            $selectedElement.parents(".settingsInput").addClass("settingsInputSelected");
+
+            this._selectedOption = CopyBoardSettingsSettings[selectedOption];
+            this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: true, isVisible: true });
+        }
+    }
+
+    /**
+     * Internal event called when a team selection is changed (a team has either been selected or unselected)
+     *
+     * Based if there are team selections or not, we enabled or disable the next button
+     */
+    private _onTeamSelectionChanged() {
+
+        let numberSelectedTeams = this._teamSelector.getNumberSelectedTeams();
+
+        if (this._currentStep === WizardStep.TeamSelection) {
+            this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: numberSelectedTeams > 0, isVisible: true });
+        }
+    }
+
+    /**
+     * Called when the data is loaded.
+     *
+     * If the data is loaded after the user has already transioned to step 2, we may need to change the selection mode
+     */
+    private _onTeamsLoaded() {
+        if (this._currentStep === WizardStep.TeamSelection) {
+            this._setStep2TeamSelectionTypeAndTitle();
+        }
     }
 
     /**
@@ -78,43 +159,169 @@ export class copySettingsWizard {
      * also updates the current step
      * @param {number} newStep - the new step
      */
-    private _updateStepState(newStep: number) {
+    private _updateStepState(newStep: WizardStep) {
 
-        for (let step = 1; step <= copySettingsWizard.NUMBER_TAGS; step++) {
+        switch (newStep) {
+            case WizardStep.Settings:
+                this._setStepTitle("Copy Kanban board settings");
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: false, isVisible: false });
+
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._selectedOption !== CopyBoardSettingsSettings.None, isVisible: true });
+
+                break;
+
+            case WizardStep.TeamSelection:
+
+                this._setStep2TeamSelectionTypeAndTitle();
+
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._teamSelector.getNumberSelectedTeams() > 0, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
+
+                break;
+
+            case WizardStep.Confirmation:
+
+                this._setStep3Content();
+
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: false, isVisible: false });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: true, isVisible: true });
+
+                break;
+            default:
+                throw "unknown step number: " + newStep;
+        }
+        /* Hide and show steps based on the new step */
+        for (let step = 1; step <= WizardStep.Confirmation; step++) {
             if (step === newStep)
                 $("#step" + step).show();
             else
                 $("#step" + step).hide();
         }
 
-        switch (newStep) {
-            case 1:
-                this._setStepTitle("Copy Kanban board settings");
-                //TODO: 
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: false, isVisible: false });
+        this._currentStep = newStep;
+    }
+    /**
+     * Sets the content for the step 2.
+     *
+     * Sets the title and team selection type based operation selected by the user in step 1
+     *
+     */
+    private _setStep2TeamSelectionTypeAndTitle() {
 
+        switch (this._selectedOption) {
+            case CopyBoardSettingsSettings.FromAnotherTeam:
+                this._setStepTitle("Select team to copy settings from");
+                this._teamSelector.changeSelectionType(TeamSelector.TeamSelectionMode.SingleSelection);
+                break
+            case CopyBoardSettingsSettings.ToOtherTeams:
+                this._setStepTitle("Select team(s) to copy settings to");
+                this._teamSelector.changeSelectionType(TeamSelector.TeamSelectionMode.MultiSelection);
                 break;
-            case 2:
-                //TODO: the title should be different based on the operation
-                this._setStepTitle("Select Team to copy settings from");
+            default:
+                throw "unknown setting, or not supported";
+        }
+    }
 
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
+    /**
+     * Sets the content for the step 2.
+     *
+     * Sets the title and the source and destination teams list.
+     */
+    private _setStep3Content() {
+        let selectedTeams = this._teamSelector.getSelectedTeams();
 
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._getNumberSelectedTeams() > 0, isVisible: true });
-
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
-                break;
-            case 3:
-                //TODO: the title should be different based on the operation and the selected team(s)
-                this._setStepTitle("Copy settings to TODO/TODO");
-
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: false, isVisible: false });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: true, isVisible: true });
-                break;
+        if (selectedTeams.length === 0) {
+            throw "no selected team"; // Shouldn't happen.
         }
 
-        this._currentStep = newStep;
+        switch (this._selectedOption) {
+            case CopyBoardSettingsSettings.FromAnotherTeam:
+
+                let selectedTeam = selectedTeams[0]; // Pick the first, since there is only one.
+
+                this._setStepTitle("Copy settings from " + this._formatTeam(selectedTeam));
+                this._setCopyFromAnotherTeamSpecificMessage(selectedTeam);
+
+                break
+            case CopyBoardSettingsSettings.ToOtherTeams:
+
+                this._setStepTitle(`Copy settings to ${selectedTeams.length} projects`);
+                this._setCopyToOtherTeamsSpecificMessage(selectedTeams);
+
+                break;
+            default:
+                throw "unknown setting or not supported";
+        }
+
+    }
+
+    /**
+     * Sets the specific confirmation content for copy from another team to the current team
+     *
+     * @param {TeamSelector.SelectedTeam} selectedTeam -  the team that the user selected
+     */
+    private _setCopyFromAnotherTeamSpecificMessage(selectedTeam: TeamSelector.SelectedTeam) {
+        let webContext = VSS.getWebContext();
+
+        $("#step3").children("#specificMessage").html("Please confirm that you to wish to copy the settings from <strong>" + this._formatTeam(selectedTeam) + "</strong> to <strong>" + this._formatTeam(webContext.project.name, webContext.team.name) + "</strong>");
+    }
+
+    /**
+     * Sets the specific confirmation content for copy to other team(s) from the current team
+     *
+     * @param {TeamSelector.SelectedTeam[]} selectedTeams - the team(s) that the user selected
+     * 
+     */
+    private _setCopyToOtherTeamsSpecificMessage(selectedTeams: TeamSelector.SelectedTeam[]) {
+        let webContext = VSS.getWebContext();
+        let copyToTeamsList = "";
+
+        // We restrict the amount of teams that are shown on the confirmation. If the number of selected
+        // teams, exceed the maximum amount, we only show the maxim number (and display an ...)
+        // The number of teams where the copy will be performed to, is already part of the title.
+        //
+        for (let x: number = 0; x < Math.min(copySettingsWizard.MAX_NUMBER_TEAMS_TO_LIST, selectedTeams.length); x++) {
+            copyToTeamsList += (copyToTeamsList !== "" ? ";" : "") + this._formatTeam(selectedTeams[x]);
+        }
+        if (selectedTeams.length > copySettingsWizard.MAX_NUMBER_TEAMS_TO_LIST) {
+            copyToTeamsList += " ...";
+        }
+
+        $("#step3").children("#specificMessage").html("Please confirm that you to wish to copy the settings from <strong>" + this._formatTeam(webContext.project.name, webContext.team.name) + "</strong> to <strong>" + copyToTeamsList + "</strong>");
+    }
+
+    /**
+     * Formats a team name to be shown to the user.
+     *
+     * The team is format as <Team Project Name>/Team Name
+     *
+     * @param team - the team to format
+     *
+     * @returns the formatted team
+     *
+     */
+    private _formatTeam(selectedTeam: TeamSelector.SelectedTeam): string;
+
+    /**
+     * Formats a team name to be shown to the user.
+     *
+     * The team is format as <Team Project Name>/Team Name
+     *
+     * @param team - the team to format
+     *
+     * @returns the formatted team
+     *
+     */
+    private _formatTeam(teamProjectName: string, teamName: string): string;
+
+    private _formatTeam(selectedTeamOrTeamProject: any, teamName?: string): string {
+        if (typeof (selectedTeamOrTeamProject) === "string") {
+            return selectedTeamOrTeamProject + "/" + teamName;
+        } else {
+            return selectedTeamOrTeamProject.teamProject.name + "/" + selectedTeamOrTeamProject.team.name;
+        }
     }
 
     /**
@@ -123,11 +330,10 @@ export class copySettingsWizard {
      * Goes back a step in the screen and updates the state of the navigation buttons
      */
     private _onBack() {
-        if (this._currentStep > 1) {
+        if (this._currentStep > WizardStep.Settings) {
             this._updateStepState(this._currentStep - 1);
         }
     }
-
 
     /**
     * Called when the user clicks on the next button.
@@ -135,7 +341,7 @@ export class copySettingsWizard {
     * Goes to the next step in the screen and updates the state of the navigation buttons
     */
     private _onNext() {
-        if (this._currentStep < copySettingsWizard.NUMBER_TAGS) {
+        if (this._currentStep < WizardStep.Confirmation) {
             this._updateStepState(this._currentStep + 1);
         }
     }
@@ -143,10 +349,23 @@ export class copySettingsWizard {
     /**
      * Called when the user clicks on the OK.
      *
-     * If the caller has defined the onOk callback, then the callback is called.
+     * If the caller has defined the onOk callback, then the callback is called with the settings to perform the operation
      */
     private _onOk() {
-        if (this._onCopyCallback) this._onCopyCallback(this._selectedTeam);
+        if (this._onCopyCallback) {
+            let currentTeam = this._teamSelector.getCurrentTeam();
+
+            switch (this._selectedOption) {
+                case CopyBoardSettingsSettings.ToOtherTeams:
+                    this._onCopyCallback(new copySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams(), this._selectedOption));
+                    break;
+                case CopyBoardSettingsSettings.FromAnotherTeam:
+                    this._onCopyCallback(new copySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
+                    break;
+                default:
+                    throw "unknown option or not implemented yet";
+            }
+        }
     }
 
     /**
@@ -161,36 +380,11 @@ export class copySettingsWizard {
     /**
      * Changes the title for a given step.
      *
-     * Requires the called has set the onTitleChanged callback (the title belongs to the caller. The control has no title in it's UI)
+     * Requires the caller has set up the onTitleChanged callback (the title belongs to the caller. The control has no title in it's UI)
      * @param {string} title - the new title
      */
     private _setStepTitle(title: string) {
         if (this._onTitleChangeCallback) this._onTitleChangeCallback(title);
-    }
-
-    private _fillTeamCombo() {
-        let webContext = VSS.getWebContext();
-
-        let client = CoreRestClient.getClient();
-        var teamlist: string[] = new Array();
-        client.getTeams(webContext.project.id).then((teams) => {
-            teams.forEach((team) => {
-                teamlist.push(team.name);
-            });
-            this.setTeams(teamlist);
-        });
-
-    }
-
-    private getSelectedTeam(): string {
-        return this._selectedTeam;
-    }
-
-    private setTeams(allTeams: string[]): void {
-        this._allTeams = allTeams;
-        if (this._teamSelectorCombo != null) {
-            this._teamSelectorCombo.setSource(this._allTeams);
-        }
     }
 
     /**
@@ -205,12 +399,11 @@ export class copySettingsWizard {
     /**
     * Dinamically set a callback for the copy operation button
     *
-    * @param {Function} callback
+    * @param {(copySettings)} callback that receives a copySettings parameter with the settings of the operation
     */
-    public onCopy(callback: (team: string) => any): void {
+    public onCopy(callback: (settings: copySettings) => void) {
         this._onCopyCallback = callback;
     }
-
 
     /**
     * Dinamically set a callback to be notified when a title changes

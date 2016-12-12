@@ -1,4 +1,4 @@
-// ---------------------------------------------------------------------
+//---------------------------------------------------------------------
 // <copyright file="TelemetryClient.ts">
 //    This code is licensed under the MIT License.
 //    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF 
@@ -7,15 +7,15 @@
 //    PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // </copyright>
 // <summary>Application Insights Telemetry Client Class</summary>
-// ---------------------------------------------------------------------
+//---------------------------------------------------------------------
 /// <reference path="../typings/index.d.ts" />
 
+import {AppInsights} from "applicationinsights-js"
 
-class TelemetryClient {
+export class TelemetryClient {
 
     private static TestingKey = "";
     private static DevLabs = "__INSTRUMENTATIONKEY__";
-
 
     private static telemetryClient: TelemetryClient;
 
@@ -34,89 +34,78 @@ class TelemetryClient {
 
     }
 
-    // private appInsightsClient: Microsoft.ApplicationInsights.AppInsights;
-
     private Init() {
-        // var snippet: any = {
-        //     config: {
-        //         instrumentationKey: TelemetryClient.DevLabs
-        //     }
-        // };
+        var config: any = {
+            instrumentationKey: TelemetryClient.DevLabs
+        };
 
-        // try {
-        //     var webContext = VSS.getWebContext();
+        try {
+            var webContext = VSS.getWebContext();
+            this.IsAvailable = webContext.account.uri.indexOf("visualstudio.com") > 0;
 
-        //     this.IsAvailable = webContext.account.uri.indexOf("visualstudio.com") > 0;
-
-        //     if (this.IsAvailable) {
-        //         var init = new Microsoft.ApplicationInsights.Initialization(snippet);
-        //         this.appInsightsClient = init.loadAppInsights();
-        //         this.appInsightsClient.setAuthenticatedUserContext(webContext.user.id, webContext.collection.id);
-        //     }
-        // }
-        // catch (e) {
-        //     this.appInsightsClient = null;
-        //     console.log(e);
-        // }
+            if (this.IsAvailable) {
+                AppInsights.downloadAndSetup(config);
+                AppInsights.setAuthenticatedUserContext(webContext.user.id, webContext.collection.id);
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
-    public trackPageView(name?: string, url?: string, properties?: Object, measurements?: Object, duration?: number) {
-        // try {
-        //     if (this.IsAvailable) {
-        //         this.appInsightsClient.trackPageView(TelemetryClient.ExtensionContext + "." + name, url, properties, measurements, duration);
-        //         this.appInsightsClient.flush();
-        //     }
-        // }
-        // catch (e) {
-        //     this.appInsightsClient = null;
-        //     console.log(e);
-        // }
+    public trackPageView(name?: string, url?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }, duration?: number) {
+        try {
+            if (this.IsAvailable) {
+                AppInsights.trackPageView(TelemetryClient.ExtensionContext + "." + name, url, properties, measurements, duration);
+                AppInsights.flush();
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
-    public trackEvent(name: string, properties?: Object, measurements?: Object) {
-        // try {
-        //     if (this.IsAvailable) {
-        //         this.appInsightsClient.trackEvent(TelemetryClient.ExtensionContext + "." + name, properties, measurements);
-        //         this.appInsightsClient.flush();
-        //     }
-        // }
-        // catch (e) {
-        //     this.appInsightsClient = null;
-        //     console.log(e);
-        // }
+    public trackEvent(name: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
+        try {
+            if (this.IsAvailable) {
+                AppInsights.trackEvent(TelemetryClient.ExtensionContext + "." + name, properties, measurements);
+                AppInsights.flush();
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
-    public trackException(exceptionMessage: string, handledAt?: string, properties?: Object, measurements?: Object) {
-        // try {
-        //     if (this.IsAvailable) {
-        //         console.error(exceptionMessage);
+    public trackException(exceptionMessage: string, handledAt?: string, properties?: { [name: string]: string; }, measurements?: { [name: string]: number; }) {
+        try {
+            if (this.IsAvailable) {
+                console.error(exceptionMessage);
 
-        //         var error: Error = {
-        //             name: TelemetryClient.ExtensionContext + "." + handledAt,
-        //             message: exceptionMessage
-        //         };
+                var error: Error = {
+                    name: TelemetryClient.ExtensionContext + "." + handledAt,
+                    message: exceptionMessage
+                };
 
-        //         this.appInsightsClient.trackException(error, handledAt, properties, measurements);
-        //         this.appInsightsClient.flush();
-        //     }
-        // }
-        // catch (e) {
-        //     this.appInsightsClient = null;
-        //     console.log(e);
-        // }
+                AppInsights.trackException(error, handledAt, properties, measurements);
+                AppInsights.flush();
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
-    public trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: Object) {
-        // try {
-        //     if (this.IsAvailable) {
-        //         this.appInsightsClient.trackMetric(TelemetryClient.ExtensionContext + "." + name, average, sampleCount, min, max, properties);
-        //         this.appInsightsClient.flush();
-        //     }
-        // }
-        // catch (e) {
-        //     this.appInsightsClient = null;
-        //     console.log(e);
-        // }
+    public trackMetric(name: string, average: number, sampleCount?: number, min?: number, max?: number, properties?: { [name: string]: string; }) {
+        try {
+            if (this.IsAvailable) {
+                AppInsights.trackMetric(TelemetryClient.ExtensionContext + "." + name, average, sampleCount, min, max, properties);
+                AppInsights.flush();
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
 }

@@ -3,9 +3,12 @@
 import Service = require("VSS/Service");
 import CoreRestClient = require("TFS/Core/RestClient");
 import Board = require("./board_configuration");
+import CopySettingsWizard = require("./copySettingsWizard");
+
+import Telemetry = require("./telemetryclient");
 
 export class ImportExportKanbanAction {
-    private _dialogControlInstance: any;
+    private _dialogControlInstance: CopySettingsWizard.copySettingsWizard;
 
     private _dialog: IExternalDialog;
 
@@ -19,7 +22,7 @@ export class ImportExportKanbanAction {
             let hostDialogOptions: IHostDialogOptions = {
                 title: "Copy Kanban board settings",
                 width: 500,
-                height: 300,
+                height: 500,
                 // We have our own navigation controls, since built in buttons are not flexible enough for our needs, so we disable all buttons
                 buttons: null
             };
@@ -27,9 +30,10 @@ export class ImportExportKanbanAction {
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then((dialog) => {
 
                 this._dialog = dialog;
-
+                Telemetry.TelemetryClient.getClient().trackEvent("Main dialog opened");
                 dialog.getContributionInstance("copySettingsWizard").then((dialogControlInstance) => {
-                    this._dialogControlInstance = dialogControlInstance;
+
+                    this._dialogControlInstance = <CopySettingsWizard.copySettingsWizard>dialogControlInstance;
 
                     this._dialogControlInstance.onCancel(() => {
                         this._dialog.close();
@@ -39,13 +43,14 @@ export class ImportExportKanbanAction {
                         this._dialog.setTitle(title);
                     });
 
-                    //TODO: in the future this will receive the user settings
-                    this._dialogControlInstance.onCopy((selectedTeam: string) => {
-                        //TODO: inline for now. should be move to it's own function later on
+                    this._dialogControlInstance.onCopy((copySettings: CopySettingsWizard.copySettings) => {
+
+                        //TODO: inline for now. should be move to it's own function later on to perform the copy and drive the UI
+
                         this._dialog.close();
 
                         let board = new Board.BoardConfiguration();
-                        board.getCurrentConfiguration(selectedTeam).then((settings) => {
+                        board.getCurrentConfiguration(copySettings.source.team.name).then((settings) => {
                             board.applySettings(webContext.team.name, settings).then((result) => {
                                 console.log("settings applied");
                             }).catch((reason) => {

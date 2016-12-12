@@ -2,5 +2,6 @@
     "public": false,
     "baseUri": "https://localhost:9090",
     "name": "Dev: Import-Export Kanban Config",
-    "publisher": "alm-rangers"
+    "publisher": "kverhaar",
+    "version": "0.0.1"
 }
