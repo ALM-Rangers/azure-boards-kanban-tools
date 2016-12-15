@@ -14,28 +14,27 @@
     "package:release": "npm run clean:vsix && npm run build:release && node ./scripts/packageRelease",
     "copy:libs": "cpx node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js libs && cpx node_modules/q/q.js libs && cpx node_modules/applicationinsights-js/dist/ai.0.js libs",
     "test": "snyk test && karma start --single-run",
-    "postinstall": "npm run copy:libs && typings install"
+    "postinstall": "npm run copy:libs"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^4.0.1",
     "cpx": "^1.5.0",
     "jasmine": "^2.5.2",
     "node-sass": "^3.10.1",
     "rimraf": "^2.5.4",
     "sass-loader": "^4.0.2",
     "style-loader": "^0.13.1",
-    "tfx-cli": "^0.3.39",
-    "ts-loader": "^1.0.0",
-    "tslint": "^4.0.2",
-    "typings": "^2.0.0",
-    "typescript": "~2.0.9",
-    "webpack": "^1.13.3",
+    "tfx-cli": "^0.3.45",
+    "ts-loader": "^1.3.2",
+    "tslint-loader": "^3.3.0",
+    "typescript": "^2.1.4",
+    "webpack": "^1.14.0",
     "webpack-dev-server": "^1.16.2",
     "snyk": "^1.21.0"
   },
   "dependencies": {
     "applicationinsights-js": "^1.0.4",
     "q": "^1.4.1",
-    "vss-web-extension-sdk": "^1.106.0"
+    "vss-web-extension-sdk": "^1.109.0"
   }
 }

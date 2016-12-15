@@ -1,7 +1,6 @@
-﻿/// <reference path="../typings/index.d.ts" />
+﻿/// <reference types="vss-web-extension-sdk" />
 
 import UIControls = require("VSS/Controls");
-
 
 export interface INavigationButtonUIState {
     label?: string;
@@ -76,18 +75,22 @@ export class NavigationControl extends UIControls.BaseControl {
         /// </summary>
         /// <param name="buttonType" type="NavigationButtonType"></param>
         /// <param name="state" type="INavigationButtonUIState"></param>
-        var buttonId = this._getButtonId(buttonType);
+        let buttonId = this._getButtonId(buttonType);
 
         let $button = $("#" + buttonId);
 
-        if (state.isEnabled)
+        if (state.isEnabled) {
             $button.removeAttr("disabled");
-        else
+        }
+        else {
             $button.attr("disabled", "disabled");
-        if (state.isVisible)
-            $button.show()
-        else
+        }
+        if (state.isVisible) {
+            $button.show();
+        }
+        else {
             $button.hide();
+        }
 
         if (state.label) {
             $button.text(state.label);
@@ -108,7 +111,7 @@ export class NavigationControl extends UIControls.BaseControl {
 
         this._element.addClass("ui-dialog-buttonpane ui-helper-clearfix bowtie");
 
-        $('<div class="ui-dialog-buttonset"></div>').appendTo(this._element);
+        $("<div class='ui-dialog-buttonset'></div>").appendTo(this._element);
 
         if (this._navigation.previousButton) {
             this._addButton(NavigationButtonType.PREVIOUS, this._navigation.previousButton, "Previous");
@@ -148,22 +151,27 @@ export class NavigationControl extends UIControls.BaseControl {
     private _addButton(buttonType: NavigationButtonType, button: INavigationButton, defaultLabel: string, isCallToAction?: boolean, isWarning?: boolean) {
         let cssClass: string = "";
 
-        if (isCallToAction)
+        if (isCallToAction) {
             cssClass = "cta";
-        if (isWarning)
+        }
+        if (isWarning) {
             cssClass += " warning";
+        }
 
-        if (cssClass !== "")
+        if (cssClass !== "") {
             cssClass = "class='" + cssClass + "'";
+        }
 
         let inputId = this._getUniqueId() + "_" + buttonType.toString();
-        let $button = $('<button id="' + this._getButtonId(buttonType) + '" type="button" ' + cssClass + '>' + (button.label || defaultLabel) + '</button>').appendTo(this._element.find("div"));
+        let $button = $("<button id='" + this._getButtonId(buttonType) + "' type='button' " + cssClass + ">" + (button.label || defaultLabel) + "</button>").appendTo(this._element.find("div"));
 
-        if (button.isEnabled === false)
+        if (button.isEnabled === false) {
             $button.attr("disabled", "disabled");
+        }
 
-        if (button.isVisible === false)
+        if (button.isVisible === false) {
             $button.hide();
+        }
 
         if (button.onClick) {
             $button.click(button.onClick);

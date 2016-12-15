@@ -1,8 +1,9 @@
-/// <reference path="../typings/index.d.ts" />
+/// <reference types="vss-web-extension-sdk" />
 
 import Service = require("VSS/Service");
 import CoreRestClient = require("TFS/Core/RestClient");
 import CoreContracts = require("TFS/Core/Contracts");
+import Q = require("q");
 
 export function getTeams(): Q.Promise<CoreContracts.WebApiTeam[]> {
     let defer = Q.defer<CoreContracts.WebApiTeam[]>();

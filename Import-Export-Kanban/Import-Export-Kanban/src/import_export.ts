@@ -1,4 +1,4 @@
-/// <reference path="../typings/index.d.ts" />
+/// <reference types="vss-web-extension-sdk" />
 
 import Service = require("VSS/Service");
 import CoreRestClient = require("TFS/Core/RestClient");
@@ -8,7 +8,7 @@ import CopySettingsWizard = require("./copySettingsWizard");
 import Telemetry = require("./telemetryclient");
 
 export class ImportExportKanbanAction {
-    private _dialogControlInstance: CopySettingsWizard.copySettingsWizard;
+    private _dialogControlInstance: CopySettingsWizard.CopySettingsWizard;
 
     private _dialog: IExternalDialog;
 
@@ -17,7 +17,7 @@ export class ImportExportKanbanAction {
 
         VSS.getService<IHostDialogService>("ms.vss-web.dialog-service").then((hostDialogService) => {
             let extensionContext: IExtensionContext = VSS.getExtensionContext();
-            let dialogControlContributionId: string = extensionContext.publisherId + '.' + extensionContext.extensionId + '.copy-settings-wizard';
+            let dialogControlContributionId: string = extensionContext.publisherId + "." + extensionContext.extensionId + ".copy-settings-wizard";
 
             let hostDialogOptions: IHostDialogOptions = {
                 title: "Copy Kanban board settings",
@@ -33,7 +33,7 @@ export class ImportExportKanbanAction {
                 Telemetry.TelemetryClient.getClient().trackEvent("Main dialog opened");
                 dialog.getContributionInstance("copySettingsWizard").then((dialogControlInstance) => {
 
-                    this._dialogControlInstance = <CopySettingsWizard.copySettingsWizard>dialogControlInstance;
+                    this._dialogControlInstance = <CopySettingsWizard.CopySettingsWizard>dialogControlInstance;
 
                     this._dialogControlInstance.onCancel(() => {
                         this._dialog.close();
@@ -43,9 +43,9 @@ export class ImportExportKanbanAction {
                         this._dialog.setTitle(title);
                     });
 
-                    this._dialogControlInstance.onCopy((copySettings: CopySettingsWizard.copySettings) => {
+                    this._dialogControlInstance.onCopy((copySettings: CopySettingsWizard.CopySettings) => {
 
-                        //TODO: inline for now. should be move to it's own function later on to perform the copy and drive the UI
+                        // TODO: inline for now. should be move to it's own function later on to perform the copy and drive the UI
 
                         this._dialog.close();
 
@@ -58,11 +58,11 @@ export class ImportExportKanbanAction {
                             });
                         });
 
-                        //TODO: do work and show progress bar
+                        // TODO: do work and show progress bar
                     });
                 });
             });
-        })
+        });
     }
 }
 

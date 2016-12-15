@@ -1,9 +1,10 @@
-/// <reference path="../typings/index.d.ts" />
+/// <reference types="vss-web-extension-sdk" />
 
 import WorkClient = require("TFS/Work/RestClient");
 import CoreClient = require("TFS/Core/RestClient");
 import WorkContracts = require("TFS/Work/Contracts");
 import CoreContracts = require("TFS/Core/Contracts");
+import Q = require("q");
 
 import { getContextForTeam } from "./utils";
 
@@ -58,7 +59,7 @@ export class BoardConfiguration {
             });
         }).catch((reason) => {
             defer.reject(reason);
-        });;
+        });
 
         return defer.promise;
     }

@@ -1,4 +1,4 @@
-﻿/// <reference path="../typings/index.d.ts" />
+﻿/// <reference types="vss-web-extension-sdk" />
 
 import UIControls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
@@ -11,7 +11,7 @@ export enum TeamSelectionMode {
 }
 
 interface TeamsMap {
-    [teamId: string]: SelectedTeam
+    [teamId: string]: SelectedTeam;
 }
 
 export class SelectedTeam {
@@ -104,8 +104,8 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     private _createFilterBoxElement(): void {
         let $searchBox = $("<div/>");
 
-        $('<input type="text" class="text-filter-input" title= "Filter" tabindex= "0" placeholder= "Filter" ></div>')
-            .on('input', (e) => {
+        $("<input type='text' class='text-filter-input' title= 'Filter' tabindex= '0' placeholder= 'Filter' ></div>")
+            .on("input", (e) => {
                 this._onChangeFilter($(e.target).val());
             })
             .appendTo($searchBox);
@@ -301,16 +301,20 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      */
     public getNumberSelectedTeams(): number {
 
-        if (this._isInitialized === false) return 0;
+        if (this._isInitialized === false) {
+            return 0;
+        }
 
         if (this._selectionMode === TeamSelectionMode.SingleSelection) {
-            if ($('input[name="' + this._getInputName() + '"]').is(':checked'))
+            if ($("input[name='" + this._getInputName() + "']").is(":checked")) {
                 return 1;
+            }
         } else {
             let numberSelected = 0;
-            this._element.find('input[name="' + this._getInputName() + '"]').each((idx, element) => {
-                if (element.checked)
+            this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
+                if (element.checked) {
                     numberSelected++;
+                }
             });
 
             return numberSelected;
@@ -328,7 +332,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
 
         let selectedTeams: SelectedTeam[] = [];
 
-        this._element.find('input[name="' + this._getInputName() + '"]').each((idx, element) => {
+        this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
             if (element.checked) {
                 let teamId = $(element).attr("data-team-id");
 
@@ -358,10 +362,12 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      * @param {TeamSelectionType} mode
      */
     public changeSelectionType(mode: TeamSelectionMode) {
-        if (mode === this._selectionMode || this._isInitialized === false) return;
+        if (mode === this._selectionMode || this._isInitialized === false) {
+            return;
+        }
 
         // toggles check fox to radio or vice verse dependingon the current mode.
-        $('input[name="' + this._getInputName() + '"]').attr("type", this._selectionMode === TeamSelectionMode.SingleSelection ? "checkbox" : "radio");
+        $("input[name='" + this._getInputName() + "']").attr("type", this._selectionMode === TeamSelectionMode.SingleSelection ? "checkbox" : "radio");
 
         this._selectionMode = mode;
     }

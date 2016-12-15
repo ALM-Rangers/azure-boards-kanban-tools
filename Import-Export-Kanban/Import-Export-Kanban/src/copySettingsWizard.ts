@@ -1,4 +1,4 @@
-/// <reference path="../typings/index.d.ts" />
+/// <reference types="vss-web-extension-sdk" />
 
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
@@ -28,7 +28,7 @@ enum WizardStep {
  * @param {TeamSelector.SelectedTeam} destinationTeam - the team or teams (depending on the operation type) where the settings will be copied to
  * @param {CopyBoardSettingsSettings} copyType - Type of copy operation that is going to be performed.
  */
-export class copySettings {
+export class CopySettings {
 
     public copyType: CopyBoardSettingsSettings;
 
@@ -55,7 +55,7 @@ export class copySettings {
  * The caller can get the data collected from the user via a callback
  *
  */
-export class copySettingsWizard {
+export class CopySettingsWizard {
     /** The maximum teams that will be shown on the confirmation step when multiple teams are selected. If settings will be copied
     * from more than this number, than an ... will be shown
     */
@@ -68,7 +68,7 @@ export class copySettingsWizard {
     private _selectedOption: CopyBoardSettingsSettings;
 
     private _onCancelCallback: Function;
-    private _onCopyCallback: (settings: copySettings) => void;
+    private _onCopyCallback: (settings: CopySettings) => void;
     private _onTitleChangeCallback: Function;
 
     constructor() {
@@ -94,7 +94,7 @@ export class copySettingsWizard {
                 isEnabled: true, isVisible: false, label: "Copy Settings", onClick: () => { this._onOk(); }
             },
             cancelButton: {
-                isEnabled: true, isVisible: true, onClick: () => { this._onCancel() }
+                isEnabled: true, isVisible: true, onClick: () => { this._onCancel(); }
             }
         };
 
@@ -104,7 +104,7 @@ export class copySettingsWizard {
     }
 
     private _attachStepOneEvents() {
-        $('input[name="boardSettings"]')
+        $("input[name='boardSettings']")
             .click((event) => { this._onSettingsChanged(event); });
     }
 
@@ -194,10 +194,12 @@ export class copySettingsWizard {
         }
         /* Hide and show steps based on the new step */
         for (let step = 1; step <= WizardStep.Confirmation; step++) {
-            if (step === newStep)
+            if (step === newStep) {
                 $("#step" + step).show();
-            else
+            }
+            else {
                 $("#step" + step).hide();
+            }
         }
 
         this._currentStep = newStep;
@@ -214,7 +216,7 @@ export class copySettingsWizard {
             case CopyBoardSettingsSettings.FromAnotherTeam:
                 this._setStepTitle("Select team to copy settings from");
                 this._teamSelector.changeSelectionType(TeamSelector.TeamSelectionMode.SingleSelection);
-                break
+                break;
             case CopyBoardSettingsSettings.ToOtherTeams:
                 this._setStepTitle("Select team(s) to copy settings to");
                 this._teamSelector.changeSelectionType(TeamSelector.TeamSelectionMode.MultiSelection);
@@ -244,7 +246,7 @@ export class copySettingsWizard {
                 this._setStepTitle("Copy settings from " + this._formatTeam(selectedTeam));
                 this._setCopyFromAnotherTeamSpecificMessage(selectedTeam);
 
-                break
+                break;
             case CopyBoardSettingsSettings.ToOtherTeams:
 
                 this._setStepTitle(`Copy settings to ${selectedTeams.length} projects`);
@@ -282,10 +284,10 @@ export class copySettingsWizard {
         // teams, exceed the maximum amount, we only show the maxim number (and display an ...)
         // The number of teams where the copy will be performed to, is already part of the title.
         //
-        for (let x: number = 0; x < Math.min(copySettingsWizard.MAX_NUMBER_TEAMS_TO_LIST, selectedTeams.length); x++) {
+        for (let x: number = 0; x < Math.min(CopySettingsWizard.MAX_NUMBER_TEAMS_TO_LIST, selectedTeams.length); x++) {
             copyToTeamsList += (copyToTeamsList !== "" ? ";" : "") + this._formatTeam(selectedTeams[x]);
         }
-        if (selectedTeams.length > copySettingsWizard.MAX_NUMBER_TEAMS_TO_LIST) {
+        if (selectedTeams.length > CopySettingsWizard.MAX_NUMBER_TEAMS_TO_LIST) {
             copyToTeamsList += " ...";
         }
 
@@ -357,10 +359,10 @@ export class copySettingsWizard {
 
             switch (this._selectedOption) {
                 case CopyBoardSettingsSettings.ToOtherTeams:
-                    this._onCopyCallback(new copySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams(), this._selectedOption));
+                    this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams(), this._selectedOption));
                     break;
                 case CopyBoardSettingsSettings.FromAnotherTeam:
-                    this._onCopyCallback(new copySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
+                    this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
                     break;
                 default:
                     throw "unknown option or not implemented yet";
@@ -374,7 +376,9 @@ export class copySettingsWizard {
     * If the caller has defined the onCancel callback, then the callback is called.
     */
     private _onCancel() {
-        if (this._onCancelCallback) this._onCancelCallback();
+        if (this._onCancelCallback) {
+            this._onCancelCallback();
+        }
     }
 
     /**
@@ -384,7 +388,9 @@ export class copySettingsWizard {
      * @param {string} title - the new title
      */
     private _setStepTitle(title: string) {
-        if (this._onTitleChangeCallback) this._onTitleChangeCallback(title);
+        if (this._onTitleChangeCallback) {
+            this._onTitleChangeCallback(title);
+        }
     }
 
     /**
@@ -401,7 +407,7 @@ export class copySettingsWizard {
     *
     * @param {(copySettings)} callback that receives a copySettings parameter with the settings of the operation
     */
-    public onCopy(callback: (settings: copySettings) => void) {
+    public onCopy(callback: (settings: CopySettings) => void) {
         this._onCopyCallback = callback;
     }
 
@@ -416,5 +422,5 @@ export class copySettingsWizard {
 }
 
 VSS.register("copySettingsWizard", function (context) {
-    return new copySettingsWizard();
+    return new CopySettingsWizard();
 });

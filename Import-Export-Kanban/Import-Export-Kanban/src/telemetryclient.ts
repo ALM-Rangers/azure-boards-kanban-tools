@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------
+// ---------------------------------------------------------------------
 // <copyright file="TelemetryClient.ts">
 //    This code is licensed under the MIT License.
 //    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF 
@@ -7,10 +7,9 @@
 //    PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // </copyright>
 // <summary>Application Insights Telemetry Client Class</summary>
-//---------------------------------------------------------------------
-/// <reference path="../typings/index.d.ts" />
+// ---------------------------------------------------------------------
 
-import {AppInsights} from "applicationinsights-js"
+import { AppInsights } from "applicationinsights-js";
 
 export class TelemetryClient {
 
@@ -35,12 +34,12 @@ export class TelemetryClient {
     }
 
     private Init() {
-        var config: any = {
+        let config: any = {
             instrumentationKey: TelemetryClient.DevLabs
         };
 
         try {
-            var webContext = VSS.getWebContext();
+            let webContext = VSS.getWebContext();
             this.IsAvailable = webContext.account.uri.indexOf("visualstudio.com") > 0;
 
             if (this.IsAvailable) {
@@ -82,7 +81,7 @@ export class TelemetryClient {
             if (this.IsAvailable) {
                 console.error(exceptionMessage);
 
-                var error: Error = {
+                let error: Error = {
                     name: TelemetryClient.ExtensionContext + "." + handledAt,
                     message: exceptionMessage
                 };

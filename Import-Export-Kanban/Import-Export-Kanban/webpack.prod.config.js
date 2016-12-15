@@ -29,6 +29,12 @@ module.exports = {
         ]
     },
     module: {
+        preLoaders: [
+            {
+                test: /\.tsx?$/,
+                loader: "tslint"
+            }
+        ],
         loaders: [
             {
                 test: /\.tsx?$/,
@@ -39,6 +45,10 @@ module.exports = {
                 loaders: ["style", "css", "sass"]
             }
         ]
+    },
+    tslint: {
+        emitErrors: true,
+        failOnHint: true
     },
     plugins: [
         new CopyWebpackPlugin([

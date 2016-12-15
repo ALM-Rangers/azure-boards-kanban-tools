@@ -1,4 +1,4 @@
-/// <reference path="../typings/index.d.ts" />
+/// <reference types="vss-web-extension-sdk" />
 
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
