@@ -16,4 +16,5 @@ libs/
 **/src/*.js.map
 **/out/chrome
 npm-debug.log
+debug.log
 ~$*.pptx

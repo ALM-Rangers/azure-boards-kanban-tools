@@ -19,7 +19,7 @@ export interface IBacklogBoardSettings {
 export interface IBoardSettings {
     version: string;
     name: string;
-    cardSettings: IBacklogBoardSettings[];
+    backlogSettings: IBacklogBoardSettings[];
 }
 
 export class BoardConfiguration {
@@ -71,7 +71,7 @@ export class BoardConfiguration {
         let settings: IBoardSettings = {
             name: "Settings - " + context.team,
             version: "1.0",
-            cardSettings: new Array<IBacklogBoardSettings>()
+            backlogSettings: new Array<IBacklogBoardSettings>()
         };
 
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
@@ -91,7 +91,7 @@ export class BoardConfiguration {
                         columns: columnsResult,
                         rows: rowsResult
                     };
-                    settings.cardSettings.push(boardSettings);
+                    settings.backlogSettings.push(boardSettings);
                 });
                 backlogPromises.push(settingsPromise);
 
@@ -111,40 +111,48 @@ export class BoardConfiguration {
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
 
         let backlogPromises: Q.Promise<[WorkContracts.BoardCardSettings, WorkContracts.BoardCardRuleSettings, WorkContracts.BoardColumn[], WorkContracts.BoardRow[]]>[] = new Array();
-        settings.cardSettings.forEach((backlogSetting) => {
+        settings.backlogSettings.forEach((backlogSetting) => {
             let cardSettingsPromise = workClient.updateBoardCardSettings(backlogSetting.cardSettings, context, backlogSetting.boardName);
             let cardRulesPromise = workClient.updateBoardCardRuleSettings(backlogSetting.cardRules, context, backlogSetting.boardName);
             let rowsPromise = workClient.updateBoardRows(backlogSetting.rows, context, backlogSetting.boardName);
 
+            let sourceColumns: WorkContracts.BoardColumn[] = new Array();
+            let targetColumns: WorkContracts.BoardColumn[] = new Array();
+            let columnsToApply: WorkContracts.BoardColumn[] = new Array();
+
             let oldBoard: IBacklogBoardSettings;
-            oldSettings.cardSettings.forEach(board => {
+            oldSettings.backlogSettings.forEach(board => {
                 if (board.boardName === backlogSetting.boardName) {
                     oldBoard = board;
                 }
             });
 
-            oldBoard.columns.forEach(column => {
-                let newColumn = backlogSetting.columns.filter(i => {
-                    return this.compareColumnStateMappings(i, column);
-                });
-                if (newColumn.length > 0) {
-                    let found: Boolean = false;
+            sourceColumns = backlogSetting.columns;
+            targetColumns = oldBoard.columns;
 
-                    newColumn.forEach(c2 => {
-                        if (c2.name === column.name) {
-                            found = true;
-                            c2.id = column.id;
-                        }
-                    });
-                    if (!found) {
-                        newColumn[0].id = column.id;
-                    }
+            let sourceIncomingColumn = sourceColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Incoming)[0];
+            let sourceOutgoingColumn = sourceColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Outgoing)[0];
+
+            let targetIncomingColumn = targetColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Incoming)[0];
+            let targetOutgoingColumn = targetColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Outgoing)[0];
+
+            targetIncomingColumn.name = sourceIncomingColumn.name;
+            targetOutgoingColumn.name = sourceOutgoingColumn.name;
+            columnsToApply.push(targetIncomingColumn);
+
+            for (let columnIndex = 0; columnIndex < sourceColumns.length; columnIndex++) {
+                let currentColumn = sourceColumns[columnIndex];
+                if (currentColumn.columnType === WorkContracts.BoardColumnType.Incoming || currentColumn.columnType === WorkContracts.BoardColumnType.Outgoing) {
+                    continue;
                 }
-            });
+                let newColumn = sourceColumns[columnIndex];
+                newColumn.id = "";
+                columnsToApply.push(newColumn);
+            }
 
-            backlogSetting.columns[backlogSetting.columns.length - 1].id = oldBoard.columns[oldBoard.columns.length - 1].id;
+            columnsToApply.push(targetOutgoingColumn);
 
-            let columnsPromise = workClient.updateBoardColumns(backlogSetting.columns, context, backlogSetting.boardName);
+            let columnsPromise = workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
 
             let settingsPromise = Q.all([cardSettingsPromise, cardRulesPromise, columnsPromise, rowsPromise]);
             settingsPromise.catch((reason) => {
