@@ -39,7 +39,7 @@ export interface TeamSelectorOptions {
  *
  * The team list is loaded asynchronously
  *
- * @param {TeamSelectorOptions} options - The 
+ * @param {TeamSelectorOptions} options - The
  */
 export class TeamSelectorControl extends UIControls.BaseControl {
 
@@ -171,7 +171,6 @@ export class TeamSelectorControl extends UIControls.BaseControl {
 
     /**
      * Gets the identifier of the container that has the number of selected projects counter
-     * 
      */
     private _getNumberSelectedTeamCounterId(): string {
         return "ctr" + this._getUniqueId();
@@ -236,8 +235,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      * Sets the the visibility of a team.
      *
      * Shows or hides a team (along with the input selector)
-     *  
-     * @param team - the team 
+     * @param team - the team
      * @param {boolean} isVisible - predicate that indicates if the team is visible
      */
     private _setTeamVisibility(team: Contracts.WebApiTeam, isVisible: boolean): void {
@@ -280,7 +278,6 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      * others that are not are hidden.
      *
      * The filter is case insensitive
-     * 
      * @param {string} searchValue - the value entered into the filter box
      */
     private _onChangeFilter(searchValue: string) {

@@ -274,7 +274,6 @@ export class CopySettingsWizard {
      * Sets the specific confirmation content for copy to other team(s) from the current team
      *
      * @param {TeamSelector.SelectedTeam[]} selectedTeams - the team(s) that the user selected
-     * 
      */
     private _setCopyToOtherTeamsSpecificMessage(selectedTeams: TeamSelector.SelectedTeam[]) {
         let webContext = VSS.getWebContext();
