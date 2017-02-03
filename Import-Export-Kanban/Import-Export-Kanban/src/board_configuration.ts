@@ -22,7 +22,44 @@ export interface IBoardSettings {
     backlogSettings: IBacklogBoardSettings[];
 }
 
+export interface IColumnMapping {
+    sourceColumn: string;
+    targetColumns: string;
+}
+
+export interface IBoardMapping {
+    backlog: string;
+    columnMappings: IColumnMapping[];
+}
+
+export interface IBoardColumnDifferences {
+    backlog: string;
+    desiredColumns: string[];
+    originalColumns: string[];
+}
+
 export class BoardConfiguration {
+    public getColumnDifferences(): IPromise<IBoardColumnDifferences[]> {
+        let defer = Q.defer<IBoardColumnDifferences[]>();
+        let results: IBoardColumnDifferences[] = new Array();
+
+        setTimeout(() => {
+            results.push({
+                backlog: "Epics",
+                desiredColumns: ["Planned", "Funded", "Started", "Tested", "Planned", "Funded", "Started", "Tested"],
+                originalColumns: ["In-Progress", "In-Test"]
+            });
+            results.push({
+                backlog: "Features",
+                desiredColumns: ["Analysis", "Scoped", "In Progress", "Development"],
+                originalColumns: ["Planned", "In Progress", "Testing"]
+            });
+            defer.resolve(results);
+        }, 100);
+
+        return defer.promise;
+    }
+
     public export(boardName: string, settings: IBoardSettings): IPromise<boolean> {
         let self = this;
         let defer = Q.defer<boolean>();
