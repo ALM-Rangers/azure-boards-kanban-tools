@@ -3,12 +3,15 @@
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
 import Utils_UI = require("VSS/Utils/UI");
+import WorkContracts = require("TFS/Work/Contracts");
 import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
 
+import Q = require("q");
+
 import * as NavigationControl from "./NavigationControl";
 
-import { IBoardColumnDifferences, IBoardMapping, IColumnMapping, BoardConfiguration } from "./board_configuration";
+import { IBoardColumnDifferences, IBoardMapping, IColumnMapping, BoardConfiguration, IBoardSettings } from "./board_configuration";
 
 export enum CopyBoardSettingsSettings {
     None = 0,
@@ -254,9 +257,24 @@ export class CopySettingsWizard {
         if (this._refreshBoardDifferences) {
             this._refreshBoardDifferences = false;
             let boardService = new BoardConfiguration();
-            boardService.getColumnDifferences().then(differences => {
+            let sourceTeam = this._teamSelector.getSelectedTeams()[0];
+            let destinationteam = this._teamSelector.getCurrentTeam();
+            let settingsPromises: IPromise<IBoardSettings>[] = new Array();
+            settingsPromises.push(boardService.getCurrentConfiguration(sourceTeam.team.name));
+            settingsPromises.push(boardService.getCurrentConfiguration(destinationteam.team.name));
+            Q.all(settingsPromises).then(settings => {
+                let sourceSettings: IBoardSettings = null;
+                let targetSettings: IBoardSettings = null;
+                settings.forEach(setting => {
+                    if (setting.teamName === sourceTeam.team.name) {
+                        sourceSettings = setting;
+                    } else if (setting.teamName === destinationteam.team.name) {
+                        targetSettings = setting;
+                    }
+                });
+
                 this._currentBoardIndex = 0;
-                this._boardDifferences = differences;
+                this._boardDifferences = boardService.getTeamColumnDifferences(sourceSettings, targetSettings);
                 this._boardMappings = new Array();
                 for (let index = 0; index < this._boardDifferences.length; index++) {
                     let mapping: IBoardMapping = {
@@ -278,16 +296,13 @@ export class CopySettingsWizard {
         let $rootContainer = $("#itemMappings");
         $rootContainer.empty();
 
-        let combos: JQuery[] = new Array();
-
-        for (let index = 0; index < differences.desiredColumns.length; index++) {
+        for (let index = 0; index < differences.mappings.length; index++) {
             let $row = $(domElem("div")).addClass("mappingRow").appendTo($rootContainer);
-            $(domElem("div")).addClass("mapping-origin").text(differences.desiredColumns[index]).appendTo($row);
+            $(domElem("div")).addClass("mapping-origin").text(differences.mappings[index].sourceColumn.name).appendTo($row);
             let dropdownArea = $(domElem("div")).addClass("mapping-choice").appendTo($row);
             let combo = this._buildCombo().appendTo(dropdownArea);
-            combos.push(combo);
+            this._createCombos(combo, differences.mappings[index].potentialMatches);
         }
-        this._createCombos(combos, differences.originalColumns);
     }
 
     private _buildCombo(): JQuery {
@@ -295,13 +310,15 @@ export class CopySettingsWizard {
         return comboInput;
     }
 
-    private _createCombos(comboInputs: JQuery[], source: string[]) {
-        for (let i = 0; i < comboInputs.length; i++) {
-            Controls.Enhancement.enhance(Combos.Combo, comboInputs[i], {
-                source: source,
-                dropCount: 3
-            });
-        }
+    private _createCombos(combo: JQuery, source: WorkContracts.BoardColumn[]) {
+        let dropDownItems: string[] = new Array();
+        source.forEach(item => {
+            dropDownItems.push(item.name);
+        });
+        Controls.Enhancement.enhance(Combos.Combo, combo, {
+            source: dropDownItems,
+            dropCount: 3
+        });
     }
 
     private _validateWorkItemMapping(): boolean {
