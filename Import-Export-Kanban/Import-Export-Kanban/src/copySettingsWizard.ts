@@ -7,6 +7,8 @@ import CoreRestClient = require("TFS/Core/RestClient");
 
 import * as NavigationControl from "./NavigationControl";
 
+import * as tc from "TelemetryClient";
+
 export enum CopyBoardSettingsSettings {
     None = 0,
     FromAnotherTeam,
@@ -72,6 +74,8 @@ export class CopySettingsWizard {
     private _onTitleChangeCallback: Function;
 
     constructor() {
+
+        tc.TelemetryClient.getClient().trackEvent("Wizard creation started");
 
         this._teamSelector = Controls.create(TeamSelector.TeamSelectorControl, $("#teamSelector"), {
             selectionType: TeamSelector.TeamSelectionMode.MultiSelection, // We have to select either one of those. We can change the type later when we know the type

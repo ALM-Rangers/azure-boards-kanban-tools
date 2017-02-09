@@ -5,7 +5,7 @@ import CoreRestClient = require("TFS/Core/RestClient");
 import Board = require("./board_configuration");
 import CopySettingsWizard = require("./copySettingsWizard");
 
-import Telemetry = require("./telemetryclient");
+import * as tc from "TelemetryClient";
 
 export class ImportExportKanbanAction {
     private _dialogControlInstance: CopySettingsWizard.CopySettingsWizard;
@@ -30,7 +30,7 @@ export class ImportExportKanbanAction {
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then((dialog) => {
 
                 this._dialog = dialog;
-                Telemetry.TelemetryClient.getClient().trackEvent("Main dialog opened");
+                tc.TelemetryClient.getClient().trackEvent("Main dialog opened");
                 dialog.getContributionInstance("copySettingsWizard").then((dialogControlInstance) => {
 
                     this._dialogControlInstance = <CopySettingsWizard.CopySettingsWizard>dialogControlInstance;
