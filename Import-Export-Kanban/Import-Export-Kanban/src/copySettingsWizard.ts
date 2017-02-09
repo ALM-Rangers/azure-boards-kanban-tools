@@ -2,12 +2,17 @@
 
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
+import Utils_UI = require("VSS/Utils/UI");
+import WorkContracts = require("TFS/Work/Contracts");
 import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
+
+import Q = require("q");
 
 import * as NavigationControl from "./NavigationControl";
 
 import * as tc from "TelemetryClient";
+import { IBoardColumnDifferences, IBoardMapping, IColumnMapping, BoardConfiguration, IBoardSettings } from "./board_configuration";
 
 export enum CopyBoardSettingsSettings {
     None = 0,
@@ -19,8 +24,11 @@ export enum CopyBoardSettingsSettings {
 enum WizardStep {
     Settings = 1,
     TeamSelection = 2,
-    Confirmation = 3
+    WorkItemMapping = 3,
+    Confirmation = 4
 }
+
+let domElem = Utils_UI.domElem;
 
 /**
  * Represents the operation and the user selected data to perform the copy operation.
@@ -72,6 +80,11 @@ export class CopySettingsWizard {
     private _onCancelCallback: Function;
     private _onCopyCallback: (settings: CopySettings) => void;
     private _onTitleChangeCallback: Function;
+
+    private _boardDifferences: IBoardColumnDifferences[];
+    private _boardMappings: IBoardMapping[];
+    private _currentBoardIndex = 0;
+    private _refreshBoardDifferences: boolean;
 
     constructor() {
 
@@ -145,6 +158,7 @@ export class CopySettingsWizard {
         if (this._currentStep === WizardStep.TeamSelection) {
             this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: numberSelectedTeams > 0, isVisible: true });
         }
+        this._refreshBoardDifferences = true;
     }
 
     /**
@@ -184,9 +198,19 @@ export class CopySettingsWizard {
 
                 break;
 
+            case WizardStep.WorkItemMapping:
+
+                this._setWorkItemMappingContent();
+
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateWorkItemMapping(), isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
+
+                break;
+
             case WizardStep.Confirmation:
 
-                this._setStep3Content();
+                this._setConfirmationContent();
 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: false, isVisible: false });
@@ -230,12 +254,86 @@ export class CopySettingsWizard {
         }
     }
 
+    private _setWorkItemMappingContent() {
+        this._setStepTitle("Work Item Mapping");
+
+        if (this._refreshBoardDifferences) {
+            this._refreshBoardDifferences = false;
+            let boardService = new BoardConfiguration();
+            let sourceTeam = this._teamSelector.getSelectedTeams()[0];
+            let destinationteam = this._teamSelector.getCurrentTeam();
+            let settingsPromises: IPromise<IBoardSettings>[] = new Array();
+            settingsPromises.push(boardService.getCurrentConfiguration(sourceTeam.team.name));
+            settingsPromises.push(boardService.getCurrentConfiguration(destinationteam.team.name));
+            Q.all(settingsPromises).then(settings => {
+                let sourceSettings: IBoardSettings = null;
+                let targetSettings: IBoardSettings = null;
+                settings.forEach(setting => {
+                    if (setting.teamName === sourceTeam.team.name) {
+                        sourceSettings = setting;
+                    } else if (setting.teamName === destinationteam.team.name) {
+                        targetSettings = setting;
+                    }
+                });
+
+                this._currentBoardIndex = 0;
+                this._boardDifferences = boardService.getTeamColumnDifferences(sourceSettings, targetSettings);
+                this._boardMappings = new Array();
+                for (let index = 0; index < this._boardDifferences.length; index++) {
+                    let mapping: IBoardMapping = {
+                        backlog: this._boardDifferences[index].backlog,
+                        columnMappings: new Array()
+                    };
+                    this._boardMappings.push(mapping);
+                }
+                this._setLoadedWorkItemMappingContent();
+            });
+        } else {
+            this._setLoadedWorkItemMappingContent();
+        }
+    }
+
+    private _setLoadedWorkItemMappingContent() {
+        let differences = this._boardDifferences[this._currentBoardIndex];
+        $("#backlogTitle").text(differences.backlog);
+        let $rootContainer = $("#itemMappings");
+        $rootContainer.empty();
+
+        for (let index = 0; index < differences.mappings.length; index++) {
+            let $row = $(domElem("div")).addClass("mappingRow").appendTo($rootContainer);
+            $(domElem("div")).addClass("mapping-origin").text(differences.mappings[index].sourceColumn.name).appendTo($row);
+            let dropdownArea = $(domElem("div")).addClass("mapping-choice").appendTo($row);
+            let combo = this._buildCombo().appendTo(dropdownArea);
+            this._createCombos(combo, differences.mappings[index].potentialMatches);
+        }
+    }
+
+    private _buildCombo(): JQuery {
+        let comboInput = $("<input type='text' class='requiredInfoLight' />");
+        return comboInput;
+    }
+
+    private _createCombos(combo: JQuery, source: WorkContracts.BoardColumn[]) {
+        let dropDownItems: string[] = new Array();
+        source.forEach(item => {
+            dropDownItems.push(item.name);
+        });
+        Controls.Enhancement.enhance(Combos.Combo, combo, {
+            source: dropDownItems,
+            dropCount: 3
+        });
+    }
+
+    private _validateWorkItemMapping(): boolean {
+        return true;
+    }
+
     /**
      * Sets the content for the step 2.
      *
      * Sets the title and the source and destination teams list.
      */
-    private _setStep3Content() {
+    private _setConfirmationContent() {
         let selectedTeams = this._teamSelector.getSelectedTeams();
 
         if (selectedTeams.length === 0) {
@@ -271,7 +369,7 @@ export class CopySettingsWizard {
     private _setCopyFromAnotherTeamSpecificMessage(selectedTeam: TeamSelector.SelectedTeam) {
         let webContext = VSS.getWebContext();
 
-        $("#step3").children("#specificMessage").html("Please confirm that you to wish to copy the settings from <strong>" + this._formatTeam(selectedTeam) + "</strong> to <strong>" + this._formatTeam(webContext.project.name, webContext.team.name) + "</strong>");
+        $("#step4").children("#specificMessage").html("Please confirm that you to wish to copy the settings from <strong>" + this._formatTeam(selectedTeam) + "</strong> to <strong>" + this._formatTeam(webContext.project.name, webContext.team.name) + "</strong>");
     }
 
     /**
@@ -294,7 +392,7 @@ export class CopySettingsWizard {
             copyToTeamsList += " ...";
         }
 
-        $("#step3").children("#specificMessage").html("Please confirm that you to wish to copy the settings from <strong>" + this._formatTeam(webContext.project.name, webContext.team.name) + "</strong> to <strong>" + copyToTeamsList + "</strong>");
+        $("#step4").children("#specificMessage").html("Please confirm that you to wish to copy the settings from <strong>" + this._formatTeam(webContext.project.name, webContext.team.name) + "</strong> to <strong>" + copyToTeamsList + "</strong>");
     }
 
     /**
@@ -305,7 +403,6 @@ export class CopySettingsWizard {
      * @param team - the team to format
      *
      * @returns the formatted team
-     *
      */
     private _formatTeam(selectedTeam: TeamSelector.SelectedTeam): string;
 
@@ -317,7 +414,6 @@ export class CopySettingsWizard {
      * @param team - the team to format
      *
      * @returns the formatted team
-     *
      */
     private _formatTeam(teamProjectName: string, teamName: string): string;
 
@@ -335,8 +431,18 @@ export class CopySettingsWizard {
      * Goes back a step in the screen and updates the state of the navigation buttons
      */
     private _onBack() {
-        if (this._currentStep > WizardStep.Settings) {
-            this._updateStepState(this._currentStep - 1);
+        if (this._currentStep !== WizardStep.Settings) {
+            let nextStep = this._currentStep;
+            if (this._currentStep === WizardStep.WorkItemMapping) {
+                if (this._currentBoardIndex === 0) {
+                    nextStep -= 1;
+                } else {
+                    this._currentBoardIndex -= 1;
+                }
+            } else {
+                nextStep -= 1;
+            }
+            this._updateStepState(nextStep);
         }
     }
 
@@ -346,8 +452,18 @@ export class CopySettingsWizard {
     * Goes to the next step in the screen and updates the state of the navigation buttons
     */
     private _onNext() {
-        if (this._currentStep < WizardStep.Confirmation) {
-            this._updateStepState(this._currentStep + 1);
+        if (this._currentStep !== WizardStep.Confirmation) {
+            let nextStep = this._currentStep;
+            if (this._currentStep === WizardStep.WorkItemMapping) {
+                if (this._currentBoardIndex === this._boardDifferences.length - 1) {
+                    nextStep += 1;
+                } else {
+                    this._currentBoardIndex += 1;
+                }
+            } else {
+                nextStep += 1;
+            }
+            this._updateStepState(nextStep);
         }
     }
 
