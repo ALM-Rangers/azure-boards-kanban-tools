@@ -12,6 +12,8 @@ import Q = require("q");
 import * as NavigationControl from "./NavigationControl";
 
 import * as tc from "TelemetryClient";
+import telemetryClientSettings = require("./telemetryClientSettings");
+
 import { IBoardColumnDifferences, IBoardMapping, IColumnMapping, BoardConfiguration, IBoardSettings } from "./board_configuration";
 
 export enum CopyBoardSettingsSettings {
@@ -88,7 +90,7 @@ export class CopySettingsWizard {
 
     constructor() {
 
-        tc.TelemetryClient.getClient().trackEvent("Wizard creation started");
+        tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackEvent("Wizard creation started");
 
         this._teamSelector = Controls.create(TeamSelector.TeamSelectorControl, $("#teamSelector"), {
             selectionType: TeamSelector.TeamSelectionMode.MultiSelection, // We have to select either one of those. We can change the type later when we know the type
