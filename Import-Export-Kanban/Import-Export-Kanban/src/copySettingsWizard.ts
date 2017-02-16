@@ -84,6 +84,8 @@ export class CopySettingsWizard {
     private _boardMappings: IBoardMapping[];
     private _currentBoardIndex = 0;
     private _refreshBoardDifferences: boolean;
+    private _sourceSettings: IBoardSettings;
+    private _targetSettings: IBoardSettings;
 
     constructor() {
 
@@ -263,18 +265,18 @@ export class CopySettingsWizard {
             settingsPromises.push(boardService.getCurrentConfiguration(sourceTeam.team.name));
             settingsPromises.push(boardService.getCurrentConfiguration(destinationteam.team.name));
             Q.all(settingsPromises).then(settings => {
-                let sourceSettings: IBoardSettings = null;
-                let targetSettings: IBoardSettings = null;
+                this._sourceSettings = null;
+                this._targetSettings = null;
                 settings.forEach(setting => {
                     if (setting.teamName === sourceTeam.team.name) {
-                        sourceSettings = setting;
+                        this._sourceSettings = setting;
                     } else if (setting.teamName === destinationteam.team.name) {
-                        targetSettings = setting;
+                        this._targetSettings = setting;
                     }
                 });
 
                 this._currentBoardIndex = 0;
-                this._boardDifferences = boardService.getTeamColumnDifferences(sourceSettings, targetSettings);
+                this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
                 this._boardMappings = new Array();
                 for (let index = 0; index < this._boardDifferences.length; index++) {
                     let mapping: IBoardMapping = {
@@ -470,14 +472,17 @@ export class CopySettingsWizard {
      * If the caller has defined the onOk callback, then the callback is called with the settings to perform the operation
      */
     private _onOk() {
+        let boardService = new BoardConfiguration();
         if (this._onCopyCallback) {
             let currentTeam = this._teamSelector.getCurrentTeam();
 
             switch (this._selectedOption) {
                 case CopyBoardSettingsSettings.ToOtherTeams:
+                    boardService.applySettings(this._targetSettings, this._sourceSettings, this._boardDifferences);
                     this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams(), this._selectedOption));
                     break;
                 case CopyBoardSettingsSettings.FromAnotherTeam:
+                    boardService.applySettings(this._targetSettings, this._sourceSettings, this._boardDifferences);
                     this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
                     break;
                 default:
