@@ -82,6 +82,7 @@ export class CopySettingsWizard {
 
     private _boardDifferences: IBoardColumnDifferences[];
     private _boardMappings: IBoardMapping[];
+    private _columnMappingCombos: Combos.Combo[];
     private _currentBoardIndex = 0;
     private _refreshBoardDifferences: boolean;
 
@@ -292,36 +293,82 @@ export class CopySettingsWizard {
 
     private _setLoadedWorkItemMappingContent() {
         let differences = this._boardDifferences[this._currentBoardIndex];
+        this._columnMappingCombos = [];
         $("#backlogTitle").text(differences.backlog);
-        let $rootContainer = $("#itemMappings");
-        $rootContainer.empty();
+        let rootContainer = $("#itemMappings");
+        rootContainer.empty();
 
         for (let index = 0; index < differences.mappings.length; index++) {
-            let $row = $(domElem("div")).addClass("mappingRow").appendTo($rootContainer);
+            let $row = $(domElem("div")).addClass("mappingRow").appendTo(rootContainer);
             $(domElem("div")).addClass("mapping-origin").text(differences.mappings[index].sourceColumn.name).appendTo($row);
             let dropdownArea = $(domElem("div")).addClass("mapping-choice").appendTo($row);
-            let combo = this._buildCombo().appendTo(dropdownArea);
-            this._createCombos(combo, differences.mappings[index].potentialMatches);
+            let combo = this._createColumnMappingCombo(dropdownArea, index);
+            this._columnMappingCombos.push(combo);
         }
     }
 
-    private _buildCombo(): JQuery {
-        let comboInput = $("<input type='text' class='requiredInfoLight' />");
-        return comboInput;
-    }
-
-    private _createCombos(combo: JQuery, source: WorkContracts.BoardColumn[]) {
+    /**
+     * Creates a combo box for use in the column mapping dialogs.
+     *
+     * @private
+     * @param {JQuery} combo
+     * @param {number} sourceColumnIndex
+     * @returns
+     *
+     * @memberOf CopySettingsWizard
+     */
+    private _createColumnMappingCombo(combo: JQuery, sourceColumnIndex: number) {
+        let source: WorkContracts.BoardColumn[] = this._boardDifferences[this._currentBoardIndex].mappings[sourceColumnIndex].potentialMatches;
         let dropDownItems: string[] = new Array();
         source.forEach(item => {
             dropDownItems.push(item.name);
         });
-        Controls.Enhancement.enhance(Combos.Combo, combo, {
+
+        let makeOptions: Combos.IComboOptions = {
             source: dropDownItems,
-            dropCount: 3
-        });
+            indexChanged: (index) => { this._setColumnMappingTarget(sourceColumnIndex, index); }
+        };
+
+        let comboBox = Controls.create(Combos.Combo, combo, makeOptions);
+        if (makeOptions.source.length === 1) {
+            comboBox.setText(makeOptions.source[0], true);
+        }
+        return comboBox;
+    }
+
+    /**
+     * Sets the target for a specific column mapping for a specific board.
+     * If the mapping for the source column was already specified for this board, then it will replace it.
+     *
+     * @private
+     * @param {number} sourceColumnIndex
+     * @param {number} selectedItemIndex
+     *
+     * @memberOf CopySettingsWizard
+     */
+    private _setColumnMappingTarget(sourceColumnIndex: number, selectedItemIndex: number) {
+        let sourceColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[sourceColumnIndex].sourceColumn;
+        let targetColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[sourceColumnIndex].potentialMatches[selectedItemIndex];
+        let board = this._boardMappings[this._currentBoardIndex].backlog;
+        console.log("Setting target column to [" + targetColumn.name + "] for source column [" + sourceColumn.name + "] for backlog [" + board + "]");
+        let newMapping: IColumnMapping = {
+            sourceColumn: sourceColumn,
+            targetColumn: targetColumn,
+            potentialMatches: null
+        };
+
+        let alreadyExistingMappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter((value, index, array) => { if (value.sourceColumn === sourceColumn) { return value; }; });
+        if (alreadyExistingMappings.length > 0) {
+            let alreadyExistingMappingIndex = this._boardMappings[this._currentBoardIndex].columnMappings.indexOf(alreadyExistingMappings[0]);
+            console.debug("Found already existing mapping at index: " + alreadyExistingMappingIndex);
+            this._boardMappings[this._currentBoardIndex].columnMappings[alreadyExistingMappingIndex] = newMapping;
+        } else {
+            this._boardMappings[this._currentBoardIndex].columnMappings.push(newMapping);
+        }
     }
 
     private _validateWorkItemMapping(): boolean {
+        console.debug("Doing validation!");
         return true;
     }
 
