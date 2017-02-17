@@ -189,8 +189,8 @@ export class BoardConfiguration {
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let backlogPromises: Q.Promise<[WorkContracts.BoardCardSettings, WorkContracts.BoardCardRuleSettings, WorkContracts.BoardColumn[], WorkContracts.BoardRow[]]>[] = new Array();
         workClient.getProcessConfiguration(context.project).then((process) => {
-            let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
-            // allBacklogs.push(process.requirementBacklog);
+            let allBacklogs = process.portfolioBacklogs;
+            allBacklogs.push(process.requirementBacklog);
             allBacklogs.forEach((backlog) => {
                 let cardSettingsPromise = workClient.getBoardCardSettings(context, backlog.name);
                 let cardRulesPromise = workClient.getBoardCardRuleSettings(context, backlog.name);
