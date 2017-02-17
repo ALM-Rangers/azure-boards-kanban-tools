@@ -80,7 +80,7 @@ export class CopySettingsWizard {
     private _onCopyCallback: (settings: CopySettings) => void;
     private _onTitleChangeCallback: Function;
 
-    private _boardDifferences: IBoardColumnDifferences[];
+    private _boardDifferences: IBoardColumnDifferences[] = [];
     private _boardMappings: IBoardMapping[];
     private _columnMappingCombos: Combos.Combo[];
     private _currentBoardIndex = 0;
@@ -201,7 +201,7 @@ export class CopySettingsWizard {
                 this._setWorkItemMappingContent();
 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateWorkItemMapping(), isVisible: true });
+                // Do not set the state for the NEXT button here, as we can only set it after calculating the required mappings. We'll set the button state after that
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
 
                 break;
@@ -304,7 +304,19 @@ export class CopySettingsWizard {
             let dropdownArea = $(domElem("div")).addClass("mapping-choice").appendTo($row);
             let combo = this._createColumnMappingCombo(dropdownArea, index);
             this._columnMappingCombos.push(combo);
+
+            // If a mapping target column was already set in _boardMappings, then we should set the combo to that.
+            let sourceColumn = differences.mappings[index].sourceColumn;
+            let mappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter((mapping) => { if (mapping.sourceColumn === sourceColumn) { return mapping; } });
+            if (mappings.length > 0 && mappings[0].targetColumn !== undefined) {
+                combo.setText(mappings[0].targetColumn.name);
+            }
+
+            this._setColumnMappingTarget(index, combo.getSelectedIndex());
         }
+        // Initial validation after loading the dialog, and set "Next" button state accordingly.
+        let validationOk: boolean = this._validateColumnMapping();
+        this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: validationOk, isVisible: true });
     }
 
     /**
@@ -326,13 +338,16 @@ export class CopySettingsWizard {
 
         let makeOptions: Combos.IComboOptions = {
             source: dropDownItems,
-            indexChanged: (index) => { this._setColumnMappingTarget(sourceColumnIndex, index); }
+            mode: "drop",
+            value: dropDownItems.length === 1 ? dropDownItems[0] : "",
+            allowEdit: false,
+            indexChanged: (index) => {
+                this._setColumnMappingTarget(sourceColumnIndex, index);
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateColumnMapping(), isVisible: true });
+            }
         };
 
         let comboBox = Controls.create(Combos.Combo, combo, makeOptions);
-        if (makeOptions.source.length === 1) {
-            comboBox.setText(makeOptions.source[0], true);
-        }
         return comboBox;
     }
 
@@ -347,28 +362,47 @@ export class CopySettingsWizard {
      * @memberOf CopySettingsWizard
      */
     private _setColumnMappingTarget(sourceColumnIndex: number, selectedItemIndex: number) {
-        let sourceColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[sourceColumnIndex].sourceColumn;
-        let targetColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[sourceColumnIndex].potentialMatches[selectedItemIndex];
-        let board = this._boardMappings[this._currentBoardIndex].backlog;
-        console.log("Setting target column to [" + targetColumn.name + "] for source column [" + sourceColumn.name + "] for backlog [" + board + "]");
-        let newMapping: IColumnMapping = {
-            sourceColumn: sourceColumn,
-            targetColumn: targetColumn,
-            potentialMatches: null
-        };
+        // index = -1 means that nothing was selected in the combo
+        if (selectedItemIndex >= 0) {
+            let sourceColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[sourceColumnIndex].sourceColumn;
+            let targetColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[sourceColumnIndex].potentialMatches[selectedItemIndex];
+            let board = this._boardMappings[this._currentBoardIndex].backlog;
+            console.log("Setting target column to [" + targetColumn.name + "] for source column [" + sourceColumn.name + "] for backlog [" + board + "]");
+            let newMapping: IColumnMapping = {
+                sourceColumn: sourceColumn,
+                targetColumn: targetColumn,
+                potentialMatches: null
+            };
 
-        let alreadyExistingMappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter((value, index, array) => { if (value.sourceColumn === sourceColumn) { return value; }; });
-        if (alreadyExistingMappings.length > 0) {
-            let alreadyExistingMappingIndex = this._boardMappings[this._currentBoardIndex].columnMappings.indexOf(alreadyExistingMappings[0]);
-            console.debug("Found already existing mapping at index: " + alreadyExistingMappingIndex);
-            this._boardMappings[this._currentBoardIndex].columnMappings[alreadyExistingMappingIndex] = newMapping;
-        } else {
-            this._boardMappings[this._currentBoardIndex].columnMappings.push(newMapping);
+            let alreadyExistingMappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter((value, index, array) => { if (value.sourceColumn === sourceColumn) { return value; }; });
+            if (alreadyExistingMappings.length > 0) {
+                let alreadyExistingMappingIndex = this._boardMappings[this._currentBoardIndex].columnMappings.indexOf(alreadyExistingMappings[0]);
+                console.debug("Found already existing mapping at index: " + alreadyExistingMappingIndex);
+                this._boardMappings[this._currentBoardIndex].columnMappings[alreadyExistingMappingIndex] = newMapping;
+            } else {
+                this._boardMappings[this._currentBoardIndex].columnMappings.push(newMapping);
+            }
         }
     }
 
-    private _validateWorkItemMapping(): boolean {
-        console.debug("Doing validation!");
+    private _validateColumnMapping(): boolean {
+        if (this._boardDifferences.length > 0 && this._boardDifferences[this._currentBoardIndex].mappings.length > 0) {
+            for (let i = 0; i < this._boardDifferences[this._currentBoardIndex].mappings.length; i++) {
+                let sourceColumnMapping = this._boardDifferences[this._currentBoardIndex].mappings[i];
+
+                // Find target column for this source column
+                let mappingToValidate: IColumnMapping[] = this._boardMappings[this._currentBoardIndex].columnMappings.filter((value, index, array) => { if (value.sourceColumn === sourceColumnMapping.sourceColumn) { return value; }; });
+                if (mappingToValidate.length > 0) {
+                    if (mappingToValidate[0].targetColumn === undefined) {
+                        return false;
+                    } else {
+                        console.log("Found valid mapping from column [" + mappingToValidate[0].sourceColumn.name + "] to column [" + mappingToValidate[0].targetColumn.name + "]");
+                    }
+                } else {
+                    return false;
+                }
+            };
+        }
         return true;
     }
 
