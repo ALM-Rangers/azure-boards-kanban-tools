@@ -300,6 +300,10 @@ export class CopySettingsWizard {
         let rootContainer = $("#itemMappings");
         rootContainer.empty();
 
+        let $headerRow = $(domElem("div")).addClass("mappingRow").addClass("mapping-header").appendTo(rootContainer);
+        $(domElem("div")).addClass("mapping-origin").text("Imported states").appendTo($headerRow);
+        $(domElem("div")).addClass("mapping-choice").text("Existing states").appendTo($headerRow);
+
         for (let index = 0; index < differences.mappings.length; index++) {
             let $row = $(domElem("div")).addClass("mappingRow").appendTo(rootContainer);
             $(domElem("div")).addClass("mapping-origin").text(differences.mappings[index].sourceColumn.name).appendTo($row);
