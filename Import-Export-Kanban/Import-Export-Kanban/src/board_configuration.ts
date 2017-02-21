@@ -8,8 +8,9 @@ import CoreContracts = require("TFS/Core/Contracts");
 import WitContracts = require("TFS/WorkItemTracking/Contracts");
 import VSS_Common_Contracts = require("VSS/WebApi/Contracts");
 import Q = require("q");
+import "es6-promise";
 
-import { getContextForTeam } from "./utils";
+import { getContextForTeam, getContextForTeamAsync } from "./utils";
 
 export interface IBacklogBoardSettings {
     boardName: string;
@@ -149,6 +150,18 @@ export class BoardConfiguration {
         return defer.promise;
     }
 
+    public async getCurrentConfigurationAsync(selectedTeam: string): Promise<IBoardSettings> {
+        let settings: IBoardSettings = null;
+        try {
+            let context = await getContextForTeamAsync(selectedTeam);
+            settings = await this.getTeamSettingsAsync(context);
+        } catch (ex) {
+            Promise.reject(ex);
+        }
+
+        return settings;
+    }
+
     public applySettings(targetTeamSettings: IBoardSettings, sourceTeamSettings: IBoardSettings, columnDifferences: IBoardColumnDifferences[]): Q.Promise<Boolean> {
         let defer = Q.defer<Boolean>();
 
@@ -158,20 +171,19 @@ export class BoardConfiguration {
             defer.reject(reason);
         });
 
-        // getContextForTeam(targetTeam).then(context => {
-        //     alert("context");
-        //     this.getTeamSettings(context).then((oldSettings) => {
-
-        //     }, reason => {
-        //         defer.reject(reason);
-        //     });
-        // }, reason => {
-        //     defer.reject(reason);
-        // }).catch((reason) => {
-        //     defer.reject(reason);
-        // });
-
         return defer.promise;
+    }
+
+    public async applySettingsAsync(targetTeamSettings: IBoardSettings, sourceTeamSettings: IBoardSettings, columnDifferences: IBoardColumnDifferences[]): Promise<Boolean> {
+        let result: Boolean = false;
+
+        try {
+            result = await this.applySettingsAsync(targetTeamSettings, sourceTeamSettings, columnDifferences);
+        } catch (ex) {
+            Promise.reject(ex);
+        }
+
+        return result;
     }
 
     private getTeamSettings(context: CoreContracts.TeamContext): Q.Promise<IBoardSettings> {
@@ -189,8 +201,9 @@ export class BoardConfiguration {
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let backlogPromises: Q.Promise<[WorkContracts.BoardCardSettings, WorkContracts.BoardCardRuleSettings, WorkContracts.BoardColumn[], WorkContracts.BoardRow[]]>[] = new Array();
         workClient.getProcessConfiguration(context.project).then((process) => {
-            let allBacklogs = process.portfolioBacklogs;
-            allBacklogs.push(process.requirementBacklog);
+            // TEMP
+            let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
+            // allBacklogs.push(process.requirementBacklog);
             allBacklogs.forEach((backlog) => {
                 let cardSettingsPromise = workClient.getBoardCardSettings(context, backlog.name);
                 let cardRulesPromise = workClient.getBoardCardRuleSettings(context, backlog.name);
@@ -219,6 +232,46 @@ export class BoardConfiguration {
         });
 
         return defer.promise;
+    }
+
+    private async getTeamSettingsAsync(context: CoreContracts.TeamContext): Promise<IBoardSettings> {
+        let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
+
+        let settings: IBoardSettings = {
+            name: "Settings - " + context.team,
+            teamName: context.team,
+            version: "1.0",
+            backlogSettings: new Array<IBacklogBoardSettings>(),
+            context: context
+        };
+
+        let boardCards: WorkContracts.BoardCardSettings[] = new Array();
+        let process = await workClient.getProcessConfiguration(context.project);
+        // TEMP to simplify debugging
+        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
+        let allBacklogs = process.portfolioBacklogs;
+        allBacklogs.push(process.requirementBacklog);
+        try {
+            for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
+                let backlog = allBacklogs[backlogIndex];
+                let cardSettings = await workClient.getBoardCardSettings(context, backlog.name);
+                let cardRules = await workClient.getBoardCardRuleSettings(context, backlog.name);
+                let columns = await workClient.getBoardColumns(context, backlog.name);
+                let rows = await workClient.getBoardRows(context, backlog.name);
+                let boardSettings: IBacklogBoardSettings = {
+                    boardName: backlog.name,
+                    boardWorkItemTypes: backlog.workItemTypes.map(wit => wit.name),
+                    cardRules: cardRules,
+                    cardSettings: cardSettings,
+                    columns: columns,
+                    rows: rows
+                };
+                settings.backlogSettings.push(boardSettings);
+            }
+            return settings;
+        } catch (e) {
+            Promise.reject(e);
+        }
     }
 
     private applyTeamSettings(oldSettings: IBoardSettings, settings: IBoardSettings, columnDifferences: IBoardColumnDifferences[]): Q.Promise<Boolean> {
@@ -333,31 +386,6 @@ export class BoardConfiguration {
                 console.log(reason);
             });
 
-            // sourceColumns = backlogSetting.columns;
-            // targetColumns = oldBoard.columns;
-
-            // let sourceIncomingColumn = sourceColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Incoming)[0];
-            // let sourceOutgoingColumn = sourceColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Outgoing)[0];
-
-            // let targetIncomingColumn = targetColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Incoming)[0];
-            // let targetOutgoingColumn = targetColumns.filter(c => c.columnType === WorkContracts.BoardColumnType.Outgoing)[0];
-
-            // targetIncomingColumn.name = sourceIncomingColumn.name;
-            // targetOutgoingColumn.name = sourceOutgoingColumn.name;
-            // columnsToApply.push(targetIncomingColumn);
-
-            // for (let columnIndex = 0; columnIndex < sourceColumns.length; columnIndex++) {
-            //     let currentColumn = sourceColumns[columnIndex];
-            //     if (currentColumn.columnType === WorkContracts.BoardColumnType.Incoming || currentColumn.columnType === WorkContracts.BoardColumnType.Outgoing) {
-            //         continue;
-            //     }
-            //     let newColumn = sourceColumns[columnIndex];
-            //     newColumn.id = "";
-            //     columnsToApply.push(newColumn);
-            // }
-
-            // columnsToApply.push(targetOutgoingColumn);
-
             let settingsPromise = Q.all([cardSettingsPromise, cardRulesPromise, rowsPromise, createNewColumnsPromise, updatedWitsPromises, removeOldColumnsPromise]);
             settingsPromise.catch((reason) => {
                 console.log("failed to apply: " + reason);
@@ -371,6 +399,115 @@ export class BoardConfiguration {
             defer.reject(reason);
         });
         return defer.promise;
+    }
+
+    private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settings: IBoardSettings, columnDifferences: IBoardColumnDifferences[]): Promise<Boolean> {
+        let workClient = WorkClient.getClient();
+        let witClient = WitClient.getClient();
+
+        let context = oldSettings.context;
+        let result: Boolean = false;
+        try {
+            for (let backlogIndex = 0; backlogIndex < settings.backlogSettings.length; backlogIndex++) {
+                let backlogSetting = settings.backlogSettings[backlogIndex];
+                let cardSettings = await workClient.updateBoardCardSettings(backlogSetting.cardSettings, context, backlogSetting.boardName);
+                let cardRules = await workClient.updateBoardCardRuleSettings(backlogSetting.cardRules, context, backlogSetting.boardName);
+                let rows = await workClient.updateBoardRows(backlogSetting.rows, context, backlogSetting.boardName);
+
+                let columnsToApply: WorkContracts.BoardColumn[] = new Array();
+
+                let oldBoard: IBacklogBoardSettings;
+                oldSettings.backlogSettings.forEach(board => {
+                    if (board.boardName === backlogSetting.boardName) {
+                        oldBoard = board;
+                    }
+                });
+
+                let columnDifference: IBoardColumnDifferences;
+                columnDifferences.forEach(cd => {
+                    if (cd.backlog === backlogSetting.boardName) {
+                        columnDifference = cd;
+                    }
+                });
+
+                let uniqueNameifier = Date.now().toString() + "-";
+
+                // Create new colums first
+                columnDifference.mappings.forEach(mapping => {
+                    if (mapping.sourceColumn.columnType !== WorkContracts.BoardColumnType.InProgress) {
+                        // keep id the same to avoid creating a new column (should only change name)
+                        mapping.sourceColumn.id = mapping.targetColumn.id;
+                        columnsToApply.push(mapping.sourceColumn);
+                    } else {
+                        // empty id to force new column creation
+                        mapping.sourceColumn.id = "";
+                        // add a unique name so we know which one to keep later - help eliminate confusion if column names are the same
+                        mapping.sourceColumn.name = uniqueNameifier + mapping.sourceColumn.name;
+                        columnsToApply.push(mapping.sourceColumn);
+                        // keep the old column for right now
+                        if (columnsToApply.filter(c => c.id === mapping.targetColumn.id).length === 0) {
+                            columnsToApply.push(mapping.targetColumn);
+                        }
+                    }
+                });
+                let currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
+                // Move work items to new mappings
+                // Get work items for current board
+                let wiql: WitContracts.Wiql = {
+                    query: BoardConfiguration.BaseWiql
+                };
+
+                // Get work items for the right backlog level
+                wiql.query += "AND [System.WorkItemType] = '" + backlogSetting.boardWorkItemTypes[0] + "'";
+                if (backlogSetting.boardWorkItemTypes.length > 1) {
+                    for (let workItemTypeIndex = 1; workItemTypeIndex < backlogSetting.boardWorkItemTypes.length; workItemTypeIndex++) {
+                        wiql.query += "OR [System.WorkItemType] = '" + backlogSetting.boardWorkItemTypes[workItemTypeIndex] + "'";
+                    }
+                }
+
+                let witIds: number[] = new Array();
+                let witQuery = await witClient.queryByWiql(wiql, context.project, context.team);
+                witIds = witQuery.workItems.map(wit => wit.id);
+                let wits = await witClient.getWorkItems(witIds);
+                for (let witIndex = 0; witIndex < wits.length; witIndex++) {
+                    let wit = wits[witIndex];
+                    let witColumn = wit.fields["System.BoardColumn"];
+                    let matchedColumns = columnDifference.mappings.filter(m => m.targetColumn === witColumn);
+                    if (matchedColumns) {
+                        let mappedColumn = matchedColumns[0];
+                        let patch = [
+                            {
+                                "op": "replace",
+                                "path": "/fields/System.BoardColumn",
+                                "value": uniqueNameifier + mappedColumn.sourceColumn.name
+                            }
+                        ];
+                        await witClient.updateWorkItem(patch, wits[0].id, false, true);
+                    }
+                };
+                // Delete old columns
+                columnsToApply = new Array();
+                currentColumns.forEach(column => {
+                    if (column.columnType === WorkContracts.BoardColumnType.InProgress) {
+                        // remove unique indentifier from column name
+                        let uniqueIndex = column.name.lastIndexOf(uniqueNameifier);
+                        if (uniqueIndex > 0) {
+                            let columnName = column.name.substring(uniqueIndex + 1);
+                            column.name = columnName;
+                            // only keep columns that were 'tagged'
+                            columnsToApply.push(column);
+                        }
+                    } else {
+                        columnsToApply.push(column);
+                    }
+                });
+                currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
+            };
+            result = true;
+        } catch (ex) {
+            Promise.reject(ex);
+        }
+        return result;
     }
 
     private _compareColumnStateMappings(c1: WorkContracts.BoardColumn, c2: WorkContracts.BoardColumn): boolean {

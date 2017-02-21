@@ -177,7 +177,7 @@ export class CopySettingsWizard {
      * also updates the current step
      * @param {number} newStep - the new step
      */
-    private _updateStepState(newStep: WizardStep) {
+    private async _updateStepStateAsync(newStep: WizardStep) {
 
         switch (newStep) {
             case WizardStep.Settings:
@@ -200,7 +200,7 @@ export class CopySettingsWizard {
 
             case WizardStep.WorkItemMapping:
 
-                this._setWorkItemMappingContent();
+                await this._setWorkItemMappingContentAsync();
 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
                 // Do not set the state for the NEXT button here, as we can only set it after calculating the required mappings. We'll set the button state after that
@@ -251,6 +251,33 @@ export class CopySettingsWizard {
                 break;
             default:
                 throw "unknown setting, or not supported";
+        }
+    }
+
+    private async _setWorkItemMappingContentAsync() {
+        this._setStepTitle("Work Item Mapping");
+
+        if (this._refreshBoardDifferences) {
+            this._refreshBoardDifferences = false;
+            let boardService = new BoardConfiguration();
+            let sourceTeam = this._teamSelector.getSelectedTeams()[0];
+            let destinationteam = this._teamSelector.getCurrentTeam();
+            this._sourceSettings = await boardService.getCurrentConfigurationAsync(sourceTeam.team.name);
+            this._targetSettings = await boardService.getCurrentConfigurationAsync(destinationteam.team.name);
+
+            this._currentBoardIndex = 0;
+            this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
+            this._boardMappings = new Array();
+            for (let index = 0; index < this._boardDifferences.length; index++) {
+                let mapping: IBoardMapping = {
+                    backlog: this._boardDifferences[index].backlog,
+                    columnMappings: new Array()
+                };
+                this._boardMappings.push(mapping);
+            }
+            this._setLoadedWorkItemMappingContent();
+        } else {
+            this._setLoadedWorkItemMappingContent();
         }
     }
 
@@ -522,7 +549,9 @@ export class CopySettingsWizard {
             } else {
                 nextStep -= 1;
             }
-            this._updateStepState(nextStep);
+            (async () => {
+                await this._updateStepStateAsync(nextStep);
+            })();
         }
     }
 
@@ -543,7 +572,9 @@ export class CopySettingsWizard {
             } else {
                 nextStep += 1;
             }
-            this._updateStepState(nextStep);
+            (async () => {
+                await this._updateStepStateAsync(nextStep);
+            })();
         }
     }
 
@@ -559,12 +590,16 @@ export class CopySettingsWizard {
 
             switch (this._selectedOption) {
                 case CopyBoardSettingsSettings.ToOtherTeams:
-                    boardService.applySettings(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                    this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams(), this._selectedOption));
+                    // (async () => {
+                    //     boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
+                    // })();
+                    // this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams(), this._selectedOption));
                     break;
                 case CopyBoardSettingsSettings.FromAnotherTeam:
-                    boardService.applySettings(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                    this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
+                    // (async () => {
+                    //     boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
+                    // })();
+                    // this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
                     break;
                 default:
                     throw "unknown option or not implemented yet";
