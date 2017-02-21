@@ -57,33 +57,36 @@ span {
     overflow: auto;
 }
 
-#itemMappings {
-    overflow-y: auto;
-}
-
 #backlogTitle {
     color: #0078d7;
     font-size: 21px;
     font-weight: 100;
 }
 
+#itemMappings {
+    overflow-y: auto;
+}
+
 .mappingRow {
     width: 100%;
     margin-top: 10px;
-    line-height: 35px;
+}
+
+.mapping-header {
+    font-weight: bold;
+    font-size: 14px;
 }
 
 .mapping-origin {
     width: 200px;
     font-size: 14px;
-    background-color: #c8c8c8;
-    display: inline-block;
+    display: block;
+    float: left;
     margin-right: 10px;
 }
 
 .mapping-choice {
     width: 200px;
     display: inline-block;
-    background-color: red;
     box-sizing: border-box;
 }
