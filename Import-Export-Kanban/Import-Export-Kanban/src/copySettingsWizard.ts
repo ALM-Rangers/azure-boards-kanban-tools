@@ -340,7 +340,7 @@ export class CopySettingsWizard {
 
             // If a mapping target column was already set in _boardMappings, then we should set the combo to that.
             let sourceColumn = differences.mappings[index].sourceColumn;
-            let mappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter((mapping) => { if (mapping.sourceColumn === sourceColumn) { return mapping; } });
+            let mappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter(mapping => mapping.sourceColumn === sourceColumn);
             if (mappings.length > 0 && mappings[0].targetColumn !== undefined) {
                 combo.setText(mappings[0].targetColumn.name);
             }
@@ -407,7 +407,7 @@ export class CopySettingsWizard {
                 potentialMatches: null
             };
 
-            let alreadyExistingMappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter((value, index, array) => { if (value.sourceColumn === sourceColumn) { return value; }; });
+            let alreadyExistingMappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter(mapping => mapping.sourceColumn === sourceColumn);
             if (alreadyExistingMappings.length > 0) {
                 let alreadyExistingMappingIndex = this._boardMappings[this._currentBoardIndex].columnMappings.indexOf(alreadyExistingMappings[0]);
                 console.debug("Found already existing mapping at index: " + alreadyExistingMappingIndex);
@@ -424,7 +424,7 @@ export class CopySettingsWizard {
                 let sourceColumnMapping = this._boardDifferences[this._currentBoardIndex].mappings[i];
 
                 // Find target column for this source column
-                let mappingToValidate: IColumnMapping[] = this._boardMappings[this._currentBoardIndex].columnMappings.filter((value, index, array) => { if (value.sourceColumn === sourceColumnMapping.sourceColumn) { return value; }; });
+                let mappingToValidate: IColumnMapping[] = this._boardMappings[this._currentBoardIndex].columnMappings.filter(mapping => mapping.sourceColumn === sourceColumnMapping.sourceColumn);
                 if (mappingToValidate.length > 0) {
                     if (mappingToValidate[0].targetColumn === undefined) {
                         return false;
