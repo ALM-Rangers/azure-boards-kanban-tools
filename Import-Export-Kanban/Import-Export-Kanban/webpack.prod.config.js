@@ -6,7 +6,6 @@ module.exports = {
     target: "web",
     entry: {
         import_export: "./src/import_export.ts",
-        select_team_dialog: "./src/select_team_dialog.ts",
         copySettingsWizard: "./src/copySettingsWizard.ts"
     },
     output: {
