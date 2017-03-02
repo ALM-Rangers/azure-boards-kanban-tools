@@ -102,16 +102,16 @@ export class CopySettingsWizard {
 
         let navigate: NavigationControl.INavigation = {
             previousButton: {
-                isEnabled: false, isVisible: false, onClick: () => { this._onBack(); }
+                isEnabled: false, isVisible: false, onClick: this._onBack.bind(this)
             },
             nextButton: {
-                isEnabled: false, isVisible: true, onClick: () => { this._onNext(); }
+                isEnabled: false, isVisible: true, onClick: this._onNext.bind(this)
             },
             okButton: {
-                isEnabled: true, isVisible: false, label: "Copy Settings", onClick: () => { this._onOk(); }
+                isEnabled: true, isVisible: false, label: "Copy Settings", onClick: this._onOk.bind(this)
             },
             cancelButton: {
-                isEnabled: true, isVisible: true, onClick: () => { this._onCancel(); }
+                isEnabled: true, isVisible: true, onClick: this._onCancel.bind(this)
             }
         };
 
@@ -255,8 +255,6 @@ export class CopySettingsWizard {
     }
 
     private async _setWorkItemMappingContentAsync() {
-        this._setStepTitle("Work Item Mapping");
-
         if (this._refreshBoardDifferences) {
             this._refreshBoardDifferences = false;
             let boardService = new BoardConfiguration();
@@ -279,45 +277,7 @@ export class CopySettingsWizard {
         } else {
             this._setLoadedWorkItemMappingContent();
         }
-    }
-
-    private _setWorkItemMappingContent() {
         this._setStepTitle("Work Item Mapping");
-
-        if (this._refreshBoardDifferences) {
-            this._refreshBoardDifferences = false;
-            let boardService = new BoardConfiguration();
-            let sourceTeam = this._teamSelector.getSelectedTeams()[0];
-            let destinationteam = this._teamSelector.getCurrentTeam();
-            let settingsPromises: IPromise<IBoardSettings>[] = new Array();
-            settingsPromises.push(boardService.getCurrentConfiguration(sourceTeam.team.name));
-            settingsPromises.push(boardService.getCurrentConfiguration(destinationteam.team.name));
-            Q.all(settingsPromises).then(settings => {
-                this._sourceSettings = null;
-                this._targetSettings = null;
-                settings.forEach(setting => {
-                    if (setting.teamName === sourceTeam.team.name) {
-                        this._sourceSettings = setting;
-                    } else if (setting.teamName === destinationteam.team.name) {
-                        this._targetSettings = setting;
-                    }
-                });
-
-                this._currentBoardIndex = 0;
-                this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
-                this._boardMappings = new Array();
-                for (let index = 0; index < this._boardDifferences.length; index++) {
-                    let mapping: IBoardMapping = {
-                        backlog: this._boardDifferences[index].backlog,
-                        columnMappings: new Array()
-                    };
-                    this._boardMappings.push(mapping);
-                }
-                this._setLoadedWorkItemMappingContent();
-            });
-        } else {
-            this._setLoadedWorkItemMappingContent();
-        }
     }
 
     private _setLoadedWorkItemMappingContent() {
@@ -541,7 +501,7 @@ export class CopySettingsWizard {
      *
      * Goes back a step in the screen and updates the state of the navigation buttons
      */
-    private _onBack() {
+    private async _onBack() {
         if (this._currentStep !== WizardStep.Settings) {
             let nextStep = this._currentStep;
             if (this._currentStep === WizardStep.WorkItemMapping) {
@@ -553,9 +513,9 @@ export class CopySettingsWizard {
             } else {
                 nextStep -= 1;
             }
-            (async () => {
-                await this._updateStepStateAsync(nextStep);
-            })();
+            // (async () => {
+            await this._updateStepStateAsync(nextStep);
+            // })();
         }
     }
 
@@ -564,7 +524,7 @@ export class CopySettingsWizard {
     *
     * Goes to the next step in the screen and updates the state of the navigation buttons
     */
-    private _onNext() {
+    private async _onNext() {
         if (this._currentStep !== WizardStep.Confirmation) {
             let nextStep = this._currentStep;
             if (this._currentStep === WizardStep.WorkItemMapping) {
@@ -576,9 +536,9 @@ export class CopySettingsWizard {
             } else {
                 nextStep += 1;
             }
-            (async () => {
-                await this._updateStepStateAsync(nextStep);
-            })();
+            // (async () => {
+            await this._updateStepStateAsync(nextStep);
+            // })();
         }
     }
 
@@ -587,26 +547,19 @@ export class CopySettingsWizard {
      *
      * If the caller has defined the onOk callback, then the callback is called with the settings to perform the operation
      */
-    private _onOk() {
+    private async _onOk(): Promise<void> {
         let boardService = new BoardConfiguration();
         if (this._onCopyCallback) {
             let currentTeam = this._teamSelector.getCurrentTeam();
+            let result: Boolean = false;
 
-            switch (this._selectedOption) {
-                case CopyBoardSettingsSettings.ToOtherTeams:
-                    // (async () => {
-                    //     boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                    // })();
-                    // this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams(), this._selectedOption));
-                    break;
-                case CopyBoardSettingsSettings.FromAnotherTeam:
-                    // (async () => {
-                    //     boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                    // })();
-                    // this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
-                    break;
-                default:
-                    throw "unknown option or not implemented yet";
+            if (this._selectedOption === CopyBoardSettingsSettings.ToOtherTeams) {
+
+            } else if (this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam) {
+                console.log("do apply settings");
+                result = await boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
+                console.log("apply settings done");
+                this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
             }
         }
     }
@@ -616,10 +569,11 @@ export class CopySettingsWizard {
     *
     * If the caller has defined the onCancel callback, then the callback is called.
     */
-    private _onCancel() {
+    private async _onCancel() {
         if (this._onCancelCallback) {
             this._onCancelCallback();
         }
+        await Promise.resolve();
     }
 
     /**
