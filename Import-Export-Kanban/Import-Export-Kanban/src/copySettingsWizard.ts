@@ -106,10 +106,10 @@ export class CopySettingsWizard {
                 isEnabled: false, isVisible: false, onClick: this._onBack.bind(this)
             },
             nextButton: {
-                isEnabled: false, isVisible: true, onClick: this._onNext.bind(this)
+                isEnabled: true, isVisible: true, onClick: this._onNext.bind(this)
             },
             okButton: {
-                isEnabled: true, isVisible: false, label: "Copy Settings", onClick: this._onOk.bind(this)
+                isEnabled: false, isVisible: false, label: "Copy Settings", onClick: this._onOk.bind(this)
             },
             cancelButton: {
                 isEnabled: true, isVisible: true, onClick: this._onCancel.bind(this)
@@ -510,7 +510,7 @@ export class CopySettingsWizard {
      * Goes back a step in the screen and updates the state of the navigation buttons
      */
     private async _onBack() {
-        if (this._currentStep !== WizardStep.Settings) {
+        if (this._currentStep !== WizardStep.Welcome) {
             let nextStep = this._currentStep;
             if (this._currentStep === WizardStep.WorkItemMapping) {
                 if (this._currentBoardIndex === 0) {
