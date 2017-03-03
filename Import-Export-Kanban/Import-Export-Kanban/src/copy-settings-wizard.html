@@ -12,7 +12,8 @@
 <body>
     <div id="step0">
         <p>Importing and exporting your board configuration!</p>
-        <p>You’ve installed the Import Export Board Configuration extension, it allows you to apply the configuration of your board to another team, or grab the configuration of another team and apply it to your board.</p>
+        <p>You’ve installed the Import Export Board Configuration extension, it allows you to apply the configuration of your
+            board to another team, or grab the configuration of another team and apply it to your board.</p>
         <p>To use this extension you must be the Team Administrator or a Project Administrator.</p>
     </div>
     <div id="step1" style="display: none;">
@@ -86,7 +87,7 @@
         });
 
         VSS.ready(function () {
-            require(['src/copySettingsWizard'], function (app) {
+            require(['./src/copySettingsWizard'], function (app) {
                 VSS.notifyLoadSucceeded();
             });
         });
