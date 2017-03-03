@@ -35,11 +35,6 @@ export interface IColumnMapping {
     targetColumn?: WorkContracts.BoardColumn;
 }
 
-export interface IBoardMapping {
-    backlog: string;
-    columnMappings: IColumnMapping[];
-}
-
 export interface IBoardColumnDifferences {
     backlog: string;
     mappings: IColumnMapping[];
@@ -48,6 +43,18 @@ export interface IBoardColumnDifferences {
 export class BoardConfiguration {
     private static BaseWiql = "SELECT [System.Id],[System.WorkItemType],[System.Title] FROM workitems WHERE [System.TeamProject] = @project ";
 
+    /**
+     * Figures out the differences in board column mappings
+     * For each board, it will set a list of potential mappings, where sourceColumn is the column in the source team (can only be set for incoming and outgoing columns),
+     * targetColumn is the existing column in the target team, and potentialMatches is a list of columns in the source team, that are candidate for taking the existing work
+     * items in the target column.
+     *
+     * @param {IBoardSettings} sourceTeamSettings The team we are importing from
+     * @param {IBoardSettings} targetTeamSettings The team we are importing to
+     * @returns {IBoardColumnDifferences[]} The array of differences
+     *
+     * @memberOf BoardConfiguration
+     */
     public getTeamColumnDifferences(sourceTeamSettings: IBoardSettings, targetTeamSettings: IBoardSettings): IBoardColumnDifferences[] {
         let differences: IBoardColumnDifferences[] = new Array();
         sourceTeamSettings.backlogSettings.forEach(backlogSetting => {
@@ -74,35 +81,35 @@ export class BoardConfiguration {
 
             mappings.push({
                 sourceColumn: sourceIncomingColumn,
-                potentialMatches: [targetIncomingColumn],
+                potentialMatches: [sourceIncomingColumn],
                 targetColumn: targetIncomingColumn
             });
 
-            for (let columnIndex = 0; columnIndex < sourceColumns.length; columnIndex++) {
-                let currentColumn = sourceColumns[columnIndex];
+            for (let columnIndex = 0; columnIndex < targetColumns.length; columnIndex++) {
+                let currentColumn = targetColumns[columnIndex];
                 if (currentColumn.columnType === WorkContracts.BoardColumnType.Incoming || currentColumn.columnType === WorkContracts.BoardColumnType.Outgoing) {
                     continue;
                 }
+
                 let similarColumns: WorkContracts.BoardColumn[] = new Array();
-                for (let targetIndex = 0; targetIndex < targetColumns.length; targetIndex++) {
-                    let isSimilar = this._compareColumnStateMappings(currentColumn, targetColumns[targetIndex]);
+                for (let sourceIndex = 0; sourceIndex < sourceColumns.length; sourceIndex++) {
+                    let isSimilar = this._compareColumnStateMappings(currentColumn, sourceColumns[sourceIndex]);
                     if (isSimilar) {
-                        similarColumns.push(targetColumns[targetIndex]);
+                        similarColumns.push(sourceColumns[sourceIndex]);
                     }
                 }
 
                 mappings.push({
-                    sourceColumn: currentColumn,
+                    sourceColumn: undefined,
                     potentialMatches: similarColumns,
-                    // TEMP set the first column as the target column
-                    targetColumn: similarColumns[0]
+                    targetColumn: currentColumn
                 });
 
             }
 
             mappings.push({
                 sourceColumn: sourceOutgoingColumn,
-                potentialMatches: [targetOutgoingColumn],
+                potentialMatches: [sourceOutgoingColumn],
                 targetColumn: targetOutgoingColumn
             });
 
@@ -138,10 +145,10 @@ export class BoardConfiguration {
         return settings;
     }
 
-    public async applySettingsAsync(targetTeamSettings: IBoardSettings, sourceTeamSettings: IBoardSettings, columnDifferences: IBoardColumnDifferences[]): Promise<Boolean> {
+    public async applySettingsAsync(targetTeamSettings: IBoardSettings, sourceTeamSettings: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
         let result: Boolean = false;
 
-        result = await this.applyTeamSettingsAsync(targetTeamSettings, sourceTeamSettings, columnDifferences);
+        result = await this.applyTeamSettingsAsync(targetTeamSettings, sourceTeamSettings, selectedMappings);
         return result;
     }
 
@@ -185,7 +192,7 @@ export class BoardConfiguration {
         }
     }
 
-    private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settings: IBoardSettings, columnDifferences: IBoardColumnDifferences[]): Promise<Boolean> {
+    private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settings: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
         let result: Boolean = false;
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
         let witClient: WitClient.WorkItemTrackingHttpClient2_3 = WitClient.getClient();
@@ -207,31 +214,31 @@ export class BoardConfiguration {
                     }
                 });
 
-                let columnDifference: IBoardColumnDifferences;
-                columnDifferences.forEach(cd => {
+                let selectedMapping: IBoardColumnDifferences;
+                selectedMappings.forEach(cd => {
                     if (cd.backlog === backlogSetting.boardName) {
-                        columnDifference = cd;
+                        selectedMapping = cd;
                     }
                 });
 
                 let uniqueNameifier = Date.now().toString() + "-";
 
                 // Create new colums first
-                columnDifference.mappings.forEach(mapping => {
-                    if (mapping.sourceColumn.columnType !== WorkContracts.BoardColumnType.InProgress) {
+                backlogSetting.columns.forEach(columnToCreate => {
+                    if (columnToCreate.columnType !== WorkContracts.BoardColumnType.InProgress) {
                         // keep id the same to avoid creating a new column (should only change name)
-                        mapping.sourceColumn.id = mapping.targetColumn.id;
-                        columnsToApply.push(mapping.sourceColumn);
+                        columnToCreate.id = selectedMapping.mappings.filter(c => c.sourceColumn === columnToCreate)[0].targetColumn.id;
+                        columnsToApply.push(columnToCreate);
                     } else {
                         // empty id to force new column creation
-                        mapping.sourceColumn.id = "";
+                        columnToCreate.id = "";
                         // add a unique name so we know which one to keep later - help eliminate confusion if column names are the same
-                        mapping.sourceColumn.name = uniqueNameifier + mapping.sourceColumn.name;
-                        columnsToApply.push(mapping.sourceColumn);
+                        columnToCreate.name = uniqueNameifier + columnToCreate.name;
+                        columnsToApply.push(columnToCreate);
                         // keep the old column for right now
-                        if (columnsToApply.filter(c => c.id === mapping.targetColumn.id).length === 0) {
-                            columnsToApply.push(mapping.targetColumn);
-                        }
+                        // if (columnsToApply.filter(c => c.id === mapping.targetColumn.id).length === 0) {
+                        //     columnsToApply.push(mapping.targetColumn);
+                        // }
                     }
                 });
                 let currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
