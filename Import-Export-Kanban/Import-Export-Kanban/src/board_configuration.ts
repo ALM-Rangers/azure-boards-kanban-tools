@@ -41,7 +41,13 @@ export interface IBoardColumnDifferences {
 }
 
 export class BoardConfiguration {
-    private static BaseWiql = "SELECT [System.Id],[System.WorkItemType],[System.Title] FROM workitems WHERE [System.TeamProject] = @project ";
+    private static BaseWiql = "SELECT [System.Id],[System.WorkItemType],[System.Title] FROM workitems WHERE [System.TeamProject] = @project " +
+    "AND [System.WorkItemType] in (@WorkItemTypes) AND [System.BoardColumn] in (@OldBoardColumns) and [System.AreaPath] UNDER '@RootArea' and System.IterationPath UNDER '@RootIteration'";
+
+    private static WiqlWorkItemTypes = "@WorkItemTypes";
+    private static WiqlBoardColumns = "@OldBoardColumns";
+    private static WiqlRootArea = "@RootArea";
+    private static WiqlIteration = "@RootIteration";
 
     /**
      * Figures out the differences in board column mappings
@@ -199,7 +205,6 @@ export class BoardConfiguration {
 
         let context = oldSettings.context;
         try {
-            console.log("start try");
             for (let backlogIndex = 0; backlogIndex < settings.backlogSettings.length; backlogIndex++) {
                 let backlogSetting = settings.backlogSettings[backlogIndex];
                 let cardSettings = await workClient.updateBoardCardSettings(backlogSetting.cardSettings, context, backlogSetting.boardName);
@@ -223,6 +228,8 @@ export class BoardConfiguration {
 
                 let uniqueNameifier = Date.now().toString() + "-";
 
+                let oldActiveColumns = oldBoard.columns.filter(c => c.columnType === WorkContracts.BoardColumnType.InProgress);
+
                 // Create new colums first
                 backlogSetting.columns.forEach(columnToCreate => {
                     if (columnToCreate.columnType !== WorkContracts.BoardColumnType.InProgress) {
@@ -235,51 +242,81 @@ export class BoardConfiguration {
                         // add a unique name so we know which one to keep later - help eliminate confusion if column names are the same
                         columnToCreate.name = uniqueNameifier + columnToCreate.name;
                         columnsToApply.push(columnToCreate);
-                        // keep the old column for right now
-                        // if (columnsToApply.filter(c => c.id === mapping.targetColumn.id).length === 0) {
-                        //     columnsToApply.push(mapping.targetColumn);
-                        // }
+                        let matchedColumn = selectedMapping.mappings.filter(c => c.sourceColumn.id === columnToCreate.id);
+                        if (matchedColumn.length > 0 && columnsToApply.filter(c => c.id === matchedColumn[0].targetColumn.id).length === 0) {
+                            columnsToApply.push(matchedColumn[0].targetColumn);
+                        }
                     }
                 });
+
+                let outgoingColumn = columnsToApply.pop();
+
+                oldActiveColumns.forEach(oldColumn => {
+                    if (columnsToApply.filter(c => c.id === oldColumn.id).length === 0) {
+                        columnsToApply.push(oldColumn);
+                    }
+                });
+
+                columnsToApply.push(outgoingColumn);
+
                 let currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
-                // // Move work items to new mappings
-                // // Get work items for current board
-                // let wiql: WitContracts.Wiql = {
-                //     query: BoardConfiguration.BaseWiql
-                // };
 
-                // // Get work items for the right backlog level
-                // wiql.query += "AND [System.WorkItemType] = '" + backlogSetting.boardWorkItemTypes[0] + "'";
-                // if (backlogSetting.boardWorkItemTypes.length > 1) {
-                //     for (let workItemTypeIndex = 1; workItemTypeIndex < backlogSetting.boardWorkItemTypes.length; workItemTypeIndex++) {
-                //         wiql.query += "OR [System.WorkItemType] = '" + backlogSetting.boardWorkItemTypes[workItemTypeIndex] + "'";
-                //     }
-                // }
+                // Move work items to new mappings
+                // Get work items for current board
+                let wiql: WitContracts.Wiql = {
+                    query: BoardConfiguration.BaseWiql
+                };
 
-                // let witIds: number[] = new Array();
-                // console.log("query by wiql " + wiql.query);
-                // let witQuery = await witClient.queryByWiql(wiql, context.project, context.team);
-                // witIds = witQuery.workItems.map(wit => wit.id);
-                // console.log("get wok items");
-                // let wits = await witClient.getWorkItems(witIds);
-                // console.log("got work items from: " + wits.length);
-                // for (let witIndex = 0; witIndex < wits.length; witIndex++) {
-                //     let wit = wits[witIndex];
-                //     let witColumn = wit.fields["System.BoardColumn"];
-                //     let matchedColumns = columnDifference.mappings.filter(m => m.targetColumn.name === witColumn);
-                //     if (matchedColumns && matchedColumns.length > 0) {
-                //         let mappedColumn = matchedColumns[0];
-                //         let patch = [
-                //             {
-                //                 "op": "replace",
-                //                 "path": "/fields/System.BoardColumn",
-                //                 "value": uniqueNameifier + mappedColumn.sourceColumn.name
-                //             }
-                //         ];
-                //         console.log("Updating work item from column: " + witColumn + " to column: " + patch);
-                //         await witClient.updateWorkItem(patch, wits[0].id, false, true);
-                //     }
-                // };
+                let teamSettings = await workClient.getTeamSettings(context);
+                let teamFieldValues = await workClient.getTeamFieldValues(context);
+
+                // Get work items for the right backlog level
+                let workItemTypes = "'" + backlogSetting.boardWorkItemTypes[0] + "'";
+                if (backlogSetting.boardWorkItemTypes.length > 1) {
+                    for (let workItemTypeIndex = 1; workItemTypeIndex < backlogSetting.boardWorkItemTypes.length; workItemTypeIndex++) {
+                        workItemTypes += ", '" + backlogSetting.boardWorkItemTypes[workItemTypeIndex] + "'";
+                    }
+                }
+
+                let activeColumns = selectedMapping.mappings.filter(m => m.targetColumn.columnType === WorkContracts.BoardColumnType.InProgress);
+                let wiqlColumns = "";
+                if (activeColumns.length > 0) {
+                    wiqlColumns = "'" + activeColumns[0].targetColumn.name + "'";
+                    for (let columnIndex = 1; columnIndex < activeColumns.length; columnIndex++) {
+                        wiqlColumns += ", '" + activeColumns[columnIndex].targetColumn.name + "'";
+                    }
+                }
+
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemTypes, workItemTypes);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlIteration, teamSettings.backlogIteration.name);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, teamFieldValues.defaultValue);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlBoardColumns, wiqlColumns);
+
+                let witIds: number[] = new Array();
+                console.log("query by wiql " + wiql.query);
+                let witQuery = await witClient.queryByWiql(wiql, context.project, context.team);
+                witIds = witQuery.workItems.map(wit => wit.id);
+                console.log("get wok items");
+                let wits = await witClient.getWorkItems(witIds);
+                console.log("got " + wits.length + " work items");
+                for (let witIndex = 0; witIndex < wits.length; witIndex++) {
+                    let wit = wits[witIndex];
+                    let witColumn = wit.fields["System.BoardColumn"];
+                    let matchedColumns = selectedMapping.mappings.filter(m => m.targetColumn.name === witColumn);
+                    if (matchedColumns && matchedColumns.length > 0) {
+                        let mappedColumn = matchedColumns[0];
+                        let patch = [
+                            {
+                                "op": "replace",
+                                "path": "/fields/System.BoardColumn",
+                                "value": mappedColumn.sourceColumn.name
+                            }
+                        ];
+                        console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
+                        await witClient.updateWorkItem(patch, wits[0].id, false, true);
+                    }
+                };
+
                 // Delete old columns
                 columnsToApply = new Array();
                 currentColumns.forEach(column => {
