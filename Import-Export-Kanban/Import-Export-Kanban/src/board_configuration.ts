@@ -301,14 +301,21 @@ export class BoardConfiguration {
                 console.log("got " + wits.length + " work items");
                 for (let witIndex = 0; witIndex < wits.length; witIndex++) {
                     let wit = wits[witIndex];
-                    let witColumn = wit.fields["System.BoardColumn"];
+                    let fieldNames = Object.keys(wit.fields);
+                    fieldNames.sort();
+                    let columnFields = fieldNames.filter(f => /WEF_.*_Kanban.Column$/.test(f));
+                    let columnField = "";
+                    if (columnFields && columnFields.length > 0) {
+                        columnField = columnFields[0];
+                    }
+                    let witColumn = wit.fields[columnField];
                     let matchedColumns = selectedMapping.mappings.filter(m => m.targetColumn.name === witColumn);
                     if (matchedColumns && matchedColumns.length > 0) {
                         let mappedColumn = matchedColumns[0];
                         let patch = [
                             {
                                 "op": "replace",
-                                "path": "/fields/System.BoardColumn",
+                                "path": `/fields/${columnField}`,
                                 "value": mappedColumn.sourceColumn.name
                             }
                         ];
