@@ -76,19 +76,10 @@
       }
     },
     {
-      "id": "select-team-dialog",
-      "type": "ms.vss-web.control",
-      "description": "The control to select the team to export the board settings to.",
-      "targets": [ ],
-      "properties": {
-        "uri": "src/select-team-dialog.html"
-      }
-    },
-    {
       "id": "copy-settings-wizard",
       "type": "ms.vss-web.control",
       "description": "The control to copy settings from one team to one or more teams.",
-      "targets": [ ],
+      "targets": [],
       "properties": {
         "uri": "src/copy-settings-wizard.html"
       }

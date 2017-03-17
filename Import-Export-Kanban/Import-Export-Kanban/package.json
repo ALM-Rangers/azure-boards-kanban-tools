@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "applicationinsights-js": "^1.0.7",
+    "es6-promise": "^4.0.5",
     "q": "^1.4.1",
     "vss-web-extension-sdk": "^2.109.1"
   }

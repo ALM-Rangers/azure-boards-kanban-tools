@@ -59,3 +59,23 @@ export function getContextForTeam(teamName: string): Q.Promise<CoreContracts.Tea
 
     return defer.promise;
 }
+
+export async function getContextForTeamAsync(teamName: string): Promise<CoreContracts.TeamContext> {
+    let webContext = VSS.getWebContext();
+
+    let teamContext: CoreContracts.TeamContext = null;
+
+    try {
+        let team = await getTeam(teamName);
+        teamContext = {
+            project: webContext.project.name,
+            projectId: webContext.project.id,
+            team: team.name,
+            teamId: team.id
+        };
+    } catch (ex) {
+        Promise.reject(ex);
+    };
+
+    return teamContext;
+}
