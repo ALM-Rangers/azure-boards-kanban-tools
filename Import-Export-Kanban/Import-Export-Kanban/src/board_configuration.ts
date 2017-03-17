@@ -172,9 +172,9 @@ export class BoardConfiguration {
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let process = await workClient.getProcessConfiguration(context.project);
         // TEMP to simplify debugging
-        let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
-        // let allBacklogs = process.portfolioBacklogs;
-        // allBacklogs.push(process.requirementBacklog);
+        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
+        let allBacklogs = process.portfolioBacklogs;
+        allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
