@@ -6,6 +6,7 @@ import Utils_UI = require("VSS/Utils/UI");
 import WorkContracts = require("TFS/Work/Contracts");
 import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
+require("es6-promise").polyfill(); /* Polyfill for ES6 promises for IE11 */
 
 import Q = require("q");
 

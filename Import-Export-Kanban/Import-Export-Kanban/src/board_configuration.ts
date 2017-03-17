@@ -8,7 +8,6 @@ import CoreContracts = require("TFS/Core/Contracts");
 import WitContracts = require("TFS/WorkItemTracking/Contracts");
 import VSS_Common_Contracts = require("VSS/WebApi/Contracts");
 import Q = require("q");
-import "es6-promise";
 
 import { getContextForTeam, getContextForTeamAsync } from "./utils";
 
