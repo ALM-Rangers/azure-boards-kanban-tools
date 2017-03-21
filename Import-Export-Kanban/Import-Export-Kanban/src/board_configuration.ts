@@ -319,7 +319,7 @@ export class BoardConfiguration {
                             }
                         ];
                         console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
-                        await witClient.updateWorkItem(patch, wits[0].id, false, true);
+                        await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
                     }
                 };
 
