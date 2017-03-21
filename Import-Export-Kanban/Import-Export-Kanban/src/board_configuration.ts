@@ -172,9 +172,9 @@ export class BoardConfiguration {
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let process = await workClient.getProcessConfiguration(context.project);
         // TEMP to simplify debugging
-        let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
-        // let allBacklogs = process.portfolioBacklogs;
-        // allBacklogs.push(process.requirementBacklog);
+        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
+        let allBacklogs = process.portfolioBacklogs;
+        allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
@@ -320,7 +320,7 @@ export class BoardConfiguration {
                             }
                         ];
                         console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
-                        await witClient.updateWorkItem(patch, wits[0].id, false, true);
+                        await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
                     }
                 };
 

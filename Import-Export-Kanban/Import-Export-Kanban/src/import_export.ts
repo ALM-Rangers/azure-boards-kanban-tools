@@ -49,6 +49,10 @@ export class ImportExportKanbanAction {
 
                         this._dialog.close();
 
+                        VSS.getService<IHostNavigationService>(VSS.ServiceIds.Navigation).then(navigationService => {
+                            navigationService.reload();
+                        });
+
                         // let board = new Board.BoardConfiguration();
                         // board.getCurrentConfiguration(copySettings.source.team.name).then((settings) => {
                         //     board.applySettings(webContext.team.name, settings).then((result) => {
