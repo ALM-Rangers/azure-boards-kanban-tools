@@ -6,6 +6,7 @@ import Utils_UI = require("VSS/Utils/UI");
 import WorkContracts = require("TFS/Work/Contracts");
 import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
+require("es6-promise").polyfill(); /* Polyfill for ES6 promises for IE11 */
 
 import Q = require("q");
 
@@ -305,12 +306,12 @@ export class CopySettingsWizard {
             let combo = this._createColumnMappingCombo(dropdownArea, index);
             this._columnMappingCombos.push(combo);
 
-            // If a mapping target column was already set in _boardMappings, then we should set the combo to that.
-            // let sourceColumn = differences.mappings[index].sourceColumn;
-            // let mappings = this._boardMappings[this._currentBoardIndex].columnMappings.filter(mapping => mapping.sourceColumn === sourceColumn);
-            // if (mappings.length > 0 && mappings[0].targetColumn !== undefined) {
-            //     combo.setText(mappings[0].targetColumn.name);
-            // }
+            // If a mapping source column was already set for this target column in _boardDifferences, then we should set the combo to that.
+            let targetColumn = differences.mappings[index].targetColumn;
+            let alreadyExistingMappings = differences.mappings.filter(mapping => mapping.targetColumn === targetColumn);
+            if (alreadyExistingMappings.length > 0 && alreadyExistingMappings[0].sourceColumn !== undefined) {
+                 combo.setText(alreadyExistingMappings[0].sourceColumn.name);
+            }
 
             this._setColumnMappingTarget(index, combo.getSelectedIndex());
         }
@@ -371,7 +372,7 @@ export class CopySettingsWizard {
             let newMapping: IColumnMapping = {
                 sourceColumn: sourceColumn,
                 targetColumn: targetColumn,
-                potentialMatches: null
+                potentialMatches: this._boardDifferences[this._currentBoardIndex].mappings[targetColumnIndex].potentialMatches
             };
 
             let alreadyExistingMappings = this._boardDifferences[this._currentBoardIndex].mappings.filter(mapping => mapping.targetColumn === targetColumn);
