@@ -2,6 +2,7 @@
 
 import Controls = require("VSS/Controls");
 import Combos = require("VSS/Controls/Combos");
+import StatusIndicator = require("VSS/Controls/StatusIndicator");
 import Utils_UI = require("VSS/Utils/UI");
 import WorkContracts = require("TFS/Work/Contracts");
 import TeamSelector = require("./TeamSelectorControl");
@@ -263,6 +264,15 @@ export class CopySettingsWizard {
     }
 
     private async _setWorkItemMappingContentAsync() {
+        let rootContainer = $("#itemMappings");
+            let waitControlOptions: StatusIndicator.IWaitControlOptions = {
+            cancellable: false,
+            message: "Loading...."
+            };
+
+        let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
+
+        waitControl.startWait();
         if (this._refreshBoardDifferences) {
             this._refreshBoardDifferences = false;
             let boardService = new BoardConfiguration();
@@ -285,6 +295,7 @@ export class CopySettingsWizard {
         } else {
             this._setLoadedWorkItemMappingContent();
         }
+         waitControl.endWait();
         this._setStepTitle("Work Item Mapping");
     }
 
@@ -570,6 +581,16 @@ export class CopySettingsWizard {
      * If the caller has defined the onOk callback, then the callback is called with the settings to perform the operation
      */
     private async _onOk(): Promise<void> {
+        let rootContainer = $("#step4");
+        let waitControlOptions: StatusIndicator.IWaitControlOptions = {
+            cancellable: false,
+            message: "Appling Settings...."
+          };
+
+        let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
+
+        waitControl.startWait();
+
         let boardService = new BoardConfiguration();
         if (this._onCopyCallback) {
             let currentTeam = this._teamSelector.getCurrentTeam();
@@ -584,6 +605,7 @@ export class CopySettingsWizard {
                 this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
             }
         }
+        waitControl.endWait();
     }
 
     /**
