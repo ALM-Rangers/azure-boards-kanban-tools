@@ -6,12 +6,17 @@
     <title>Copy Settings</title>
     <link rel="stylesheet" href="../css/app.css">
     <script src="../libs/VSS.SDK.min.js"></script>
-    <script src="../libs/q.js"></script>
     <script src="../libs/ai.0.js"></script>
 </head>
 
 <body>
-    <div id="step1">
+    <div id="step0">
+        <p>Importing and exporting your board configuration!</p>
+        <p>You’ve installed the Import Export Board Configuration extension, it allows you to apply the configuration of your
+            board to another team, or grab the configuration of another team and apply it to your board.</p>
+        <p>To use this extension you must be the Team Administrator or a Project Administrator.</p>
+    </div>
+    <div id="step1" style="display: none;">
         <table class="settingsContainer">
             <tr>
                 <td class="settingsInput">
@@ -45,7 +50,7 @@
     <div id="step3" style="display: none;">
         <div id="backlogTitle">
         </div>
-        <div>&nbsp;</div> 
+        <div>&nbsp;</div>
         <strong>Work items in existing columns will need to be mapped to their new target states.</strong>
         <div>&nbsp;</div>
         <div id="itemMappings" style="width:450px; height:300px; overflow: auto;"></div>
@@ -66,7 +71,7 @@
         </div>
 
     </div>
-    <div>&nbsp;</div>   
+    <div>&nbsp;</div>
     <div id="navigation" class="wizardNavigation"></div>
     <script>
         VSS.init({
@@ -82,7 +87,7 @@
         });
 
         VSS.ready(function () {
-            require(['src/copySettingsWizard'], function (app) {
+            require(['./src/copySettingsWizard'], function (app) {
                 VSS.notifyLoadSucceeded();
             });
         });

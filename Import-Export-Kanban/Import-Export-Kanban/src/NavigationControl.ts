@@ -9,7 +9,7 @@ export interface INavigationButtonUIState {
 }
 
 export interface INavigationButton extends INavigationButtonUIState {
-    onClick?: Function;
+    onClick(): Promise<void>;
 }
 
 export interface INavigation {

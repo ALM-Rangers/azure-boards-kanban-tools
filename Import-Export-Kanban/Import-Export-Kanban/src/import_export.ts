@@ -50,14 +50,18 @@ export class ImportExportKanbanAction {
 
                         this._dialog.close();
 
-                        let board = new Board.BoardConfiguration();
-                        board.getCurrentConfiguration(copySettings.source.team.name).then((settings) => {
-                            board.applySettings(webContext.team.name, settings).then((result) => {
-                                console.log("settings applied");
-                            }).catch((reason) => {
-                                console.log("apply failed - " + reason);
-                            });
+                        VSS.getService<IHostNavigationService>(VSS.ServiceIds.Navigation).then(navigationService => {
+                            navigationService.reload();
                         });
+
+                        // let board = new Board.BoardConfiguration();
+                        // board.getCurrentConfiguration(copySettings.source.team.name).then((settings) => {
+                        //     board.applySettings(webContext.team.name, settings).then((result) => {
+                        //         console.log("settings applied");
+                        //     }).catch((reason) => {
+                        //         console.log("apply failed - " + reason);
+                        //     });
+                        // });
 
                         // TODO: do work and show progress bar
                     });
