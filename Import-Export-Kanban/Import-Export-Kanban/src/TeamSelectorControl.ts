@@ -83,7 +83,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
                 this._teamsList[team.id] = new SelectedTeam(team, webContext.project);
             });
 
-            this._createNumberSelectedTeamsCounterElement();
+            // this._createNumberSelectedTeamsCounterElement();
             this._createTeamListElement(teams);
 
             this._setNumberSelectedTeamsCounter(0);
@@ -104,11 +104,33 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     private _createFilterBoxElement(): void {
         let $searchBox = $("<div/>");
 
-        $("<input type='text' class='text-filter-input' title= 'Filter' tabindex= '0' placeholder= 'Filter' ></div>")
-            .on("input", (e) => {
-                this._onChangeFilter($(e.target).val());
-            })
-            .appendTo($searchBox);
+        let $rootDiv = $("<div class='ms-SearchBox'>");
+        let $input = $("<input class='ms-SearchBox-field' type='text' value=''>");
+        $input.on("input", (e) => {
+            this._onChangeFilter($(e.target).val());
+        });
+        let $searchLabel = $("<label class='ms-SearchBox-label'>");
+        $("<i class='ms-SearchBox-icon ms-Icon ms-Icon--Search'></i>").appendTo($searchLabel);
+        $("<span class='ms-SearchBox-text'>Search</span>").appendTo($searchLabel);
+
+        let $commandDiv = $("<div class='ms-CommandButton ms-SearchBox-clear ms-CommandButton--noLabel'>");
+        let $commandButton = $("<button class='ms-CommandButton-button'>");
+        $("<span class='ms-CommandButton-icon'>")
+            .append("<i class='ms-Icon ms-Icon--Clear'></i>")
+            .appendTo($commandButton);
+        $commandButton.append("<span class='ms-CommandButton-label'></span>");
+        $commandButton.appendTo($commandDiv);
+
+        $input.appendTo($rootDiv);
+        $searchLabel.appendTo($rootDiv);
+        $commandDiv.appendTo($rootDiv);
+
+        $rootDiv.appendTo($searchBox);
+        // $("<input type='text' class='text-filter-input' title= 'Filter' tabindex= '0' placeholder= 'Filter' ></div>")
+        //     .on("input", (e) => {
+        //         this._onChangeFilter($(e.target).val());
+        //     })
+        //     .appendTo($searchBox);
 
         $searchBox.appendTo(this._element);
     }
@@ -116,9 +138,9 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     /**
      * adds the container for the number of selected teams counter
      */
-    private _createNumberSelectedTeamsCounterElement(): void {
-        $("<div id='" + this._getNumberSelectedTeamCounterId() + "' />").appendTo(this._element);
-    }
+    // private _createNumberSelectedTeamsCounterElement(): void {
+    //     $("<div id='" + this._getNumberSelectedTeamCounterId() + "' />").appendTo(this._element);
+    // }
 
     /**
      * Adds the teams to the UI
@@ -132,15 +154,21 @@ export class TeamSelectorControl extends UIControls.BaseControl {
 
         let webContext = VSS.getWebContext();
 
-        let $teamsContainer = $("<div class='teamSelectorContainer'/>").appendTo(this._element);
+        // let $teamsContainer = $("<div class='teamSelectorContainer'/>").appendTo(this._element);
+        let radioGroup = "teamSelection";
+        let $teamsContainer = $("<div class='ms-ChoiceFieldGroup' role='radiogroup' />")
+            .attr("id", radioGroup);
+        let $list = $("<ul class='ms-ChoiceFieldGroup-list' />").appendTo($teamsContainer);
 
         teams.sort((t1, t2) => {
             return t1.name.localeCompare(t2.name);
         }).forEach((team) => {
             if (webContext.team.id !== team.id) { // We don't show the current project
-                this._createTeamElement($teamsContainer, team);
+                this._createTeamElement($teamsContainer, team, radioGroup);
             }
         });
+
+        $teamsContainer.appendTo(this._element);
     }
 
     /**
@@ -150,13 +178,18 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      *
      * @param {any} container - The container where the team element will be appended to
      * @param {any} team - The team to add
+     * @param {string} group - The radio group name
      */
-    private _createTeamElement(container: any, team: Contracts.WebApiTeam): void {
-        let $div = $("<div class='TeamItem' id='" + this._getTeamId(team) + "'/>")
+    private _createTeamElement(container: any, team: Contracts.WebApiTeam, group: string): void {
+        let $li = $("<div class='ms-RadioButton'/>")
             .append(this._getTeamInputElement(team))
-            .append(this._getLabelElement(team));
+            .append(this._getLabelElement(team, group));
 
-        $div.appendTo(container);
+        // let $div = $("<div class='TeamItem' id='" + this._getTeamId(team) + "'/>")
+        //     .append(this._getTeamInputElement(team))
+        //     .append(this._getLabelElement(team));
+
+        $li.appendTo(container);
     }
 
     /**
@@ -205,13 +238,20 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      * Besides the team name, it also has the team description as a tooltip
      *
      * @param team - the team
+     * @param {string} group - The radio group name
      * @returns the jquery element for the label
      */
-    private _getLabelElement(team: Contracts.WebApiTeam): JQuery {
+    private _getLabelElement(team: Contracts.WebApiTeam, group: string): JQuery {
+        let $span = $("<span></span>")
+            .addClass("ms-Label")
+            .text(team.name);
         return $("<label/>")
+            .attr("role", "radio")
             .attr("for", this._getInputId(team))
             .attr("title", team.description)
-            .text(team.name);
+            .attr("name", group)
+            .addClass("ms-RadioButton-field")
+            .append($span);
     }
 
     /**
@@ -223,11 +263,12 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     private _getTeamInputElement(team: Contracts.WebApiTeam): JQuery {
 
         return $("<input />")
-            .attr("type", this._selectionMode === TeamSelectionMode.SingleSelection ? "radio" : "checkbox")
+            .attr("type", "radio")
             .attr("id", this._getInputId(team))
             .attr("data-team-id", team.id)
             .attr("name", this._getInputName())
             .attr("value", team.id)
+            .addClass("ms-RadioButton-input")
             .click(() => { this._onChanged(); });
     }
 

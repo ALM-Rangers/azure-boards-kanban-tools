@@ -23,7 +23,6 @@ export enum CopyBoardSettingsSettings {
 
 /* Allways keep the number in synch with the correct order (also needs to be sequential) */
 enum WizardStep {
-    Welcome = 0,
     Settings = 1,
     TeamSelection = 2,
     WorkItemMapping = 3,
@@ -76,7 +75,7 @@ export class CopySettingsWizard {
     private _teamSelector: TeamSelector.TeamSelectorControl;
     private _navigationControl: NavigationControl.NavigationControl;
 
-    private _currentStep: WizardStep = WizardStep.Welcome;
+    private _currentStep: WizardStep = WizardStep.Settings;
     private _selectedOption: CopyBoardSettingsSettings = CopyBoardSettingsSettings.None;
 
     private _onCancelCallback: Function;
@@ -107,7 +106,7 @@ export class CopySettingsWizard {
                 isEnabled: false, isVisible: false, onClick: this._onBack.bind(this)
             },
             nextButton: {
-                isEnabled: true, isVisible: true, onClick: this._onNext.bind(this)
+                isEnabled: false, isVisible: true, onClick: this._onNext.bind(this)
             },
             okButton: {
                 isEnabled: false, isVisible: false, label: "Copy Settings", onClick: this._onOk.bind(this)
@@ -123,7 +122,7 @@ export class CopySettingsWizard {
     }
 
     private _attachStepOneEvents() {
-        $("input[name='boardSettings']")
+        $(".selectionsOption")
             .click((event) => { this._onSettingsChanged(event); });
     }
 
@@ -135,13 +134,21 @@ export class CopySettingsWizard {
      * @param {type} checkedElementEvent
      */
     private _onSettingsChanged(checkedElementEvent: JQueryEventObject): void {
-
         let $selectedElement = $(checkedElementEvent.target);
-        let selectedOption: string = $selectedElement.val();
+        let selectedOption: string = "";
+        let id: string = $selectedElement.attr("for");
+        if (!id) {
+            id = $selectedElement.parent().attr("for");
+        }
+
+        if (id) {
+            let $inputElement = $(`#${id}`);
+            selectedOption = $inputElement.val();
+        }
 
         if (selectedOption) {
-            $(".settingsInput").removeClass("settingsInputSelected");
-            $selectedElement.parents(".settingsInput").addClass("settingsInputSelected");
+            // $(".settingsInput").removeClass("settingsInputSelected");
+            // $selectedElement.parents(".settingsInput").addClass("settingsInputSelected");
 
             this._selectedOption = CopyBoardSettingsSettings[selectedOption];
             this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: true, isVisible: true });
@@ -182,19 +189,12 @@ export class CopySettingsWizard {
     private async _updateStepStateAsync(newStep: WizardStep) {
 
         switch (newStep) {
-            case WizardStep.Welcome:
-                this._setStepTitle("Welcome!");
-
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: false, isVisible: false });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: true, isVisible: true });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
-                break;
 
             case WizardStep.Settings:
                 this._setStepTitle("Copy Kanban board settings");
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: false, isVisible: false });
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._selectedOption !== CopyBoardSettingsSettings.None, isVisible: true });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
                 break;
 
             case WizardStep.TeamSelection:
@@ -230,7 +230,7 @@ export class CopySettingsWizard {
                 throw "unknown step number: " + newStep;
         }
         /* Hide and show steps based on the new step */
-        for (let step = WizardStep.Welcome; step <= WizardStep.Confirmation; step++) {
+        for (let step = WizardStep.Settings; step <= WizardStep.Confirmation; step++) {
             if (step === newStep) {
                 $("#step" + step).show();
             }
@@ -265,10 +265,10 @@ export class CopySettingsWizard {
 
     private async _setWorkItemMappingContentAsync() {
         let rootContainer = $("#itemMappings");
-            let waitControlOptions: StatusIndicator.IWaitControlOptions = {
+        let waitControlOptions: StatusIndicator.IWaitControlOptions = {
             cancellable: false,
             message: "Loading...."
-            };
+        };
 
         let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
 
@@ -295,7 +295,7 @@ export class CopySettingsWizard {
         } else {
             this._setLoadedWorkItemMappingContent();
         }
-         waitControl.endWait();
+        waitControl.endWait();
         this._setStepTitle("Work Item Mapping");
     }
 
@@ -535,7 +535,7 @@ export class CopySettingsWizard {
      * Goes back a step in the screen and updates the state of the navigation buttons
      */
     private async _onBack() {
-        if (this._currentStep !== WizardStep.Welcome) {
+        if (this._currentStep !== WizardStep.Settings) {
             let nextStep = this._currentStep;
             if (this._currentStep === WizardStep.WorkItemMapping) {
                 if (this._currentBoardIndex === 0) {
@@ -585,7 +585,7 @@ export class CopySettingsWizard {
         let waitControlOptions: StatusIndicator.IWaitControlOptions = {
             cancellable: false,
             message: "Appling Settings...."
-          };
+        };
 
         let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
 

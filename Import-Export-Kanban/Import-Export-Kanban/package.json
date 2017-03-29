@@ -12,9 +12,10 @@
     "publish:dev": "npm run package:dev && node ./scripts/packageDev",
     "build:release": "npm run lint && npm run clean && mkdir dist && webpack --progress --colors --config webpack.prod.config.js --output-path ./dist -p",
     "package:release": "npm run clean:vsix && npm run build:release && node ./scripts/packageRelease",
-    "copy:libs": "cpx node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js libs && cpx node_modules/q/q.js libs && cpx node_modules/applicationinsights-js/dist/ai.0.js libs",
+    "copy:libs": "cpx node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js libs && cpx node_modules/office-ui-fabric-js/dist/js/fabric.min.js libs && cpx node_modules/applicationinsights-js/dist/ai.0.js libs",
+    "copy:css": "cpx node_modules/office-ui-fabric-js/dist/css/fabric.components.min.css css && cpx node_modules/office-ui-fabric-js/dist/css/fabric.min.css css",
     "test": "snyk test && karma start --single-run",
-    "postinstall": "npm run copy:libs"
+    "postinstall": "npm run copy:libs && npm run copy:css"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^4.0.1",
@@ -36,6 +37,7 @@
   "dependencies": {
     "applicationinsights-js": "^1.0.7",
     "es6-promise": "^4.0.5",
+    "office-ui-fabric-js": "^1.4.0",
     "q": "^1.4.1",
     "vss-web-extension-sdk": "^2.109.1"
   }
