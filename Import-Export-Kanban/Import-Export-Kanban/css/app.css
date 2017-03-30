@@ -2,6 +2,14 @@
     font-family: 'Segoe UI', sans-serif;
 }
 
+.ms-SearchBox {
+    width: 100%;
+}
+
+.ms-SearchBox-field {
+    width: 100%;
+}
+
 /* Wizard Steps */
 
 .settingsContainer {

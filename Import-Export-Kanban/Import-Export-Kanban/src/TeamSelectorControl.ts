@@ -5,6 +5,11 @@ import Combos = require("VSS/Controls/Combos");
 import CoreRestClient = require("TFS/Core/RestClient");
 import Contracts = require("TFS/Core/Contracts");
 
+import { getCheckedValue } from "./utils";
+
+declare function initializeSearch(): void;
+declare function initializeRadioGroups(): void;
+
 export enum TeamSelectionMode {
     SingleSelection,
     MultiSelection
@@ -47,6 +52,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     private _teamsList: TeamsMap = {};
     private _selectionMode: TeamSelectionMode;
     private _isInitialized: boolean;
+    private _selectedTeam: SelectedTeam;
 
     constructor(options: TeamSelectorOptions) {
         super(options);
@@ -93,6 +99,8 @@ export class TeamSelectorControl extends UIControls.BaseControl {
             if (this._options.dataLoaded) {
                 this._options.dataLoaded();
             }
+
+            initializeRadioGroups();
         });
     }
 
@@ -133,6 +141,8 @@ export class TeamSelectorControl extends UIControls.BaseControl {
         //     .appendTo($searchBox);
 
         $searchBox.appendTo(this._element);
+
+        initializeSearch();
     }
 
     /**
@@ -251,6 +261,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
             .attr("title", team.description)
             .attr("name", group)
             .addClass("ms-RadioButton-field")
+            .click(event => { this._onChanged(event); })
             .append($span);
     }
 
@@ -268,8 +279,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
             .attr("data-team-id", team.id)
             .attr("name", this._getInputName())
             .attr("value", team.id)
-            .addClass("ms-RadioButton-input")
-            .click(() => { this._onChanged(); });
+            .addClass("ms-RadioButton-input");
     }
 
     /**
@@ -302,13 +312,17 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      *
      * Calls the client callback if it set up
      */
-    private _onChanged() {
-        let numberSelectedTeams = this.getNumberSelectedTeams();
+    private _onChanged(event: JQueryEventObject) {
+        let teamId = getCheckedValue(event);
 
-        this._setNumberSelectedTeamsCounter(numberSelectedTeams);
+        if (teamId) {
+            this._selectedTeam = this._teamsList[teamId];
+        } else {
+            this._selectedTeam = undefined;
+        }
 
         if (this._options.selectionChanged) {
-            this._options.selectionChanged(numberSelectedTeams);
+            this._options.selectionChanged();
         }
     }
 
@@ -337,29 +351,29 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      *
      * @returns The number of currently selected teams
      */
-    public getNumberSelectedTeams(): number {
+    // public getNumberSelectedTeams(): number {
 
-        if (this._isInitialized === false) {
-            return 0;
-        }
+    //     if (this._isInitialized === false) {
+    //         return 0;
+    //     }
 
-        if (this._selectionMode === TeamSelectionMode.SingleSelection) {
-            if ($("input[name='" + this._getInputName() + "']").is(":checked")) {
-                return 1;
-            }
-        } else {
-            let numberSelected = 0;
-            this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
-                if (element.checked) {
-                    numberSelected++;
-                }
-            });
+    //     if (this._selectionMode === TeamSelectionMode.SingleSelection) {
+    //         if ($("input[name='" + this._getInputName() + "']").is(":checked")) {
+    //             return 1;
+    //         }
+    //     } else {
+    //         let numberSelected = 0;
+    //         this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
+    //             if (element.checked) {
+    //                 numberSelected++;
+    //             }
+    //         });
 
-            return numberSelected;
-        }
+    //         return numberSelected;
+    //     }
 
-        return 0;
-    }
+    //     return 0;
+    // }
 
     /**
      * Gets the list of currently selected teams.
@@ -370,13 +384,17 @@ export class TeamSelectorControl extends UIControls.BaseControl {
 
         let selectedTeams: SelectedTeam[] = [];
 
-        this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
-            if (element.checked) {
-                let teamId = $(element).attr("data-team-id");
+        if (this._selectedTeam) {
+            selectedTeams.push(this._selectedTeam);
+        }
 
-                selectedTeams.push(this._teamsList[teamId]);
-            }
-        });
+        // this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
+        //     if (element.checked) {
+        //         let teamId = $(element).attr("data-team-id");
+
+        //         selectedTeams.push(this._teamsList[teamId]);
+        //     }
+        // });
 
         return selectedTeams;
     }

@@ -31,6 +31,10 @@ enum WizardStep {
 
 let domElem = Utils_UI.domElem;
 
+declare function initializeSearch(): void;
+declare function initializePivots(): void;
+declare function initializeDropdowns(): void;
+
 /**
  * Represents the operation and the user selected data to perform the copy operation.
  *
@@ -90,10 +94,9 @@ export class CopySettingsWizard {
     private _targetSettings: IBoardSettings;
 
     constructor() {
-
         this._teamSelector = Controls.create(TeamSelector.TeamSelectorControl, $("#teamSelector"), {
-            selectionType: TeamSelector.TeamSelectionMode.MultiSelection, // We have to select either one of those. We can change the type later when we know the type
-            selectionChanged: (numberSelectedTeams: number) => {
+            selectionType: TeamSelector.TeamSelectionMode.SingleSelection, // We have to select either one of those. We can change the type later when we know the type
+            selectionChanged: () => {
                 this._onTeamSelectionChanged();
             },
             dataLoaded: () => {
@@ -162,7 +165,7 @@ export class CopySettingsWizard {
      */
     private _onTeamSelectionChanged() {
 
-        let numberSelectedTeams = this._teamSelector.getNumberSelectedTeams();
+        let numberSelectedTeams = this._teamSelector.getSelectedTeams().length;
 
         if (this._currentStep === WizardStep.TeamSelection) {
             this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: numberSelectedTeams > 0, isVisible: true });
@@ -202,7 +205,7 @@ export class CopySettingsWizard {
                 this._setStep2TeamSelectionTypeAndTitle();
 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._teamSelector.getNumberSelectedTeams() > 0, isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._teamSelector.getSelectedTeams().length > 0, isVisible: true });
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
 
                 break;
@@ -291,45 +294,128 @@ export class CopySettingsWizard {
             //     };
             //     this._boardMappings.push(mapping);
             // }
-            this._setLoadedWorkItemMappingContent();
+            this._createBacklogPivots();
         } else {
-            this._setLoadedWorkItemMappingContent();
+            // this._createBacklogPivots();
         }
         waitControl.endWait();
         this._setStepTitle("Work Item Mapping");
     }
 
-    private _setLoadedWorkItemMappingContent() {
-        let differences = this._boardDifferences[this._currentBoardIndex];
-        this._columnMappingCombos = [];
-        $("#backlogTitle").text(differences.backlog);
-        let rootContainer = $("#itemMappings");
-        rootContainer.empty();
+    private _createBacklogPivots() {
+        let $pivotMenu = $("#pivot-menu");
+        let $pivotContainer = $("#pivot-container");
 
-        let $headerRow = $(domElem("div")).addClass("mappingRow").addClass("mapping-header").appendTo(rootContainer);
-        $(domElem("div")).addClass("mapping-origin").text("Existing columns (target)").appendTo($headerRow);
-        $(domElem("div")).addClass("mapping-choice").text("Imported columns (source)").appendTo($headerRow);
-
-        for (let index = 0; index < differences.mappings.length; index++) {
-            let $row = $(domElem("div")).addClass("mappingRow").appendTo(rootContainer);
-            $(domElem("div")).addClass("mapping-origin").text(differences.mappings[index].targetColumn.name).appendTo($row);
-            let dropdownArea = $(domElem("div")).addClass("mapping-choice").appendTo($row);
-            let combo = this._createColumnMappingCombo(dropdownArea, index);
-            this._columnMappingCombos.push(combo);
-
-            // If a mapping source column was already set for this target column in _boardDifferences, then we should set the combo to that.
-            let targetColumn = differences.mappings[index].targetColumn;
-            let alreadyExistingMappings = differences.mappings.filter(mapping => mapping.targetColumn === targetColumn);
-            if (alreadyExistingMappings.length > 0 && alreadyExistingMappings[0].sourceColumn !== undefined) {
-                combo.setText(alreadyExistingMappings[0].sourceColumn.name);
+        this._boardDifferences.forEach((difference, index, allDifferences) => {
+            let $menu = this._createPivotHeader(difference.backlog);
+            if (index === 0) {
+                $menu.addClass("is-selected");
             }
 
-            this._setColumnMappingTarget(index, combo.getSelectedIndex());
-        }
-        // Initial validation after loading the dialog, and set "Next" button state accordingly.
-        let validationOk: boolean = this._validateColumnMapping();
-        this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: validationOk, isVisible: true });
+            let $content = this._createPivotContent(difference);
+            $menu.appendTo($pivotMenu);
+            $content.appendTo($pivotContainer);
+        });
+        initializePivots();
+        initializeDropdowns();
     }
+
+    private _createPivotHeader(backlogLevel: string): JQuery {
+        return $("<li />")
+            .attr("data-content", backlogLevel)
+            .attr("title", backlogLevel)
+            .attr("tabindex", "1")
+            .addClass("ms-Pivot-link")
+            .text(backlogLevel);
+    }
+
+    private _createPivotContent(differences: IBoardColumnDifferences): JQuery {
+        let $div = $("<div />")
+            .addClass("ms-Pivot-content")
+            .attr("data-content", differences.backlog);
+        $("<label />")
+            .addClass("ms-Label")
+            .text("Work items in existing columns will need to be mapped to their new target states.")
+            .appendTo($div);
+        let $grid = $("<div />").addClass("ms-Grid");
+        $("<div />").addClass("ms-Grid-row")
+            .append(
+            $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6")
+                .append(
+                $("<label />")
+                    .addClass("ms-Label")
+                    .text("Existing columns (target)")
+                )
+            )
+            .append(
+            $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6")
+                .append(
+                $("<label />")
+                    .addClass("ms-Label")
+                    .text("Imported columns (source)")
+                )
+            )
+            .appendTo($grid);
+        for (let index = 0; index < differences.mappings.length; index++) {
+            let $row = $("<div />").addClass("ms-Grid-row");
+            let $left = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
+            $("<label />")
+                .addClass("ms-Label")
+                .text(differences.mappings[index].targetColumn.name)
+                .appendTo($left);
+            let $right = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
+            this._createDropdown(differences.mappings[index].potentialMatches).appendTo($right);
+            $left.appendTo($row);
+            $right.appendTo($row);
+            $row.appendTo($grid);
+        }
+        $grid.appendTo($div);
+        return $div;
+    }
+
+    private _createDropdown(options: WorkContracts.BoardColumn[]): JQuery {
+        let $div = $("<div />").addClass("ms-Dropdown").attr("tabindex", 0);
+        // $("<label />").addClass("ms-Label").text("").appendTo($div);
+        $("<i />").addClass("ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown").appendTo($div);
+        let $select = $("<select />").addClass("ms-Dropdown-select");
+        options.forEach(item => {
+            $("<option />").text(item.name).appendTo($select);
+        });
+        $select.appendTo($div);
+        return $div;
+    }
+
+    // private _setLoadedWorkItemMappingContent() {
+    //     let differences = this._boardDifferences[this._currentBoardIndex];
+    //     this._columnMappingCombos = [];
+    //     $("#backlogTitle").text(differences.backlog);
+    //     let rootContainer = $("#itemMappings");
+    //     rootContainer.empty();
+
+    //     let $headerRow = $(domElem("div")).addClass("mappingRow").addClass("mapping-header").appendTo(rootContainer);
+    //     $(domElem("div")).addClass("mapping-origin").text("Existing columns (target)").appendTo($headerRow);
+    //     $(domElem("div")).addClass("mapping-choice").text("Imported columns (source)").appendTo($headerRow);
+
+    //     for (let index = 0; index < differences.mappings.length; index++) {
+    //         let $row = $(domElem("div")).addClass("mappingRow").appendTo(rootContainer);
+    //         $(domElem("div")).addClass("mapping-origin").text(differences.mappings[index].targetColumn.name).appendTo($row);
+    //         let dropdownArea = $(domElem("div")).addClass("mapping-choice").appendTo($row);
+    //         let combo = this._createColumnMappingCombo(dropdownArea, index);
+    //         this._columnMappingCombos.push(combo);
+
+    //         // If a mapping source column was already set for this target column in _boardDifferences, then we should set the combo to that.
+    //         let targetColumn = differences.mappings[index].targetColumn;
+    //         let alreadyExistingMappings = differences.mappings.filter(mapping => mapping.targetColumn === targetColumn);
+    //         if (alreadyExistingMappings.length > 0 && alreadyExistingMappings[0].sourceColumn !== undefined) {
+    //             combo.setText(alreadyExistingMappings[0].sourceColumn.name);
+    //         }
+
+    //         this._setColumnMappingTarget(index, combo.getSelectedIndex());
+    //     }
+    //     // Initial validation after loading the dialog, and set "Next" button state accordingly.
+    //     let validationOk: boolean = this._validateColumnMapping();
+    //     this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: validationOk, isVisible: true });
+    // }
 
     /**
      * Creates a combo box for use in the column mapping dialogs.
@@ -340,28 +426,28 @@ export class CopySettingsWizard {
      * @returns
      *
      * @memberOf CopySettingsWizard
-     */
-    private _createColumnMappingCombo(combo: JQuery, targetColumnIndex: number) {
-        let source: WorkContracts.BoardColumn[] = this._boardDifferences[this._currentBoardIndex].mappings[targetColumnIndex].potentialMatches;
-        let dropDownItems: string[] = new Array();
-        source.forEach(item => {
-            dropDownItems.push(item.name);
-        });
+    //  */
+    // private _createColumnMappingCombo(combo: JQuery, targetColumnIndex: number) {
+    //     let source: WorkContracts.BoardColumn[] = this._boardDifferences[this._currentBoardIndex].mappings[targetColumnIndex].potentialMatches;
+    //     let dropDownItems: string[] = new Array();
+    //     source.forEach(item => {
+    //         dropDownItems.push(item.name);
+    //     });
 
-        let makeOptions: Combos.IComboOptions = {
-            source: dropDownItems,
-            mode: "drop",
-            value: dropDownItems.length === 1 ? dropDownItems[0] : "",
-            allowEdit: false,
-            indexChanged: (index) => {
-                this._setColumnMappingTarget(targetColumnIndex, index);
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateColumnMapping(), isVisible: true });
-            }
-        };
+    //     let makeOptions: Combos.IComboOptions = {
+    //         source: dropDownItems,
+    //         mode: "drop",
+    //         value: dropDownItems.length === 1 ? dropDownItems[0] : "",
+    //         allowEdit: false,
+    //         indexChanged: (index) => {
+    //             this._setColumnMappingTarget(targetColumnIndex, index);
+    //             this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateColumnMapping(), isVisible: true });
+    //         }
+    //     };
 
-        let comboBox = Controls.create(Combos.Combo, combo, makeOptions);
-        return comboBox;
-    }
+    //     let comboBox = Controls.create(Combos.Combo, combo, makeOptions);
+    //     return comboBox;
+    // }
 
     /**
      * Sets the target for a specific column mapping for a specific board.
@@ -537,18 +623,8 @@ export class CopySettingsWizard {
     private async _onBack() {
         if (this._currentStep !== WizardStep.Settings) {
             let nextStep = this._currentStep;
-            if (this._currentStep === WizardStep.WorkItemMapping) {
-                if (this._currentBoardIndex === 0) {
-                    nextStep -= 1;
-                } else {
-                    this._currentBoardIndex -= 1;
-                }
-            } else {
-                nextStep -= 1;
-            }
-            // (async () => {
+            nextStep -= 1;
             await this._updateStepStateAsync(nextStep);
-            // })();
         }
     }
 
@@ -560,18 +636,8 @@ export class CopySettingsWizard {
     private async _onNext() {
         if (this._currentStep !== WizardStep.Confirmation) {
             let nextStep = this._currentStep;
-            if (this._currentStep === WizardStep.WorkItemMapping) {
-                if (this._currentBoardIndex === this._boardDifferences.length - 1) {
-                    nextStep += 1;
-                } else {
-                    this._currentBoardIndex += 1;
-                }
-            } else {
-                nextStep += 1;
-            }
-            // (async () => {
+            nextStep += 1;
             await this._updateStepStateAsync(nextStep);
-            // })();
         }
     }
 

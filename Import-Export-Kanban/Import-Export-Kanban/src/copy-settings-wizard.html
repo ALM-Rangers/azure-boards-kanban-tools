@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Copy Settings</title>
-    <link rel="stylesheet" href="../css/app.css">
     <link rel="stylesheet" href="../css/fabric.min.css">
     <link rel="stylesheet" href="../css/fabric.components.min.css">
+    <link rel="stylesheet" href="../css/app.css">
     <script src="../libs/VSS.SDK.min.js"></script>
     <script src="../libs/ai.0.js"></script>
     <script src="../libs/fabric.min.js"></script>
@@ -38,12 +38,16 @@
         <div id="teamSelector"></div>
     </div>
     <div id="step3" style="display: none;">
-        <div id="backlogTitle">
+        <div class="ms-Pivot" id="pivot-container">
+            <ul class="ms-Pivot-links" id="pivot-menu">
+            </ul>
+        </div>
+        <!--<div id="backlogTitle">
         </div>
         <div>&nbsp;</div>
         <strong>Work items in existing columns will need to be mapped to their new target states.</strong>
         <div>&nbsp;</div>
-        <div id="itemMappings" style="width:450px; height:300px; overflow: auto;"></div>
+        <div id="itemMappings" style="width:450px; height:300px; overflow: auto;"></div>-->
     </div>
     <div id="step4" style="display: none;">
         <div id="specificMessage"></div>
@@ -79,25 +83,37 @@
         VSS.ready(function () {
             require(['./src/copySettingsWizard'], function (app) {
                 VSS.notifyLoadSucceeded();
+                initializeRadioGroups();
             });
         });
     </script>
     <script type="text/javascript">
-        var ChoiceFieldGroupElements = document.querySelectorAll(".ms-ChoiceFieldGroup");
-        for (var i = 0; i < ChoiceFieldGroupElements.length; i++) {
-            new fabric['ChoiceFieldGroup'](ChoiceFieldGroupElements[i]);
+        function initializeRadioGroups() {
+            var ChoiceFieldGroupElements = document.querySelectorAll(".ms-ChoiceFieldGroup");
+            for (var i = 0; i < ChoiceFieldGroupElements.length; i++) {
+                new fabric['ChoiceFieldGroup'](ChoiceFieldGroupElements[i]);
+            }
         }
-    </script>
-    <script type="text/javascript">
-        var SearchBoxElements = document.querySelectorAll(".ms-SearchBox");
-        for (var i = 0; i < SearchBoxElements.length; i++) {
-            new fabric['SearchBox'](SearchBoxElements[i]);
+
+        function initializeSearch() {
+            var SearchBoxElements = document.querySelectorAll(".ms-SearchBox");
+            for (var i = 0; i < SearchBoxElements.length; i++) {
+                new fabric['SearchBox'](SearchBoxElements[i]);
+            }
         }
-    </script>
-    <script type="text/javascript">
-        var PivotElements = document.querySelectorAll(".ms-Pivot");
-        for (var i = 0; i < PivotElements.length; i++) {
-            new fabric['Pivot'](PivotElements[i]);
+
+        function initializePivots() {
+            var PivotElements = document.querySelectorAll(".ms-Pivot");
+            for (var i = 0; i < PivotElements.length; i++) {
+                new fabric['Pivot'](PivotElements[i]);
+            }
+        }
+
+        function initializeDropdowns() {
+            var DropdownHTMLElements = document.querySelectorAll('.ms-Dropdown');
+            for (var i = 0; i < DropdownHTMLElements.length; ++i) {
+                var Dropdown = new fabric['Dropdown'](DropdownHTMLElements[i]);
+            }
         }
     </script>
 </body>

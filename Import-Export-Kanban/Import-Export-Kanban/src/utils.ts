@@ -5,6 +5,23 @@ import CoreRestClient = require("TFS/Core/RestClient");
 import CoreContracts = require("TFS/Core/Contracts");
 import Q = require("q");
 
+export function getCheckedValue(checkedElementEvent: JQueryEventObject): string {
+    let value: string = "";
+    let $selectedElement = $(checkedElementEvent.target);
+    let selectedOption: string = "";
+    let id: string = $selectedElement.attr("for");
+    if (!id) {
+        id = $selectedElement.parent().attr("for");
+    }
+
+    if (id) {
+        let $inputElement = $(`#${id}`);
+        value = $inputElement.val();
+    }
+
+    return value;
+}
+
 export function getTeams(): Q.Promise<CoreContracts.WebApiTeam[]> {
     let defer = Q.defer<CoreContracts.WebApiTeam[]>();
     let webContext = VSS.getWebContext();
