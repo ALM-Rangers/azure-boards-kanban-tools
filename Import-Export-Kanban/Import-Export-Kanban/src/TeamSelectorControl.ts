@@ -38,7 +38,7 @@ export interface TeamSelectorOptions {
 /**
  * Team selector control.
  *
- * Adds a filter text box and the list of a team project teams (order by alphabeticall order).
+ * Adds a filter text box and the list of a team project teams (order by alphabetically order).
  *
  * Supports to modes of operation. Single team selection or multiple team selection (the mode can be changed at runtime)
  *
@@ -117,6 +117,9 @@ export class TeamSelectorControl extends UIControls.BaseControl {
         $input.on("input", (e) => {
             this._onChangeFilter($(e.target).val());
         });
+        $input.on("change", (e) => {
+            this._onChangeFilter($(e.target).val());
+        });
         let $searchLabel = $("<label class='ms-SearchBox-label'>");
         $("<i class='ms-SearchBox-icon ms-Icon ms-Icon--Search'></i>").appendTo($searchLabel);
         $("<span class='ms-SearchBox-text'>Search</span>").appendTo($searchLabel);
@@ -191,7 +194,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      * @param {string} group - The radio group name
      */
     private _createTeamElement(container: any, team: Contracts.WebApiTeam, group: string): void {
-        let $li = $("<div class='ms-RadioButton'/>")
+        let $li = $("<div class='ms-RadioButton' id='" + this._getTeamId(team) + "'/>")
             .append(this._getTeamInputElement(team))
             .append(this._getLabelElement(team, group));
 
@@ -310,7 +313,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     /**
      * Event that is called everytime a team selection changes (either a selection or unselection).
      *
-     * Calls the client callback if it set up
+     * Calls the client callback if its configured
      */
     private _onChanged(event: JQueryEventObject) {
         let teamId = getCheckedValue(event);
