@@ -264,9 +264,10 @@ export class CopySettingsWizard {
     }
 
     private async _setWorkItemMappingContentAsync() {
-        let rootContainer = $("#itemMappings");
+        let rootContainer = $("#step3");
             let waitControlOptions: StatusIndicator.IWaitControlOptions = {
             cancellable: false,
+            backgroundColor: "#ffffff",
             message: "Loading...."
             };
 
@@ -584,6 +585,7 @@ export class CopySettingsWizard {
         let rootContainer = $("#step4");
         let waitControlOptions: StatusIndicator.IWaitControlOptions = {
             cancellable: false,
+            backgroundColor: "#ffffff",
             message: "Appling Settings...."
           };
 
