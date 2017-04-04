@@ -9,13 +9,14 @@ import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
 require("es6-promise").polyfill(); /* Polyfill for ES6 promises for IE11 */
 
+import * as tc from "TelemetryClient";
+import telemetryClientSettings = require("./telemetryClientSettings");
+
 import Q = require("q");
 
 import * as NavigationControl from "./NavigationControl";
 
 import { IBoardColumnDifferences, IColumnMapping, BoardConfiguration, IBoardSettings } from "./board_configuration";
-import * as tc from "TelemetryClient";
-import telemetryClientSettings = require("./telemetryClientSettings");
 
 export enum CopyBoardSettingsSettings {
     None = 0,
@@ -93,8 +94,6 @@ export class CopySettingsWizard {
     private _targetSettings: IBoardSettings;
 
     constructor() {
-
-        tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackEvent("Wizard creation started");
 
         this._teamSelector = Controls.create(TeamSelector.TeamSelectorControl, $("#teamSelector"), {
             selectionType: TeamSelector.TeamSelectionMode.MultiSelection, // We have to select either one of those. We can change the type later when we know the type
@@ -281,26 +280,34 @@ export class CopySettingsWizard {
         if (this._refreshBoardDifferences) {
             this._refreshBoardDifferences = false;
             let boardService = new BoardConfiguration();
-            let sourceTeam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getSelectedTeams()[0] : this._teamSelector.getCurrentTeam();
-            let destinationteam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getCurrentTeam() : this._teamSelector.getSelectedTeams()[0];
-            this._sourceSettings = await boardService.getCurrentConfigurationAsync(sourceTeam.team.name);
-            this._targetSettings = await boardService.getCurrentConfigurationAsync(destinationteam.team.name);
+            try {
+                let sourceTeam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getSelectedTeams()[0] : this._teamSelector.getCurrentTeam();
+                let destinationteam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getCurrentTeam() : this._teamSelector.getSelectedTeams()[0];
+                this._sourceSettings = await boardService.getCurrentConfigurationAsync(sourceTeam.team.name);
+                this._targetSettings = await boardService.getCurrentConfigurationAsync(destinationteam.team.name);
 
-            this._currentBoardIndex = 0;
-            this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
-            // this._boardMappings = new Array();
-            // for (let index = 0; index < this._boardDifferences.length; index++) {
-            //     let mapping: IBoardMapping = {
-            //         backlog: this._boardDifferences[index].backlog,
-            //         columnMappings: new Array()
-            //     };
-            //     this._boardMappings.push(mapping);
-            // }
-            this._setLoadedWorkItemMappingContent();
+                this._currentBoardIndex = 0;
+                this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
+                // this._boardMappings = new Array();
+                // for (let index = 0; index < this._boardDifferences.length; index++) {
+                //     let mapping: IBoardMapping = {
+                //         backlog: this._boardDifferences[index].backlog,
+                //         columnMappings: new Array()
+                //     };
+                //     this._boardMappings.push(mapping);
+                // }
+                this._setLoadedWorkItemMappingContent();
+            } catch (e) {
+                tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e.message);
+            }
         } else {
-            this._setLoadedWorkItemMappingContent();
+            try {
+                this._setLoadedWorkItemMappingContent();
+            } catch (e) {
+                tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e.message);
+            }
         }
-         waitControl.endWait();
+        waitControl.endWait();
         this._setStepTitle("Work Item Mapping");
     }
 
@@ -446,6 +453,7 @@ export class CopySettingsWizard {
         let selectedTeams = this._teamSelector.getSelectedTeams();
 
         if (selectedTeams.length === 0) {
+            tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException("Opened confirmation dialog without any team selected");
             throw "no selected team"; // Shouldn't happen.
         }
 
@@ -465,6 +473,7 @@ export class CopySettingsWizard {
 
                 break;
             default:
+                tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException("Opened confirmation dialog without any copy option selected");
                 throw "unknown setting or not supported";
         }
 
@@ -603,11 +612,19 @@ export class CopySettingsWizard {
             let result: Boolean = false;
 
             if (this._selectedOption === CopyBoardSettingsSettings.ToOtherTeams) {
-                result = await boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams()[0], this._selectedOption));
+                try {
+                    result = await boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
+                    this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams()[0], this._selectedOption));
+                } catch (e) {
+                    tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e);
+                }
             } else if (this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam) {
-                result = await boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
+                try {
+                    result = await boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
+                    this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
+                } catch (e) {
+                    tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e);
+                }
             }
         }
         waitControl.endWait();
