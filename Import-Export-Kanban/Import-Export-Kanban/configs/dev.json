@@ -3,5 +3,5 @@
     "baseUri": "https://localhost:9090",
     "name": "Dev: Import-Export Kanban Config",
     "publisher": "kverhaar",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }

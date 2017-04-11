@@ -39,6 +39,7 @@
     "es6-promise": "^4.0.5",
     "office-ui-fabric-js": "^1.4.0",
     "q": "^1.4.1",
+    "telemetryclient": "0.0.5",
     "vss-web-extension-sdk": "^2.109.1"
   }
 }
