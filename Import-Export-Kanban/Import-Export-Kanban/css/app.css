@@ -10,6 +10,10 @@
     width: 100%;
 }
 
+#errorMessageBar {
+    margin-bottom: 10px;
+}
+
 /* Wizard Steps */
 
 .settingsContainer {

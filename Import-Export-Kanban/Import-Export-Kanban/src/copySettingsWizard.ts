@@ -130,6 +130,16 @@ export class CopySettingsWizard {
     }
 
     /**
+     * Shows a nice error message to the user, in a red bar
+     * @param errorMessage The error message to show
+     */
+    private _showError(errorMessage: string) {
+        let _errorMessageBar: JQuery = $("#errorMessageBar");
+        _errorMessageBar.find(".ms-MessageBar-text").text(errorMessage);
+        _errorMessageBar.show();
+    }
+
+    /**
      * Event called when a new option setting is selected.
      *
      * Changes the background color of the container where input element is located and enables the next step
