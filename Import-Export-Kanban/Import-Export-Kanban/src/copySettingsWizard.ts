@@ -299,17 +299,21 @@ export class CopySettingsWizard {
                 this._sourceSettings = await boardService.getCurrentConfigurationAsync(sourceTeam.team.name);
                 this._targetSettings = await boardService.getCurrentConfigurationAsync(destinationteam.team.name);
 
-            this._currentBoardIndex = 0;
-            this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
-            // this._boardMappings = new Array();
-            // for (let index = 0; index < this._boardDifferences.length; index++) {
-            //     let mapping: IBoardMapping = {
-            //         backlog: this._boardDifferences[index].backlog,
-            //         columnMappings: new Array()
-            //     };
-            //     this._boardMappings.push(mapping);
-            // }
-            this._createBacklogPivots();
+                this._currentBoardIndex = 0;
+                this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
+                // this._boardMappings = new Array();
+                // for (let index = 0; index < this._boardDifferences.length; index++) {
+                //     let mapping: IBoardMapping = {
+                //         backlog: this._boardDifferences[index].backlog,
+                //         columnMappings: new Array()
+                //     };
+                //     this._boardMappings.push(mapping);
+                // }
+                this._createBacklogPivots();
+            } catch (e) {
+                tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e.message);
+                this._showError("Failed to get board differences to determine mapping. " + e.message);
+            }
         } else {
             // this._createBacklogPivots();
         }
@@ -543,6 +547,7 @@ export class CopySettingsWizard {
 
         if (selectedTeams.length === 0) {
             tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException("Opened confirmation dialog without any team selected");
+            this._showError("Opened confirmation dialog without any team selected");
             throw "no selected team"; // Shouldn't happen.
         }
 
@@ -563,6 +568,7 @@ export class CopySettingsWizard {
                 break;
             default:
                 tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException("Opened confirmation dialog without any copy option selected");
+                this._showError("Opened confirmation dialog without any copy option selected");
                 throw "unknown setting or not supported";
         }
 
@@ -668,7 +674,7 @@ export class CopySettingsWizard {
         let waitControlOptions: StatusIndicator.IWaitControlOptions = {
             cancellable: false,
             backgroundColor: "#ffffff",
-            message: "Appling Settings...."
+            message: "Applying Settings...."
         };
 
         let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
@@ -686,6 +692,7 @@ export class CopySettingsWizard {
                     this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams()[0], this._selectedOption));
                 } catch (e) {
                     tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e);
+                    this._showError("Failed to apply board settings. " + e.message);
                 }
             } else if (this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam) {
                 try {
@@ -693,6 +700,7 @@ export class CopySettingsWizard {
                     this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
                 } catch (e) {
                     tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e);
+                    this._showError("Failed to apply board settings. " + e.message);
                 }
             }
         }
