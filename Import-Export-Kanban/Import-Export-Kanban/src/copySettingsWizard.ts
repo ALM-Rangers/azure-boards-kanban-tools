@@ -529,7 +529,7 @@ export class CopySettingsWizard {
                     console.log("No mapping defined for target column [" + currentMappingDifference.targetColumn.name + "], mapping invalid!");
                     return false;
                 }
-            };
+            }
             console.log("All column mappings valid!");
             return true;
         }

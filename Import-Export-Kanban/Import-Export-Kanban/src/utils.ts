@@ -92,7 +92,7 @@ export async function getContextForTeamAsync(teamName: string): Promise<CoreCont
         };
     } catch (ex) {
         Promise.reject(ex);
-    };
+    }
 
     return teamContext;
 }

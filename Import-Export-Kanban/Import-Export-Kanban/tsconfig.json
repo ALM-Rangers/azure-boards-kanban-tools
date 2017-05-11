@@ -9,7 +9,13 @@
             "es5",
             "es2015.promise"
         ],
-        "allowJs": true
+        "allowJs": true,
+        "types": [
+            "requirejs"
+        ],
+        "typeRoots": [
+            "node_modules/@types"
+        ]
     },
     "exclude": [
         "node_modules",
