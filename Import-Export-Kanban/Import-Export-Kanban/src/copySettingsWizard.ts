@@ -279,6 +279,11 @@ export class CopySettingsWizard {
         }
     }
 
+    /**
+     * Gets the board differences and presents them in a mapping dialog so the user can select which columns to map
+     * Gets the data and then calls _createBacklogPivots() to create the actual dialog
+     * Board differences are stored in this._boardDifferences
+     */
     private async _setWorkItemMappingContentAsync() {
         let rootContainer = $("#itemMappings");
         let waitControlOptions: StatusIndicator.IWaitControlOptions = {
@@ -321,6 +326,12 @@ export class CopySettingsWizard {
         this._setStepTitle("Work Item Mapping");
     }
 
+    /**
+     * Creates the backlog pivot to include in the main dialog for the work item column mappings
+     * Will create a pivot page for each board level (e.g. "Epic", "Features", "Backlog Items") and call _createPivotContent to populate the pivot page
+     * @private
+     * @memberof CopySettingsWizard
+     */
     private _createBacklogPivots() {
         let $pivotMenu = $("#pivot-menu");
         let $pivotContainer = $("#pivot-container");
@@ -339,6 +350,13 @@ export class CopySettingsWizard {
         initializeDropdowns();
     }
 
+    /**
+     * Creates a header for a pivot page
+     * @private
+     * @param {string} backlogLevel
+     * @returns {JQuery}
+     * @memberof CopySettingsWizard
+     */
     private _createPivotHeader(backlogLevel: string): JQuery {
         return $("<li />")
             .attr("data-content", backlogLevel)
@@ -348,6 +366,13 @@ export class CopySettingsWizard {
             .text(backlogLevel);
     }
 
+    /**
+     * Creates the content for a single pivot page. Will take the board differences for a single backlog level and call _createDropdown to create a combobox for each work item type
+     * @private
+     * @param {IBoardColumnDifferences} differences
+     * @returns {JQuery}
+     * @memberof CopySettingsWizard
+     */
     private _createPivotContent(differences: IBoardColumnDifferences): JQuery {
         let $div = $("<div />")
             .addClass("ms-Pivot-content")
@@ -392,6 +417,13 @@ export class CopySettingsWizard {
         return $div;
     }
 
+    /**
+     * Creates a single combobox for selecting the mapping for a single work item type
+     * @private
+     * @param {WorkContracts.BoardColumn[]} options
+     * @returns {JQuery}
+     * @memberof CopySettingsWizard
+     */
     private _createDropdown(options: WorkContracts.BoardColumn[]): JQuery {
         let $div = $("<div />").addClass("ms-Dropdown").attr("tabindex", 0);
         // $("<label />").addClass("ms-Label").text("").appendTo($div);
@@ -538,7 +570,7 @@ export class CopySettingsWizard {
     }
 
     /**
-     * Sets the content for the step 2.
+     * Sets the content for the action selection dialog (either "copy from another team" or "copy to another team").
      *
      * Sets the title and the source and destination teams list.
      */
@@ -732,7 +764,7 @@ export class CopySettingsWizard {
     }
 
     /**
-     * Dinamically set a callback for the cancel button
+     * Dynamically set a callback for the cancel button
      *
      * @param {Function} callback
      */
@@ -741,7 +773,7 @@ export class CopySettingsWizard {
     }
 
     /**
-    * Dinamically set a callback for the copy operation button
+    * Dynamically set a callback for the copy operation button
     *
     * @param {(copySettings)} callback that receives a copySettings parameter with the settings of the operation
     */
@@ -750,7 +782,7 @@ export class CopySettingsWizard {
     }
 
     /**
-    * Dinamically set a callback to be notified when a title changes
+    * Dynamically set a callback to be notified when a title changes
     *
     * @param {Function} callback
     */
