@@ -2,8 +2,16 @@
     font-family: 'Segoe UI', sans-serif;
 }
 
-span {
-    font-style: italic;
+.ms-SearchBox {
+    width: 100%;
+}
+
+.ms-SearchBox-field {
+    width: 100%;
+}
+
+#errorMessageBar {
+    margin-bottom: 10px;
 }
 
 /* Wizard Steps */

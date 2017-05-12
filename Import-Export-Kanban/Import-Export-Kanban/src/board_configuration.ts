@@ -104,8 +104,10 @@ export class BoardConfiguration {
                     }
                 }
 
+                let initialSourceColumn = similarColumns.length > 0 ? similarColumns[0] : undefined;
+
                 mappings.push({
-                    sourceColumn: undefined,
+                    sourceColumn: initialSourceColumn,
                     potentialMatches: similarColumns,
                     targetColumn: currentColumn
                 });
@@ -200,7 +202,7 @@ export class BoardConfiguration {
     private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settings: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
         let result: Boolean = false;
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
-        let witClient: WitClient.WorkItemTrackingHttpClient2_3 = WitClient.getClient();
+        let witClient = WitClient.getClient();
 
         let context = oldSettings.context;
         try {
@@ -321,7 +323,7 @@ export class BoardConfiguration {
                         console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
                         await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
                     }
-                };
+                }
 
                 // Delete old columns
                 columnsToApply = new Array();
@@ -340,7 +342,7 @@ export class BoardConfiguration {
                     }
                 });
                 currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
-            };
+            }
             result = true;
         } catch (ex) {
             console.log("Error " + ex);

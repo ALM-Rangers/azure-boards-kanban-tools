@@ -4,56 +4,62 @@
 <head>
     <meta charset="UTF-8">
     <title>Copy Settings</title>
+    <link rel="stylesheet" href="../css/fabric.min.css">
+    <link rel="stylesheet" href="../css/fabric.components.min.css">
     <link rel="stylesheet" href="../css/app.css">
     <script src="../libs/VSS.SDK.min.js"></script>
     <script src="../libs/ai.0.js"></script>
+    <script src="../libs/fabric.min.js"></script>
 </head>
 
 <body>
-    <div id="step0">
-        <p>Importing and exporting your board configuration!</p>
-        <p>You’ve installed the Import Export Board Configuration extension, it allows you to apply the configuration of your
-            board to another team, or grab the configuration of another team and apply it to your board.</p>
-        <p>To use this extension you must be the Team Administrator or a Project Administrator.</p>
+    <div class="ms-MessageBar ms-MessageBar--error" id="errorMessageBar" style="display: none">
+        <div class="ms-MessageBar-content">
+            <div class="ms-MessageBar-icon">
+                <i class="ms-Icon ms-Icon--ErrorBadge"></i>
+            </div>
+            <div class="ms-MessageBar-text">
+                Lorem ipsum dolor sit amet, a elit sem interdum consectetur adipiscing elit.
+                <br />
+                <a href="#" class="ms-Link">Hyperlink string</a> 
+            </div>
+        </div>
     </div>
-    <div id="step1" style="display: none;">
-        <table class="settingsContainer">
-            <tr>
-                <td class="settingsInput">
-                    <input id="FromAnotherTeam" type="radio" name="boardSettings" value="FromAnotherTeam" />
-                </td>
-                <td class="settingsDescription">
-                    <label for="FromAnotherTeam">
-                        <strong>Copy board settings from another team</strong>
-                        <br />
-                        Will allow you to select another team from the same team project and apply the settings from their Kanban board to yours
+    <div id="step1">
+        <div class="ms-ChoiceFieldGroup" id="boardSettings" role="radiogroup">
+            <div class="ms-ChoiceFieldGroup-title">
+                <label class="ms-Label">Do something</label>
+            </div>
+            <ul class="ms-ChoiceFieldGroup-list">
+                <li class="ms-RadioButton">
+                    <input type="radio" id="Choice-From" tabindex="-1" class="ms-RadioButton-input " value="FromAnotherTeam">
+                    <label id="Item1" class="ms-RadioButton-field selectionsOption" aria-checked="false" for="Choice-From" name="boardSettings">
+                        <span class="ms-Label">Copy board settings from another team</span>
                     </label>
-                </td>
-            </tr>
-            <tr>
-                <td class="settingsInput">
-                    <input id="ToOtherTeams" type="radio" name="boardSettings" value="ToOtherTeams" />
-                </td>
-                <td class="settingsDescription">
-                    <label for="ToOtherTeams">
-                        <strong>Copy board settings to other teams(s)</strong>
-                        <br />
-                        Will allow you to select another team(s) from the same team project and apply your Kanban board settings to theirs.
+                </li>
+                <li class="ms-RadioButton">
+                    <input type="radio" id="Choice-To" tabindex="0" class="ms-RadioButton-input " value="ToOtherTeams">
+                    <label id="Item2" class="ms-RadioButton-field selectionsOption" aria-checked="false" for="Choice-To" name="boardSettings">
+                        <span class="ms-Label">Copy board settings to another team</span>
                     </label>
-                </td>
-            </tr>
-        </table>
+                </li>
+            </ul>
+        </div>
     </div>
     <div id="step2" style="display: none;">
         <div id="teamSelector"></div>
     </div>
     <div id="step3" style="display: none;">
-        <div id="backlogTitle">
+        <div class="ms-Pivot" id="pivot-container">
+            <ul class="ms-Pivot-links" id="pivot-menu">
+            </ul>
+        </div>
+        <!--<div id="backlogTitle">
         </div>
         <div>&nbsp;</div>
         <strong>Work items in existing columns will need to be mapped to their new target states.</strong>
         <div>&nbsp;</div>
-        <div id="itemMappings" style="width:450px; height:300px; overflow: auto;"></div>
+        <div id="itemMappings" style="width:450px; height:300px; overflow: auto;"></div>-->
     </div>
     <div id="step4" style="display: none;">
         <div id="specificMessage"></div>
@@ -89,11 +95,39 @@
         VSS.ready(function () {
             require(['./src/copySettingsWizard'], function (app) {
                 VSS.notifyLoadSucceeded();
+                initializeRadioGroups();
             });
         });
     </script>
+    <script type="text/javascript">
+        function initializeRadioGroups() {
+            var ChoiceFieldGroupElements = document.querySelectorAll(".ms-ChoiceFieldGroup");
+            for (var i = 0; i < ChoiceFieldGroupElements.length; i++) {
+                new fabric['ChoiceFieldGroup'](ChoiceFieldGroupElements[i]);
+            }
+        }
+
+        function initializeSearch() {
+            var SearchBoxElements = document.querySelectorAll(".ms-SearchBox");
+            for (var i = 0; i < SearchBoxElements.length; i++) {
+                new fabric['SearchBox'](SearchBoxElements[i]);
+            }
+        }
+
+        function initializePivots() {
+            var PivotElements = document.querySelectorAll(".ms-Pivot");
+            for (var i = 0; i < PivotElements.length; i++) {
+                new fabric['Pivot'](PivotElements[i]);
+            }
+        }
+
+        function initializeDropdowns() {
+            var DropdownHTMLElements = document.querySelectorAll('.ms-Dropdown');
+            for (var i = 0; i < DropdownHTMLElements.length; ++i) {
+                var Dropdown = new fabric['Dropdown'](DropdownHTMLElements[i]);
+            }
+        }
+    </script>
 </body>
-
-
 
 </html>

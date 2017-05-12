@@ -12,6 +12,8 @@ obj/
 dist/
 typings/
 libs/
+css/
+!css/app.css
 **/src/*.js
 **/src/*.js.map
 **/out/chrome

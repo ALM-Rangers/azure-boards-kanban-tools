@@ -5,6 +5,11 @@ import Combos = require("VSS/Controls/Combos");
 import CoreRestClient = require("TFS/Core/RestClient");
 import Contracts = require("TFS/Core/Contracts");
 
+import { getCheckedValue } from "./utils";
+
+declare function initializeSearch(): void;
+declare function initializeRadioGroups(): void;
+
 export enum TeamSelectionMode {
     SingleSelection,
     MultiSelection
@@ -33,7 +38,7 @@ export interface TeamSelectorOptions {
 /**
  * Team selector control.
  *
- * Adds a filter text box and the list of a team project teams (order by alphabeticall order).
+ * Adds a filter text box and the list of a team project teams (order by alphabetically order).
  *
  * Supports to modes of operation. Single team selection or multiple team selection (the mode can be changed at runtime)
  *
@@ -47,6 +52,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     private _teamsList: TeamsMap = {};
     private _selectionMode: TeamSelectionMode;
     private _isInitialized: boolean;
+    private _selectedTeam: SelectedTeam;
 
     constructor(options: TeamSelectorOptions) {
         super(options);
@@ -83,7 +89,7 @@ export class TeamSelectorControl extends UIControls.BaseControl {
                 this._teamsList[team.id] = new SelectedTeam(team, webContext.project);
             });
 
-            this._createNumberSelectedTeamsCounterElement();
+            // this._createNumberSelectedTeamsCounterElement();
             this._createTeamListElement(teams);
 
             this._setNumberSelectedTeamsCounter(0);
@@ -93,6 +99,8 @@ export class TeamSelectorControl extends UIControls.BaseControl {
             if (this._options.dataLoaded) {
                 this._options.dataLoaded();
             }
+
+            initializeRadioGroups();
         });
     }
 
@@ -104,21 +112,48 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     private _createFilterBoxElement(): void {
         let $searchBox = $("<div/>");
 
-        $("<input type='text' class='text-filter-input' title= 'Filter' tabindex= '0' placeholder= 'Filter' ></div>")
-            .on("input", (e) => {
-                this._onChangeFilter($(e.target).val());
-            })
-            .appendTo($searchBox);
+        let $rootDiv = $("<div class='ms-SearchBox'>");
+        let $input = $("<input class='ms-SearchBox-field' type='text' value=''>");
+        $input.on("input", (e) => {
+            this._onChangeFilter($(e.target).val());
+        });
+        $input.on("change", (e) => {
+            this._onChangeFilter($(e.target).val());
+        });
+        let $searchLabel = $("<label class='ms-SearchBox-label'>");
+        $("<i class='ms-SearchBox-icon ms-Icon ms-Icon--Search'></i>").appendTo($searchLabel);
+        $("<span class='ms-SearchBox-text'>Search</span>").appendTo($searchLabel);
+
+        let $commandDiv = $("<div class='ms-CommandButton ms-SearchBox-clear ms-CommandButton--noLabel'>");
+        let $commandButton = $("<button class='ms-CommandButton-button'>");
+        $("<span class='ms-CommandButton-icon'>")
+            .append("<i class='ms-Icon ms-Icon--Clear'></i>")
+            .appendTo($commandButton);
+        $commandButton.append("<span class='ms-CommandButton-label'></span>");
+        $commandButton.appendTo($commandDiv);
+
+        $input.appendTo($rootDiv);
+        $searchLabel.appendTo($rootDiv);
+        $commandDiv.appendTo($rootDiv);
+
+        $rootDiv.appendTo($searchBox);
+        // $("<input type='text' class='text-filter-input' title= 'Filter' tabindex= '0' placeholder= 'Filter' ></div>")
+        //     .on("input", (e) => {
+        //         this._onChangeFilter($(e.target).val());
+        //     })
+        //     .appendTo($searchBox);
 
         $searchBox.appendTo(this._element);
+
+        initializeSearch();
     }
 
     /**
      * adds the container for the number of selected teams counter
      */
-    private _createNumberSelectedTeamsCounterElement(): void {
-        $("<div id='" + this._getNumberSelectedTeamCounterId() + "' />").appendTo(this._element);
-    }
+    // private _createNumberSelectedTeamsCounterElement(): void {
+    //     $("<div id='" + this._getNumberSelectedTeamCounterId() + "' />").appendTo(this._element);
+    // }
 
     /**
      * Adds the teams to the UI
@@ -132,15 +167,21 @@ export class TeamSelectorControl extends UIControls.BaseControl {
 
         let webContext = VSS.getWebContext();
 
-        let $teamsContainer = $("<div class='teamSelectorContainer'/>").appendTo(this._element);
+        // let $teamsContainer = $("<div class='teamSelectorContainer'/>").appendTo(this._element);
+        let radioGroup = "teamSelection";
+        let $teamsContainer = $("<div class='ms-ChoiceFieldGroup' role='radiogroup' />")
+            .attr("id", radioGroup);
+        let $list = $("<ul class='ms-ChoiceFieldGroup-list' />").appendTo($teamsContainer);
 
         teams.sort((t1, t2) => {
             return t1.name.localeCompare(t2.name);
         }).forEach((team) => {
             if (webContext.team.id !== team.id) { // We don't show the current project
-                this._createTeamElement($teamsContainer, team);
+                this._createTeamElement($teamsContainer, team, radioGroup);
             }
         });
+
+        $teamsContainer.appendTo(this._element);
     }
 
     /**
@@ -150,13 +191,18 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      *
      * @param {any} container - The container where the team element will be appended to
      * @param {any} team - The team to add
+     * @param {string} group - The radio group name
      */
-    private _createTeamElement(container: any, team: Contracts.WebApiTeam): void {
-        let $div = $("<div class='TeamItem' id='" + this._getTeamId(team) + "'/>")
+    private _createTeamElement(container: any, team: Contracts.WebApiTeam, group: string): void {
+        let $li = $("<div class='ms-RadioButton' id='" + this._getTeamId(team) + "'/>")
             .append(this._getTeamInputElement(team))
-            .append(this._getLabelElement(team));
+            .append(this._getLabelElement(team, group));
 
-        $div.appendTo(container);
+        // let $div = $("<div class='TeamItem' id='" + this._getTeamId(team) + "'/>")
+        //     .append(this._getTeamInputElement(team))
+        //     .append(this._getLabelElement(team));
+
+        $li.appendTo(container);
     }
 
     /**
@@ -205,13 +251,21 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      * Besides the team name, it also has the team description as a tooltip
      *
      * @param team - the team
+     * @param {string} group - The radio group name
      * @returns the jquery element for the label
      */
-    private _getLabelElement(team: Contracts.WebApiTeam): JQuery {
+    private _getLabelElement(team: Contracts.WebApiTeam, group: string): JQuery {
+        let $span = $("<span></span>")
+            .addClass("ms-Label")
+            .text(team.name);
         return $("<label/>")
+            .attr("role", "radio")
             .attr("for", this._getInputId(team))
             .attr("title", team.description)
-            .text(team.name);
+            .attr("name", group)
+            .addClass("ms-RadioButton-field")
+            .click(event => { this._onChanged(event); })
+            .append($span);
     }
 
     /**
@@ -223,12 +277,12 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     private _getTeamInputElement(team: Contracts.WebApiTeam): JQuery {
 
         return $("<input />")
-            .attr("type", this._selectionMode === TeamSelectionMode.SingleSelection ? "radio" : "checkbox")
+            .attr("type", "radio")
             .attr("id", this._getInputId(team))
             .attr("data-team-id", team.id)
             .attr("name", this._getInputName())
             .attr("value", team.id)
-            .click(() => { this._onChanged(); });
+            .addClass("ms-RadioButton-input");
     }
 
     /**
@@ -259,15 +313,19 @@ export class TeamSelectorControl extends UIControls.BaseControl {
     /**
      * Event that is called everytime a team selection changes (either a selection or unselection).
      *
-     * Calls the client callback if it set up
+     * Calls the client callback if its configured
      */
-    private _onChanged() {
-        let numberSelectedTeams = this.getNumberSelectedTeams();
+    private _onChanged(event: JQueryEventObject) {
+        let teamId = getCheckedValue(event);
 
-        this._setNumberSelectedTeamsCounter(numberSelectedTeams);
+        if (teamId) {
+            this._selectedTeam = this._teamsList[teamId];
+        } else {
+            this._selectedTeam = undefined;
+        }
 
         if (this._options.selectionChanged) {
-            this._options.selectionChanged(numberSelectedTeams);
+            this._options.selectionChanged();
         }
     }
 
@@ -296,29 +354,29 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      *
      * @returns The number of currently selected teams
      */
-    public getNumberSelectedTeams(): number {
+    // public getNumberSelectedTeams(): number {
 
-        if (this._isInitialized === false) {
-            return 0;
-        }
+    //     if (this._isInitialized === false) {
+    //         return 0;
+    //     }
 
-        if (this._selectionMode === TeamSelectionMode.SingleSelection) {
-            if ($("input[name='" + this._getInputName() + "']").is(":checked")) {
-                return 1;
-            }
-        } else {
-            let numberSelected = 0;
-            this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
-                if (element.checked) {
-                    numberSelected++;
-                }
-            });
+    //     if (this._selectionMode === TeamSelectionMode.SingleSelection) {
+    //         if ($("input[name='" + this._getInputName() + "']").is(":checked")) {
+    //             return 1;
+    //         }
+    //     } else {
+    //         let numberSelected = 0;
+    //         this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
+    //             if (element.checked) {
+    //                 numberSelected++;
+    //             }
+    //         });
 
-            return numberSelected;
-        }
+    //         return numberSelected;
+    //     }
 
-        return 0;
-    }
+    //     return 0;
+    // }
 
     /**
      * Gets the list of currently selected teams.
@@ -329,13 +387,17 @@ export class TeamSelectorControl extends UIControls.BaseControl {
 
         let selectedTeams: SelectedTeam[] = [];
 
-        this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
-            if (element.checked) {
-                let teamId = $(element).attr("data-team-id");
+        if (this._selectedTeam) {
+            selectedTeams.push(this._selectedTeam);
+        }
 
-                selectedTeams.push(this._teamsList[teamId]);
-            }
-        });
+        // this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
+        //     if (element.checked) {
+        //         let teamId = $(element).attr("data-team-id");
+
+        //         selectedTeams.push(this._teamsList[teamId]);
+        //     }
+        // });
 
         return selectedTeams;
     }

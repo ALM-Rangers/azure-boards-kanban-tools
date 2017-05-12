@@ -17,24 +17,23 @@ module.exports = {
     ],
     resolve: {
         extensions: [
-            "",
             ".webpack.js",
             ".web.js",
             ".ts",
             ".tsx",
-            ".js"],
-        root: [
-            path.resolve("./src")
-        ]
+            ".js"]
     },
     module: {
-        preLoaders: [
+        rules: [
             {
                 test: /\.tsx?$/,
-                loader: "tslint"
-            }
-        ],
-        loaders: [
+                loader: "tslint-loader",
+                enforce: "pre",
+                options: {
+                    emitErrors: true,
+                    failOnHint: true
+                }
+            },
             {
                 test: /\.tsx?$/,
                 loader: "ts-loader"
@@ -44,10 +43,6 @@ module.exports = {
                 loaders: ["style", "css", "sass"]
             }
         ]
-    },
-    tslint: {
-        emitErrors: true,
-        failOnHint: true
     },
     plugins: [
         new CopyWebpackPlugin([

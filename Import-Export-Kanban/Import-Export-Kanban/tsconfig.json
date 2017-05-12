@@ -8,6 +8,13 @@
             "dom",
             "es5",
             "es2015.promise"
+        ],
+        "allowJs": true,
+        "types": [
+            "requirejs"
+        ],
+        "typeRoots": [
+            "node_modules/@types"
         ]
     },
     "exclude": [
