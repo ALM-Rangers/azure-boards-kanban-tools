@@ -408,7 +408,7 @@ export class CopySettingsWizard {
                 .text(differences.mappings[index].targetColumn.name)
                 .appendTo($left);
             let $right = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
-            this._createDropdown(differences.mappings[index].potentialMatches).appendTo($right);
+            this._createDropdown(differences.mappings[index].targetColumn.id, differences.mappings[index].potentialMatches).appendTo($right);
             $left.appendTo($row);
             $right.appendTo($row);
             $row.appendTo($grid);
@@ -424,81 +424,23 @@ export class CopySettingsWizard {
      * @returns {JQuery}
      * @memberof CopySettingsWizard
      */
-    private _createDropdown(options: WorkContracts.BoardColumn[]): JQuery {
+    private _createDropdown(targetColumnId: string, options: WorkContracts.BoardColumn[]): JQuery {
         let $div = $("<div />").addClass("ms-Dropdown").attr("tabindex", 0);
         // $("<label />").addClass("ms-Label").text("").appendTo($div);
         $("<i />").addClass("ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown").appendTo($div);
         let $select = $("<select />").addClass("ms-Dropdown-select");
         options.forEach(item => {
-            $("<option />").text(item.name).appendTo($select);
+            $("<option />").val(item.id).text(item.name).appendTo($select);
+        });
+        $select.change({targetColumnId: targetColumnId}, (e) => {
+            console.log("Select changed! ");
+            let value = $(e.target).val();
+            let text = $(e.target).find(":selected").text();
+            console.log("Value for target column " + e.data.targetColumnId + " is now: " + value + ", " + text);
         });
         $select.appendTo($div);
         return $div;
     }
-
-    // private _setLoadedWorkItemMappingContent() {
-    //     let differences = this._boardDifferences[this._currentBoardIndex];
-    //     this._columnMappingCombos = [];
-    //     $("#backlogTitle").text(differences.backlog);
-    //     let rootContainer = $("#itemMappings");
-    //     rootContainer.empty();
-
-    //     let $headerRow = $(domElem("div")).addClass("mappingRow").addClass("mapping-header").appendTo(rootContainer);
-    //     $(domElem("div")).addClass("mapping-origin").text("Existing columns (target)").appendTo($headerRow);
-    //     $(domElem("div")).addClass("mapping-choice").text("Imported columns (source)").appendTo($headerRow);
-
-    //     for (let index = 0; index < differences.mappings.length; index++) {
-    //         let $row = $(domElem("div")).addClass("mappingRow").appendTo(rootContainer);
-    //         $(domElem("div")).addClass("mapping-origin").text(differences.mappings[index].targetColumn.name).appendTo($row);
-    //         let dropdownArea = $(domElem("div")).addClass("mapping-choice").appendTo($row);
-    //         let combo = this._createColumnMappingCombo(dropdownArea, index);
-    //         this._columnMappingCombos.push(combo);
-
-    //         // If a mapping source column was already set for this target column in _boardDifferences, then we should set the combo to that.
-    //         let targetColumn = differences.mappings[index].targetColumn;
-    //         let alreadyExistingMappings = differences.mappings.filter(mapping => mapping.targetColumn === targetColumn);
-    //         if (alreadyExistingMappings.length > 0 && alreadyExistingMappings[0].sourceColumn !== undefined) {
-    //             combo.setText(alreadyExistingMappings[0].sourceColumn.name);
-    //         }
-
-    //         this._setColumnMappingTarget(index, combo.getSelectedIndex());
-    //     }
-    //     // Initial validation after loading the dialog, and set "Next" button state accordingly.
-    //     let validationOk: boolean = this._validateColumnMapping();
-    //     this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: validationOk, isVisible: true });
-    // }
-
-    /**
-     * Creates a combo box for use in the column mapping dialogs.
-     *
-     * @private
-     * @param {JQuery} combo
-     * @param {number} sourceColumnIndex
-     * @returns
-     *
-     * @memberOf CopySettingsWizard
-    //  */
-    // private _createColumnMappingCombo(combo: JQuery, targetColumnIndex: number) {
-    //     let source: WorkContracts.BoardColumn[] = this._boardDifferences[this._currentBoardIndex].mappings[targetColumnIndex].potentialMatches;
-    //     let dropDownItems: string[] = new Array();
-    //     source.forEach(item => {
-    //         dropDownItems.push(item.name);
-    //     });
-
-    //     let makeOptions: Combos.IComboOptions = {
-    //         source: dropDownItems,
-    //         mode: "drop",
-    //         value: dropDownItems.length === 1 ? dropDownItems[0] : "",
-    //         allowEdit: false,
-    //         indexChanged: (index) => {
-    //             this._setColumnMappingTarget(targetColumnIndex, index);
-    //             this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateColumnMapping(), isVisible: true });
-    //         }
-    //     };
-
-    //     let comboBox = Controls.create(Combos.Combo, combo, makeOptions);
-    //     return comboBox;
-    // }
 
     /**
      * Sets the target for a specific column mapping for a specific board.
