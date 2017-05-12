@@ -90,8 +90,6 @@ export class CopySettingsWizard {
     private _onTitleChangeCallback: Function;
 
     private _boardDifferences: IBoardColumnDifferences[] = [];
-    private _columnMappingCombos: Combos.Combo[];
-    private _currentBoardIndex = 0;
     private _refreshBoardDifferences: boolean;
     private _sourceSettings: IBoardSettings;
     private _targetSettings: IBoardSettings;
@@ -228,7 +226,7 @@ export class CopySettingsWizard {
                 await this._setWorkItemMappingContentAsync();
 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
-                // Do not set the state for the NEXT button here, as we can only set it after calculating the required mappings. We'll set the button state after that
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateColumnMapping(), isVisible: true });
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
 
                 break;
@@ -304,16 +302,8 @@ export class CopySettingsWizard {
                 this._sourceSettings = await boardService.getCurrentConfigurationAsync(sourceTeam.team.name);
                 this._targetSettings = await boardService.getCurrentConfigurationAsync(destinationteam.team.name);
 
-                this._currentBoardIndex = 0;
                 this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
-                // this._boardMappings = new Array();
-                // for (let index = 0; index < this._boardDifferences.length; index++) {
-                //     let mapping: IBoardMapping = {
-                //         backlog: this._boardDifferences[index].backlog,
-                //         columnMappings: new Array()
-                //     };
-                //     this._boardMappings.push(mapping);
-                // }
+
                 this._createBacklogPivots();
             } catch (e) {
                 tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e.message);
@@ -439,49 +429,16 @@ export class CopySettingsWizard {
             // Set the source column of the mapping for this backlog to the selected column, which should be in the potential matches for that same column
             this._boardDifferences.filter(diff => diff.backlog === backlog)[0].mappings.filter(mapping => mapping.targetColumn.id === e.data.targetColumnId)[0].sourceColumn =
                 this._boardDifferences.filter(diff => diff.backlog === backlog)[0].mappings.filter(mapping => mapping.targetColumn.id === e.data.targetColumnId)[0].potentialMatches.filter(potentialMatch => potentialMatch.id === value)[0];
+
+            this._validateColumnMapping();
         });
         $select.appendTo($div);
         return $div;
     }
 
     /**
-     * Sets the target for a specific column mapping for a specific board.
-     * If the mapping for the target column was already specified for this board, then it will replace it.
-     *
-     * @private
-     * @param {number} sourceColumnIndex
-     * @param {number} selectedItemIndex
-     *
-     * @memberOf CopySettingsWizard
-     */
-    private _setColumnMappingTarget(targetColumnIndex: number, selectedItemIndex: number) {
-        // index = -1 means that nothing was selected in the combo
-        if (selectedItemIndex >= 0) {
-            let targetColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[targetColumnIndex].targetColumn;
-            let sourceColumn: WorkContracts.BoardColumn = this._boardDifferences[this._currentBoardIndex].mappings[targetColumnIndex].potentialMatches[selectedItemIndex];
-            let board = this._boardDifferences[this._currentBoardIndex].backlog;
-            console.log("Setting source column to [" + sourceColumn.name + "] for target column [" + targetColumn.name + "] for backlog [" + board + "]");
-            let newMapping: IColumnMapping = {
-                sourceColumn: sourceColumn,
-                targetColumn: targetColumn,
-                potentialMatches: this._boardDifferences[this._currentBoardIndex].mappings[targetColumnIndex].potentialMatches
-            };
-
-            let alreadyExistingMappings = this._boardDifferences[this._currentBoardIndex].mappings.filter(mapping => mapping.targetColumn === targetColumn);
-            if (alreadyExistingMappings.length > 0) {
-                let alreadyExistingMappingIndex = this._boardDifferences[this._currentBoardIndex].mappings.indexOf(alreadyExistingMappings[0]);
-                console.debug("Found already existing mapping at index: " + alreadyExistingMappingIndex);
-                this._boardDifferences[this._currentBoardIndex].mappings[alreadyExistingMappingIndex] = newMapping;
-            } else {
-                console.debug("Adding new mapping");
-                this._boardDifferences[this._currentBoardIndex].mappings.push(newMapping);
-            }
-        }
-    }
-
-    /**
-     * Validates the selected column mapping. Used for enabling the "Next" button on the wizard.
-     * There will need to be a valid mapping set in this._boardMappings, for each difference specified in this._boardDifferences
+     * Validates all selected mappings. Used for enabling the "Next" button on the wizard.
+     * There will need to be a valid mapping set in this._boardDifferences
      *
      * @private
      * @returns {boolean} Whether the mapping is valid (true) or not (false)
@@ -489,27 +446,18 @@ export class CopySettingsWizard {
      * @memberOf CopySettingsWizard
      */
     private _validateColumnMapping(): boolean {
-        if (this._boardDifferences.length > 0 && this._boardDifferences[this._currentBoardIndex].mappings.length > 0) {
-            for (let i = 0; i < this._boardDifferences[this._currentBoardIndex].mappings.length; i++) {
-                let currentMappingDifference = this._boardDifferences[this._currentBoardIndex].mappings[i];
-                let mappingToValidate: IColumnMapping[] = this._boardDifferences[this._currentBoardIndex].mappings.filter(mapping => mapping.targetColumn === currentMappingDifference.targetColumn);
-
-                if (mappingToValidate.length > 0) {
-                    if (mappingToValidate[0].sourceColumn === undefined) {
-                        console.log("Source column not set for target column [" + mappingToValidate[0].targetColumn.name + "], mapping invalid!");
-                        return false;
-                    } else {
-                        console.log("Found valid mapping from column [" + mappingToValidate[0].sourceColumn.name + "] to column [" + mappingToValidate[0].targetColumn.name + "]");
-                    }
-                } else {
-                    console.log("No mapping defined for target column [" + currentMappingDifference.targetColumn.name + "], mapping invalid!");
+        console.log("Validating mapping");
+        for ( let currentBoardIndex = 0; currentBoardIndex < this._boardDifferences.length; currentBoardIndex++ ) {
+            let mappingsForCurrentBoard = this._boardDifferences[currentBoardIndex].mappings;
+            for ( let currentMappingIndex = 0; currentMappingIndex < mappingsForCurrentBoard.length; currentMappingIndex++ ) {
+                let currentMapping = mappingsForCurrentBoard[currentMappingIndex];
+                if ( currentMapping.sourceColumn === undefined || currentMapping.targetColumn === undefined ) {
+                    console.log("Mapping for board " + this._boardDifferences[currentBoardIndex].backlog + " is invalid!");
                     return false;
                 }
             }
-            console.log("All column mappings valid!");
-            return true;
         }
-        console.log("Couldn't find any differences in boards, mapping valid!");
+        console.log("Mapping valid!");
         return true;
     }
 
