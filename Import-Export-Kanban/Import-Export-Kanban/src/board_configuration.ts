@@ -104,8 +104,10 @@ export class BoardConfiguration {
                     }
                 }
 
+                let initialSourceColumn = similarColumns.length > 0 ? similarColumns[0] : undefined;
+
                 mappings.push({
-                    sourceColumn: undefined,
+                    sourceColumn: initialSourceColumn,
                     potentialMatches: similarColumns,
                     targetColumn: currentColumn
                 });

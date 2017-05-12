@@ -408,7 +408,7 @@ export class CopySettingsWizard {
                 .text(differences.mappings[index].targetColumn.name)
                 .appendTo($left);
             let $right = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
-            this._createDropdown(differences.mappings[index].targetColumn.id, differences.mappings[index].potentialMatches).appendTo($right);
+            this._createDropdown(differences.backlog, differences.mappings[index].targetColumn.id, differences.mappings[index].potentialMatches).appendTo($right);
             $left.appendTo($row);
             $right.appendTo($row);
             $row.appendTo($grid);
@@ -424,7 +424,7 @@ export class CopySettingsWizard {
      * @returns {JQuery}
      * @memberof CopySettingsWizard
      */
-    private _createDropdown(targetColumnId: string, options: WorkContracts.BoardColumn[]): JQuery {
+    private _createDropdown(backlog: string, targetColumnId: string, options: WorkContracts.BoardColumn[]): JQuery {
         let $div = $("<div />").addClass("ms-Dropdown").attr("tabindex", 0);
         // $("<label />").addClass("ms-Label").text("").appendTo($div);
         $("<i />").addClass("ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown").appendTo($div);
@@ -432,11 +432,13 @@ export class CopySettingsWizard {
         options.forEach(item => {
             $("<option />").val(item.id).text(item.name).appendTo($select);
         });
-        $select.change({targetColumnId: targetColumnId}, (e) => {
-            console.log("Select changed! ");
+        $select.change({backlog: backlog, targetColumnId: targetColumnId}, (e) => {
             let value = $(e.target).val();
             let text = $(e.target).find(":selected").text();
-            console.log("Value for target column " + e.data.targetColumnId + " is now: " + value + ", " + text);
+            console.log("Value for target column " + e.data.targetColumnId + " on backlog " + backlog + " is now: " + value + ", " + text);
+            // Set the source column of the mapping for this backlog to the selected column, which should be in the potential matches for that same column
+            this._boardDifferences.filter(diff => diff.backlog === backlog)[0].mappings.filter(mapping => mapping.targetColumn.id === e.data.targetColumnId)[0].sourceColumn =
+                this._boardDifferences.filter(diff => diff.backlog === backlog)[0].mappings.filter(mapping => mapping.targetColumn.id === e.data.targetColumnId)[0].potentialMatches.filter(potentialMatch => potentialMatch.id === value)[0];
         });
         $select.appendTo($div);
         return $div;
