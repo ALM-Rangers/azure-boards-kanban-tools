@@ -179,6 +179,26 @@ export class BoardConfiguration {
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
+                console.debug("Getting settings for board " + backlog.name + " of team " + context.team);
+                let success: boolean = false;
+                let tries: number = 0;
+                while (success === false && tries <= 10) {
+                    try {
+                        await workClient.getBoard(context, backlog.name);
+                        success = true;
+                    } catch (e) {
+                        console.debug("Failed to get board!: " + e);
+                        let errormessage: string = e.message;
+                        if (errormessage.indexOf("The board does not exist.") !== -1 ) {
+                            // This board has not yet been visited by anyone, so it doesn't exist in the VSTS backend yet. This will make subsequent API calls fail
+                            // We'll try to fake a visit to this board here
+                            let url = "https://kverhaar.visualstudio.com/" + context.project + "/" + context.team + "/_backlogs/board/" + backlog.name;
+                            console.debug("Faking visit to: " + url);
+                            $("#fakepage").html("<object data=\"" + url + "\" />");
+                        }
+                        tries++;
+                    }
+                }
                 let cardSettings = await workClient.getBoardCardSettings(context, backlog.name);
                 let cardRules = await workClient.getBoardCardRuleSettings(context, backlog.name);
                 let columns = await workClient.getBoardColumns(context, backlog.name);
