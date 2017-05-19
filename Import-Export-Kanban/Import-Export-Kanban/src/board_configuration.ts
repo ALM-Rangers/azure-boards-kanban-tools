@@ -41,7 +41,7 @@ export interface IBoardColumnDifferences {
 
 export class BoardConfiguration {
     private static BaseWiql = "SELECT [System.Id],[System.WorkItemType],[System.Title] FROM workitems WHERE [System.TeamProject] = @project " +
-    "AND [System.WorkItemType] in (@WorkItemTypes) AND [System.BoardColumn] in (@OldBoardColumns) and [System.AreaPath] UNDER '@RootArea' and System.IterationPath UNDER '@RootIteration'";
+    "AND [System.WorkItemType] in (@WorkItemTypes) AND [System.BoardColumn] in (@OldBoardColumns) and (@RootArea) and System.IterationPath UNDER '@RootIteration'";
 
     private static WiqlWorkItemTypes = "@WorkItemTypes";
     private static WiqlBoardColumns = "@OldBoardColumns";
@@ -173,8 +173,8 @@ export class BoardConfiguration {
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let process = await workClient.getProcessConfiguration(context.project);
         // TEMP to simplify debugging
-        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Features");
-        let allBacklogs = process.portfolioBacklogs;
+        let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Backlog Items");
+        // let allBacklogs = process.portfolioBacklogs;
         allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
@@ -288,9 +288,16 @@ export class BoardConfiguration {
                     }
                 }
 
+                let areaQuery = "";
+                teamFieldValues.values.forEach((areaPath, index, values) => {
+                    let operator = areaPath.includeChildren ? "UNDER" : "=";
+                    let pathQuery = `[System.AreaPath] ${operator} "${areaPath.value}"`;
+                    areaQuery += index > 0 ? ` OR ${pathQuery}` : pathQuery;
+                });
+
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemTypes, workItemTypes);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlIteration, teamSettings.backlogIteration.name);
-                wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, teamFieldValues.defaultValue);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, areaQuery);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlBoardColumns, wiqlColumns);
 
                 let witIds: number[] = new Array();
