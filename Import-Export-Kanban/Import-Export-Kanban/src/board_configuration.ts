@@ -159,6 +159,68 @@ export class BoardConfiguration {
         return result;
     }
 
+    private async sleep(ms) {
+        console.log("Waiting " + ms + " milliseconds...");
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Initializes a board that hasn't been visited before. It does this by opening it in an invisible window.
+     *
+     * @param context The context of the team to initialize the board for
+     * @param backlog The board to initialize
+     */
+    private async initializeBoard(context: CoreContracts.TeamContext, backlog: WorkContracts.CategoryConfiguration) {
+        let fakepage: JQuery = $("#fakepage");
+        let collectionUri: string = VSS.getWebContext().collection.uri;
+        let url = encodeURI(collectionUri + context.project + "/" + context.team + "/_backlogs/board/" + backlog.name);
+
+        let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
+        let teamSettings = await workClient.getTeamSettings(context);
+
+        let backlogVisible: boolean = teamSettings.backlogVisibilities[backlog.referenceName];
+        if (backlogVisible === false) {
+            // If the backlog is not visible, we won't be able to fake the displaying of it. So, we'll temporarily enable it.
+            console.log("Temporarily enabling backlog " + backlog.referenceName + " for team " + context.team);
+            let backlogVisibilities: {[key: string]: boolean} = {};
+            backlogVisibilities[backlog.referenceName] = true;
+
+            let updateSettings: WorkContracts.TeamSettingsPatch = {
+                backlogIteration: null,
+                backlogVisibilities: backlogVisibilities,
+                bugsBehavior: null,
+                workingDays: null,
+                defaultIteration: null,
+                defaultIterationMacro: null
+            };
+            await workClient.updateTeamSettings(updateSettings, context);
+        }
+
+        console.log("Faking visit to: " + url);
+        fakepage.show();
+        fakepage.html("<object data=\"" + url + "\" />");
+        await this.sleep(5000); // Wait 5 seconds. I'd love a better solution for this, but there doesn't seem to be a way to check the content an <object> tag that is loaded with the data property
+        fakepage.hide();
+
+        if (backlogVisible === false) {
+            // If the backlog was not visible, we'll hide it again.
+            console.log("Disabling backlog " + backlog.referenceName + " for team " + context.team);
+            let backlogVisibilities: {[key: string]: boolean} = {};
+            backlogVisibilities[backlog.referenceName] = false;
+
+            let updateSettings: WorkContracts.TeamSettingsPatch = {
+                backlogIteration: null,
+                backlogVisibilities: backlogVisibilities,
+                bugsBehavior: null,
+                workingDays: null,
+                defaultIteration: null,
+                defaultIterationMacro: null
+            };
+            await workClient.updateTeamSettings(updateSettings, context);
+        }
+
+    }
+
     private async getTeamSettingsAsync(context: CoreContracts.TeamContext): Promise<IBoardSettings> {
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
 
@@ -173,28 +235,27 @@ export class BoardConfiguration {
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let process = await workClient.getProcessConfiguration(context.project);
         // TEMP to simplify debugging
-        let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Backlog Items");
+        let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
         // let allBacklogs = process.portfolioBacklogs;
-        allBacklogs.push(process.requirementBacklog);
+        // allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
-                console.debug("Getting settings for board " + backlog.name + " of team " + context.team);
+                console.log("Getting settings for board " + backlog.name + " (" + backlog.referenceName + ") of team " + context.team);
                 let success: boolean = false;
                 let tries: number = 0;
                 while (success === false && tries <= 10) {
                     try {
                         await workClient.getBoard(context, backlog.name);
+                        console.log("Successfully got board!");
                         success = true;
                     } catch (e) {
-                        console.debug("Failed to get board!: " + e);
+                        console.log("Failed to get board!: " + e);
                         let errormessage: string = e.message;
                         if (errormessage.indexOf("The board does not exist.") !== -1 ) {
                             // This board has not yet been visited by anyone, so it doesn't exist in the VSTS backend yet. This will make subsequent API calls fail
                             // We'll try to fake a visit to this board here
-                            let url = "https://kverhaar.visualstudio.com/" + context.project + "/" + context.team + "/_backlogs/board/" + backlog.name;
-                            console.debug("Faking visit to: " + url);
-                            $("#fakepage").html("<object data=\"" + url + "\" />");
+                            await this.initializeBoard(context, backlog);
                         }
                         tries++;
                     }
