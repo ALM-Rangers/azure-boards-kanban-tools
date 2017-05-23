@@ -41,7 +41,7 @@ export interface IBoardColumnDifferences {
 
 export class BoardConfiguration {
     private static BaseWiql = "SELECT [System.Id],[System.WorkItemType],[System.Title] FROM workitems WHERE [System.TeamProject] = @project " +
-    "AND [System.WorkItemType] in (@WorkItemTypes) AND [System.BoardColumn] in (@OldBoardColumns) and [System.AreaPath] UNDER '@RootArea' and System.IterationPath UNDER '@RootIteration'";
+    "AND [System.WorkItemType] in (@WorkItemTypes) AND [System.BoardColumn] in (@OldBoardColumns) and (@RootArea) and System.IterationPath UNDER '@RootIteration'";
 
     private static WiqlWorkItemTypes = "@WorkItemTypes";
     private static WiqlBoardColumns = "@OldBoardColumns";
@@ -173,8 +173,8 @@ export class BoardConfiguration {
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let process = await workClient.getProcessConfiguration(context.project);
         // TEMP to simplify debugging
-        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
-        let allBacklogs = process.portfolioBacklogs;
+        let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Backlog Items");
+        // let allBacklogs = process.portfolioBacklogs;
         allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
@@ -308,40 +308,49 @@ export class BoardConfiguration {
                     }
                 }
 
+                let areaQuery = "";
+                teamFieldValues.values.forEach((areaPath, index, values) => {
+                    let operator = areaPath.includeChildren ? "UNDER" : "=";
+                    let pathQuery = `[System.AreaPath] ${operator} "${areaPath.value}"`;
+                    areaQuery += index > 0 ? ` OR ${pathQuery}` : pathQuery;
+                });
+
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemTypes, workItemTypes);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlIteration, teamSettings.backlogIteration.name);
-                wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, teamFieldValues.defaultValue);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, areaQuery);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlBoardColumns, wiqlColumns);
 
                 let witIds: number[] = new Array();
                 console.log("query by wiql " + wiql.query);
                 let witQuery = await witClient.queryByWiql(wiql, context.project, context.team);
                 witIds = witQuery.workItems.map(wit => wit.id);
-                console.log("get wok items");
-                let wits = await witClient.getWorkItems(witIds);
-                console.log("got " + wits.length + " work items");
-                for (let witIndex = 0; witIndex < wits.length; witIndex++) {
-                    let wit = wits[witIndex];
-                    let fieldNames = Object.keys(wit.fields);
-                    fieldNames.sort();
-                    let columnFields = fieldNames.filter(f => /WEF_.*_Kanban.Column$/.test(f));
-                    let columnField = "";
-                    if (columnFields && columnFields.length > 0) {
-                        columnField = columnFields[0];
-                    }
-                    let witColumn = wit.fields[columnField];
-                    let matchedColumns = selectedMapping.mappings.filter(m => m.targetColumn.name === witColumn);
-                    if (matchedColumns && matchedColumns.length > 0) {
-                        let mappedColumn = matchedColumns[0];
-                        let patch = [
-                            {
-                                "op": "replace",
-                                "path": `/fields/${columnField}`,
-                                "value": mappedColumn.sourceColumn.name
-                            }
-                        ];
-                        console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
-                        await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
+                console.log("get work items");
+                if (witIds.length > 0) {
+                    let wits = await witClient.getWorkItems(witIds);
+                    console.log("got " + wits.length + " work items");
+                    for (let witIndex = 0; witIndex < wits.length; witIndex++) {
+                        let wit = wits[witIndex];
+                        let fieldNames = Object.keys(wit.fields);
+                        fieldNames.sort();
+                        let columnFields = fieldNames.filter(f => /WEF_.*_Kanban.Column$/.test(f));
+                        let columnField = "";
+                        if (columnFields && columnFields.length > 0) {
+                            columnField = columnFields[0];
+                        }
+                        let witColumn = wit.fields[columnField];
+                        let matchedColumns = selectedMapping.mappings.filter(m => m.targetColumn.name === witColumn);
+                        if (matchedColumns && matchedColumns.length > 0) {
+                            let mappedColumn = matchedColumns[0];
+                            let patch = [
+                                {
+                                    "op": "replace",
+                                    "path": `/fields/${columnField}`,
+                                    "value": mappedColumn.sourceColumn.name
+                                }
+                            ];
+                            console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
+                            await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
+                        }
                     }
                 }
 
@@ -373,6 +382,52 @@ export class BoardConfiguration {
     }
 
     private _compareColumnStateMappings(c1: WorkContracts.BoardColumn, c2: WorkContracts.BoardColumn): boolean {
-        return JSON.stringify(c1.stateMappings) === JSON.stringify(c2.stateMappings);
+        let isEqual = this.equals(c1.stateMappings, c2.stateMappings);
+        return isEqual;
+    }
+
+    // taken from here: http://stackoverflow.com/a/14286864
+    private equals(x: any, y: any): boolean {
+        if (x === y) {
+            return true;
+        }
+        if (!(x instanceof Object) || !(y instanceof Object)) {
+            return false;
+        }
+        if (x.constructor !== y.constructor) {
+            return false;
+        }
+        for (let p in x) {
+            // Inherited properties were tested using x.constructor === y.constructor
+            if (x.hasOwnProperty(p)) {
+                // Allows comparing x[ p ] and y[ p ] when set to undefined
+                if (!y.hasOwnProperty(p)) {
+                    return false;
+                }
+
+                // If they have the same strict value or identity then they are equal
+                if (x[p] === y[p]) {
+                    continue;
+                }
+
+                // Numbers, Strings, Functions, Booleans must be strictly equal
+                if (typeof (x[p]) !== "object") {
+                    return false;
+                }
+
+                // Objects and Arrays must be tested recursively
+                if (!this.equals(x[p], y[p])) {
+                    return false;
+                }
+            }
+        }
+
+        for (let p in y) {
+            // allows x[ p ] to be set to undefined
+            if (y.hasOwnProperty(p) && !x.hasOwnProperty(p)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
