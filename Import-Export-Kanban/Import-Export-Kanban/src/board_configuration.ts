@@ -18,6 +18,7 @@ export interface IBacklogBoardSettings {
     cardRules: WorkContracts.BoardCardRuleSettings;
     columns: WorkContracts.BoardColumn[];
     rows: WorkContracts.BoardRow[];
+    fields: WorkContracts.BoardFields;
 }
 
 export interface IBoardSettings {
@@ -41,12 +42,13 @@ export interface IBoardColumnDifferences {
 
 export class BoardConfiguration {
     private static BaseWiql = "SELECT [System.Id],[System.WorkItemType],[System.Title] FROM workitems WHERE [System.TeamProject] = @project " +
-    "AND [System.WorkItemType] in (@WorkItemTypes) AND [System.BoardColumn] in (@OldBoardColumns) and (@RootArea) and System.IterationPath UNDER '@RootIteration'";
+    "AND [System.WorkItemType] in (@WorkItemTypes) AND [@WITField] in (@OldBoardColumns) and (@RootArea) and System.IterationPath UNDER '@RootIteration'";
 
     private static WiqlWorkItemTypes = "@WorkItemTypes";
     private static WiqlBoardColumns = "@OldBoardColumns";
     private static WiqlRootArea = "@RootArea";
     private static WiqlIteration = "@RootIteration";
+    private static WiqlWorkItemColumnField = "@WITField";
 
     /**
      * Figures out the differences in board column mappings
@@ -182,7 +184,7 @@ export class BoardConfiguration {
         if (backlogVisible === false) {
             // If the backlog is not visible, we won't be able to fake the displaying of it. So, we'll temporarily enable it.
             console.log("Temporarily enabling backlog " + backlog.referenceName + " for team " + context.team);
-            let backlogVisibilities: {[key: string]: boolean} = {};
+            let backlogVisibilities: { [key: string]: boolean } = {};
             backlogVisibilities[backlog.referenceName] = true;
 
             let updateSettings: WorkContracts.TeamSettingsPatch = {
@@ -205,7 +207,7 @@ export class BoardConfiguration {
         if (backlogVisible === false) {
             // If the backlog was not visible, we'll hide it again.
             console.log("Disabling backlog " + backlog.referenceName + " for team " + context.team);
-            let backlogVisibilities: {[key: string]: boolean} = {};
+            let backlogVisibilities: { [key: string]: boolean } = {};
             backlogVisibilities[backlog.referenceName] = false;
 
             let updateSettings: WorkContracts.TeamSettingsPatch = {
@@ -234,28 +236,30 @@ export class BoardConfiguration {
 
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let process = await workClient.getProcessConfiguration(context.project);
-        // TEMP to simplify debugging
-        let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
-        // let allBacklogs = process.portfolioBacklogs;
-        // allBacklogs.push(process.requirementBacklog);
+        let allBacklogs: WorkContracts.CategoryConfiguration[] = [];
+        allBacklogs = process.portfolioBacklogs;
+        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
+        allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
                 console.log("Getting settings for board " + backlog.name + " (" + backlog.referenceName + ") of team " + context.team);
                 let success: boolean = false;
                 let tries: number = 0;
+                let board: WorkContracts.Board = null;
                 while (success === false && tries <= 10) {
                     try {
-                        await workClient.getBoard(context, backlog.name);
+                        board = await workClient.getBoard(context, backlog.name);
                         console.log("Successfully got board!");
                         success = true;
                     } catch (e) {
                         console.log("Failed to get board!: " + e);
                         let errormessage: string = e.message;
-                        if (errormessage.indexOf("The board does not exist.") !== -1 ) {
+                        if (errormessage.indexOf("The board does not exist.") !== -1) {
                             // This board has not yet been visited by anyone, so it doesn't exist in the VSTS backend yet. This will make subsequent API calls fail
                             // We'll try to fake a visit to this board here
                             await this.initializeBoard(context, backlog);
+                            board = await workClient.getBoard(context, backlog.name);
                         }
                         tries++;
                     }
@@ -270,7 +274,8 @@ export class BoardConfiguration {
                     cardRules: cardRules,
                     cardSettings: cardSettings,
                     columns: columns,
-                    rows: rows
+                    rows: rows,
+                    fields: board !== null ? board.fields : null
                 };
                 settings.backlogSettings.push(boardSettings);
             }
@@ -291,7 +296,7 @@ export class BoardConfiguration {
                 let backlogSetting = settings.backlogSettings[backlogIndex];
                 let cardSettings = await workClient.updateBoardCardSettings(backlogSetting.cardSettings, context, backlogSetting.boardName);
                 let cardRules = await workClient.updateBoardCardRuleSettings(backlogSetting.cardRules, context, backlogSetting.boardName);
-                let rows = await workClient.updateBoardRows(backlogSetting.rows, context, backlogSetting.boardName);
+                // let rows = await workClient.updateBoardRows(backlogSetting.rows, context, backlogSetting.boardName);
                 let columnsToApply: WorkContracts.BoardColumn[] = new Array();
 
                 let oldBoard: IBacklogBoardSettings;
@@ -376,10 +381,13 @@ export class BoardConfiguration {
                     areaQuery += index > 0 ? ` OR ${pathQuery}` : pathQuery;
                 });
 
+                let boardColumnField = oldBoard.fields.columnField.referenceName;
+
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemTypes, workItemTypes);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlIteration, teamSettings.backlogIteration.name);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, areaQuery);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlBoardColumns, wiqlColumns);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemColumnField, boardColumnField);
 
                 let witIds: number[] = new Array();
                 console.log("query by wiql " + wiql.query);
@@ -393,10 +401,12 @@ export class BoardConfiguration {
                         let wit = wits[witIndex];
                         let fieldNames = Object.keys(wit.fields);
                         fieldNames.sort();
-                        let columnFields = fieldNames.filter(f => /WEF_.*_Kanban.Column$/.test(f));
+                        let columnFields = fieldNames.filter(f => boardColumnField === f);
                         let columnField = "";
                         if (columnFields && columnFields.length > 0) {
                             columnField = columnFields[0];
+                        } else {
+                            console.log("No column field found");
                         }
                         let witColumn = wit.fields[columnField];
                         let matchedColumns = selectedMapping.mappings.filter(m => m.targetColumn.name === witColumn);
