@@ -513,31 +513,31 @@ export class BoardConfiguration {
 
     private async _cleanUpRows(currentRows: WorkContracts.BoardRow[], incomingRows: WorkContracts.BoardRow[], uniqueNameifier: string, boardName: string, context: CoreContracts.TeamContext, client: WorkClient.WorkHttpClient2_3): Promise<WorkContracts.BoardRow[]> {
         let finalRows: WorkContracts.BoardRow[] = [];
-        currentRows.forEach(row => {
+        incomingRows.forEach(row => {
             if (row.id === BoardConfiguration.DefaultRowId) {
                 finalRows.push(row);
             } else {
-                let uniqueIndex = row.name.lastIndexOf(uniqueNameifier);
-                if (uniqueIndex >= 0) {
-                    let rowName = row.name.substring(uniqueNameifier.length);
-                    row.name = rowName;
-                    finalRows.push(row);
+                let currentRow = this._getRowByName(currentRows, uniqueNameifier + row.name);
+                if (currentRow) {
+                    let finalRow: WorkContracts.BoardRow = {
+                        name: row.name,
+                        id: currentRow.id
+                    };
+                    finalRows.push(finalRow);
                 }
             }
         });
-        // let originalDefaultRow = this._getDefaultRow(incomingRows);
-        // let newDefaultRow = this._getDefaultRow(finalRows);
-        // if (originalDefaultRow && newDefaultRow) {
-        //     let originalIndex = incomingRows.indexOf(originalDefaultRow);
-        //     let newIndex = finalRows.indexOf(newDefaultRow);
-        //     if (originalIndex !== newIndex) {
-        //         finalRows = finalRows.splice(newIndex, 1);
-        //         finalRows = finalRows.splice(originalIndex, 0, newDefaultRow);
-        //     }
-        // }
 
         finalRows = await client.updateBoardRows(finalRows, context, boardName);
         return finalRows;
+    }
+
+    private _getRowByName(rows: WorkContracts.BoardRow[], name: string): WorkContracts.BoardRow {
+        let namedRow = rows.filter(row => row.name === name);
+        if (namedRow && namedRow.length > 0) {
+            return namedRow[0];
+        }
+        return null;
     }
 
     private _getDefaultRow(rows: WorkContracts.BoardRow[]): WorkContracts.BoardRow {
