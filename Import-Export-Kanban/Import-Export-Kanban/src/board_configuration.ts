@@ -288,30 +288,35 @@ export class BoardConfiguration {
         }
     }
 
-    private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settings: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
+    private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settingsToApply: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
         let result: Boolean = false;
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
         let witClient = WitClient.getClient();
 
         let context = oldSettings.context;
+        console.log("Old settings");
+        console.log(oldSettings);
+        console.log("Settings to apply");
+        console.log(settingsToApply);
         try {
-            for (let backlogIndex = 0; backlogIndex < settings.backlogSettings.length; backlogIndex++) {
-                let backlogSetting = settings.backlogSettings[backlogIndex];
-                let cardSettings = await workClient.updateBoardCardSettings(backlogSetting.cardSettings, context, backlogSetting.boardName);
-                let cardRules = await workClient.updateBoardCardRuleSettings(backlogSetting.cardRules, context, backlogSetting.boardName);
+            for (let backlogIndex = 0; backlogIndex < settingsToApply.backlogSettings.length; backlogIndex++) {
+                let backlogSettingToApply = settingsToApply.backlogSettings[backlogIndex];
+                console.log(`Processing backlog [${backlogSettingToApply.boardName}]`);
+                let cardSettings = await workClient.updateBoardCardSettings(backlogSettingToApply.cardSettings, context, backlogSettingToApply.boardName);
+                let cardRules = await workClient.updateBoardCardRuleSettings(backlogSettingToApply.cardRules, context, backlogSettingToApply.boardName);
                 // let rows = await workClient.updateBoardRows(backlogSetting.rows, context, backlogSetting.boardName);
                 let columnsToApply: WorkContracts.BoardColumn[] = new Array();
 
                 let oldBoard: IBacklogBoardSettings;
                 oldSettings.backlogSettings.forEach(board => {
-                    if (board.boardName === backlogSetting.boardName) {
+                    if (board.boardName === backlogSettingToApply.boardName) {
                         oldBoard = board;
                     }
                 });
 
                 let selectedMapping: IBoardColumnDifferences;
                 selectedMappings.forEach(cd => {
-                    if (cd.backlog === backlogSetting.boardName) {
+                    if (cd.backlog === backlogSettingToApply.boardName) {
                         selectedMapping = cd;
                     }
                 });
@@ -321,7 +326,7 @@ export class BoardConfiguration {
                 let oldActiveColumns = oldBoard.columns.filter(c => c.columnType === WorkContracts.BoardColumnType.InProgress);
 
                 // Create new colums first
-                backlogSetting.columns.forEach(columnToCreate => {
+                backlogSettingToApply.columns.forEach(columnToCreate => {
                     if (columnToCreate.columnType !== WorkContracts.BoardColumnType.InProgress) {
                         // keep id the same to avoid creating a new column (should only change name)
                         columnToCreate.id = selectedMapping.mappings.filter(c => c.sourceColumn.id === columnToCreate.id)[0].targetColumn.id;
@@ -348,8 +353,9 @@ export class BoardConfiguration {
                 });
 
                 columnsToApply.push(outgoingColumn);
-
-                let currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
+                console.log("Creating intermediate board with columns:");
+                console.log(columnsToApply);
+                let intermediateColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSettingToApply.boardName);
 
                 // Move work items to new mappings
                 // Get work items for current board
@@ -361,10 +367,10 @@ export class BoardConfiguration {
                 let teamFieldValues = await workClient.getTeamFieldValues(context);
 
                 // Get work items for the right backlog level
-                let workItemTypes = "'" + backlogSetting.boardWorkItemTypes[0] + "'";
-                if (backlogSetting.boardWorkItemTypes.length > 1) {
-                    for (let workItemTypeIndex = 1; workItemTypeIndex < backlogSetting.boardWorkItemTypes.length; workItemTypeIndex++) {
-                        workItemTypes += ", '" + backlogSetting.boardWorkItemTypes[workItemTypeIndex] + "'";
+                let workItemTypes = "'" + backlogSettingToApply.boardWorkItemTypes[0] + "'";
+                if (backlogSettingToApply.boardWorkItemTypes.length > 1) {
+                    for (let workItemTypeIndex = 1; workItemTypeIndex < backlogSettingToApply.boardWorkItemTypes.length; workItemTypeIndex++) {
+                        workItemTypes += ", '" + backlogSettingToApply.boardWorkItemTypes[workItemTypeIndex] + "'";
                     }
                 }
 
@@ -415,22 +421,34 @@ export class BoardConfiguration {
                         let matchedColumns = selectedMapping.mappings.filter(m => m.targetColumn.name === witColumn);
                         if (matchedColumns && matchedColumns.length > 0) {
                             let mappedColumn = matchedColumns[0];
+                            console.log("Using column mapping:");
+                            console.log(mappedColumn);
+
+                            // If the intermediate columns contains a temporary column for our source column, we should move our items there
+                            let newColumnFieldValue: string = mappedColumn.sourceColumn.name;
+                            let tempColumnNameToFind = uniqueNameifier + mappedColumn.sourceColumn.name;
+                            if (intermediateColumns.some(c => c.name === tempColumnNameToFind)) {
+                                newColumnFieldValue = intermediateColumns.filter(c => c.name === tempColumnNameToFind)[0].name;
+                            }
+
                             let patch = [
                                 {
                                     "op": "replace",
                                     "path": `/fields/${columnField}`,
-                                    "value": mappedColumn.sourceColumn.name
+                                    "value": newColumnFieldValue
                                 }
                             ];
                             console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
                             await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
                         }
                     }
+                } else {
+                    console.log("No work items found");
                 }
 
                 // Delete old columns
                 columnsToApply = new Array();
-                currentColumns.forEach(column => {
+                intermediateColumns.forEach(column => {
                     if (column.columnType === WorkContracts.BoardColumnType.InProgress) {
                         // remove unique indentifier from column name
                         let uniqueIndex = column.name.lastIndexOf(uniqueNameifier);
@@ -444,7 +462,7 @@ export class BoardConfiguration {
                         columnsToApply.push(column);
                     }
                 });
-                currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
+                let finalColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSettingToApply.boardName);
             }
             result = true;
         } catch (ex) {
