@@ -9,6 +9,8 @@ import TeamSelector = require("./TeamSelectorControl");
 import CoreRestClient = require("TFS/Core/RestClient");
 require("es6-promise").polyfill(); /* Polyfill for ES6 promises for IE11 */
 
+import { WorkItemMappingPage } from "./wizardpages/workItemMappingPage";
+
 import * as tc from "TelemetryClient";
 import telemetryClientSettings = require("./telemetryClientSettings");
 
@@ -35,8 +37,6 @@ enum WizardStep {
 let domElem = Utils_UI.domElem;
 
 declare function initializeSearch(): void;
-declare function initializePivots(): void;
-declare function initializeDropdowns(): void;
 
 /**
  * Represents the operation and the user selected data to perform the copy operation.
@@ -79,20 +79,23 @@ export class CopySettingsWizard {
     */
     private static MAX_NUMBER_TEAMS_TO_LIST = 15;
 
+    // Controls
     private _teamSelector: TeamSelector.TeamSelectorControl;
     private _navigationControl: NavigationControl.NavigationControl;
 
+    // Wizard pages
+    private _workItemMappingPage: WorkItemMappingPage;
+
+    // The current step that we're on in the wizard
     private _currentStep: WizardStep = WizardStep.Settings;
+
+    // Whether we're copying from or to a team
     private _selectedOption: CopyBoardSettingsSettings = CopyBoardSettingsSettings.None;
 
+    // Callbacks for the wizard control
     private _onCancelCallback: Function;
     private _onCopyCallback: (settings: CopySettings) => void;
     private _onTitleChangeCallback: Function;
-
-    private _boardDifferences: IBoardColumnDifferences[] = [];
-    private _refreshBoardDifferences: boolean;
-    private _sourceSettings: IBoardSettings;
-    private _targetSettings: IBoardSettings;
 
     constructor() {
         this._teamSelector = Controls.create(TeamSelector.TeamSelectorControl, $("#teamSelector"), {
@@ -105,6 +108,13 @@ export class CopySettingsWizard {
             }
         });
 
+        // Create the required pages
+        this._workItemMappingPage = new WorkItemMappingPage();
+        this._workItemMappingPage.OnMappingValidated = ((validationResult) => {
+            this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: validationResult, isVisible: true });
+        });
+
+        // Create the navigation control
         let navigate: NavigationControl.INavigation = {
             previousButton: {
                 isEnabled: false, isVisible: false, onClick: this._onBack.bind(this)
@@ -181,7 +191,8 @@ export class CopySettingsWizard {
         if (this._currentStep === WizardStep.TeamSelection) {
             this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: numberSelectedTeams > 0, isVisible: true });
         }
-        this._refreshBoardDifferences = true;
+        // After the team selection has been changed we should reload the work item mapping
+        this._workItemMappingPage.RefreshBoardDifferences = true;
     }
 
     /**
@@ -222,11 +233,17 @@ export class CopySettingsWizard {
                 break;
 
             case WizardStep.WorkItemMapping:
-
-                await this._setWorkItemMappingContentAsync();
+                let sourceTeam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getSelectedTeams()[0] : this._teamSelector.getCurrentTeam();
+                let destinationteam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getCurrentTeam() : this._teamSelector.getSelectedTeams()[0];
+                try {
+                    await this._workItemMappingPage.SetWorkItemMappingContentAsync(sourceTeam, destinationteam);
+                } catch (e) {
+                    this._showError("Failed to get board differences to determine mapping. " + e.message);
+                }
+                this._setStepTitle("Work Item Mapping");
 
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.PREVIOUS, { isEnabled: true, isVisible: true });
-                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateColumnMapping(), isVisible: true });
+                this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._workItemMappingPage.ValidateColumnMapping(), isVisible: true });
                 this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.OK, { isEnabled: false, isVisible: false });
 
                 break;
@@ -275,190 +292,6 @@ export class CopySettingsWizard {
             default:
                 throw "unknown setting, or not supported";
         }
-    }
-
-    /**
-     * Gets the board differences and presents them in a mapping dialog so the user can select which columns to map
-     * Gets the data and then calls _createBacklogPivots() to create the actual dialog
-     * Board differences are stored in this._boardDifferences
-     */
-    private async _setWorkItemMappingContentAsync() {
-        let rootContainer = $("#itemMappings");
-        let waitControlOptions: StatusIndicator.IWaitControlOptions = {
-            cancellable: false,
-            backgroundColor: "#ffffff",
-            message: "Loading...."
-        };
-
-        let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
-
-        waitControl.startWait();
-        if (this._refreshBoardDifferences) {
-            this._refreshBoardDifferences = false;
-            let boardService = new BoardConfiguration();
-            try {
-                let sourceTeam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getSelectedTeams()[0] : this._teamSelector.getCurrentTeam();
-                let destinationteam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getCurrentTeam() : this._teamSelector.getSelectedTeams()[0];
-                this._sourceSettings = await boardService.getCurrentConfigurationAsync(sourceTeam.team.name);
-                this._targetSettings = await boardService.getCurrentConfigurationAsync(destinationteam.team.name);
-
-                this._boardDifferences = boardService.getTeamColumnDifferences(this._sourceSettings, this._targetSettings);
-
-                this._createBacklogPivots();
-            } catch (e) {
-                tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e.message);
-                this._showError("Failed to get board differences to determine mapping. " + e.message);
-            }
-        } else {
-            // this._createBacklogPivots();
-        }
-        waitControl.endWait();
-        this._setStepTitle("Work Item Mapping");
-    }
-
-    /**
-     * Creates the backlog pivot to include in the main dialog for the work item column mappings
-     * Will create a pivot page for each board level (e.g. "Epic", "Features", "Backlog Items") and call _createPivotContent to populate the pivot page
-     * @private
-     * @memberof CopySettingsWizard
-     */
-    private _createBacklogPivots() {
-        let $pivotMenu = $("#pivot-menu");
-        let $pivotContainer = $("#pivot-container");
-
-        this._boardDifferences.forEach((difference, index, allDifferences) => {
-            let $menu = this._createPivotHeader(difference.backlog);
-            if (index === 0) {
-                $menu.addClass("is-selected");
-            }
-
-            let $content = this._createPivotContent(difference);
-            $menu.appendTo($pivotMenu);
-            $content.appendTo($pivotContainer);
-        });
-        initializePivots();
-        initializeDropdowns();
-    }
-
-    /**
-     * Creates a header for a pivot page
-     * @private
-     * @param {string} backlogLevel
-     * @returns {JQuery}
-     * @memberof CopySettingsWizard
-     */
-    private _createPivotHeader(backlogLevel: string): JQuery {
-        return $("<li />")
-            .attr("data-content", backlogLevel)
-            .attr("title", backlogLevel)
-            .attr("tabindex", "1")
-            .addClass("ms-Pivot-link")
-            .text(backlogLevel);
-    }
-
-    /**
-     * Creates the content for a single pivot page. Will take the board differences for a single backlog level and call _createDropdown to create a combobox for each work item type
-     * @private
-     * @param {IBoardColumnDifferences} differences
-     * @returns {JQuery}
-     * @memberof CopySettingsWizard
-     */
-    private _createPivotContent(differences: IBoardColumnDifferences): JQuery {
-        let $div = $("<div />")
-            .addClass("ms-Pivot-content")
-            .attr("data-content", differences.backlog);
-        $("<label />")
-            .addClass("ms-Label")
-            .text("Work items in existing columns will need to be mapped to their new target states.")
-            .appendTo($div);
-        let $grid = $("<div />").addClass("ms-Grid");
-        $("<div />").addClass("ms-Grid-row")
-            .append(
-            $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6")
-                .append(
-                $("<label />")
-                    .addClass("ms-Label")
-                    .text("Existing columns (target)")
-                )
-            )
-            .append(
-            $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6")
-                .append(
-                $("<label />")
-                    .addClass("ms-Label")
-                    .text("Imported columns (source)")
-                )
-            )
-            .appendTo($grid);
-        for (let index = 0; index < differences.mappings.length; index++) {
-            let $row = $("<div />").addClass("ms-Grid-row");
-            let $left = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
-            $("<label />")
-                .addClass("ms-Label")
-                .text(differences.mappings[index].targetColumn.name)
-                .appendTo($left);
-            let $right = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
-            this._createDropdown(differences.backlog, differences.mappings[index].targetColumn.id, differences.mappings[index].potentialMatches).appendTo($right);
-            $left.appendTo($row);
-            $right.appendTo($row);
-            $row.appendTo($grid);
-        }
-        $grid.appendTo($div);
-        return $div;
-    }
-
-    /**
-     * Creates a single combobox for selecting the mapping for a single work item type
-     * @private
-     * @param {WorkContracts.BoardColumn[]} options
-     * @returns {JQuery}
-     * @memberof CopySettingsWizard
-     */
-    private _createDropdown(backlog: string, targetColumnId: string, options: WorkContracts.BoardColumn[]): JQuery {
-        let $div = $("<div />").addClass("ms-Dropdown").attr("tabindex", 0);
-        // $("<label />").addClass("ms-Label").text("").appendTo($div);
-        $("<i />").addClass("ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown").appendTo($div);
-        let $select = $("<select />").addClass("ms-Dropdown-select");
-        options.forEach(item => {
-            $("<option />").val(item.id).text(item.name).appendTo($select);
-        });
-        $select.change({backlog: backlog, targetColumnId: targetColumnId}, (e) => {
-            let value = $(e.target).val();
-            let text = $(e.target).find(":selected").text();
-            console.log("Value for target column " + e.data.targetColumnId + " on backlog " + backlog + " is now: " + value + ", " + text);
-            // Set the source column of the mapping for this backlog to the selected column, which should be in the potential matches for that same column
-            this._boardDifferences.filter(diff => diff.backlog === backlog)[0].mappings.filter(mapping => mapping.targetColumn.id === e.data.targetColumnId)[0].sourceColumn =
-                this._boardDifferences.filter(diff => diff.backlog === backlog)[0].mappings.filter(mapping => mapping.targetColumn.id === e.data.targetColumnId)[0].potentialMatches.filter(potentialMatch => potentialMatch.id === value)[0];
-
-            this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: this._validateColumnMapping(), isVisible: true });
-        });
-        $select.appendTo($div);
-        return $div;
-    }
-
-    /**
-     * Validates all selected mappings. Used for enabling the "Next" button on the wizard.
-     * There will need to be a valid mapping set in this._boardDifferences
-     *
-     * @private
-     * @returns {boolean} Whether the mapping is valid (true) or not (false)
-     *
-     * @memberOf CopySettingsWizard
-     */
-    private _validateColumnMapping(): boolean {
-        console.log("Validating mapping");
-        for ( let currentBoardIndex = 0; currentBoardIndex < this._boardDifferences.length; currentBoardIndex++ ) {
-            let mappingsForCurrentBoard = this._boardDifferences[currentBoardIndex].mappings;
-            for ( let currentMappingIndex = 0; currentMappingIndex < mappingsForCurrentBoard.length; currentMappingIndex++ ) {
-                let currentMapping = mappingsForCurrentBoard[currentMappingIndex];
-                if ( currentMapping.sourceColumn === undefined || currentMapping.targetColumn === undefined ) {
-                    console.log("Mapping for board " + this._boardDifferences[currentBoardIndex].backlog + " is invalid!");
-                    return false;
-                }
-            }
-        }
-        console.log("Mapping valid!");
-        return true;
     }
 
     /**
@@ -607,26 +440,19 @@ export class CopySettingsWizard {
 
         let boardService = new BoardConfiguration();
         if (this._onCopyCallback) {
-            let currentTeam = this._teamSelector.getCurrentTeam();
             let result: Boolean = false;
 
-            if (this._selectedOption === CopyBoardSettingsSettings.ToOtherTeams) {
-                try {
-                    result = await boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                    this._onCopyCallback(new CopySettings(this._teamSelector.getCurrentTeam(), this._teamSelector.getSelectedTeams()[0], this._selectedOption));
-                } catch (e) {
-                    tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e);
-                    this._showError("Failed to apply board settings. " + e.message);
-                }
-            } else if (this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam) {
-                try {
-                    result = await boardService.applySettingsAsync(this._targetSettings, this._sourceSettings, this._boardDifferences);
-                    this._onCopyCallback(new CopySettings(this._teamSelector.getSelectedTeams()[0], this._teamSelector.getCurrentTeam(), this._selectedOption));
-                } catch (e) {
-                    tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e);
-                    this._showError("Failed to apply board settings. " + e.message);
-                }
+            let sourceTeam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getSelectedTeams()[0] : this._teamSelector.getCurrentTeam();
+            let destinationteam = this._selectedOption === CopyBoardSettingsSettings.FromAnotherTeam ? this._teamSelector.getCurrentTeam() : this._teamSelector.getSelectedTeams()[0];
+
+            try {
+                result = await boardService.applySettingsAsync(destinationteam.team.name, sourceTeam.team.name, this._workItemMappingPage.GetBoardMappings());
+                this._onCopyCallback(new CopySettings(sourceTeam, destinationteam, this._selectedOption));
+            } catch (e) {
+                tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackException(e);
+                this._showError("Failed to apply board settings. " + e.message);
             }
+
         }
         waitControl.endWait();
     }

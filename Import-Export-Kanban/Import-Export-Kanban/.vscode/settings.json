@@ -7,7 +7,7 @@
         "**/obj": true,
         "**/node_modules": true,
         "**/.tscache": true
-    }
-,
-"typescript.tsdk": "./node_modules/typescript/lib"
+    },
+    "files.trimTrailingWhitespace": true,
+    "typescript.tsdk": "./node_modules/typescript/lib"
 }

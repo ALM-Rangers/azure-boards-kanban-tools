@@ -154,10 +154,13 @@ export class BoardConfiguration {
         return settings;
     }
 
-    public async applySettingsAsync(targetTeamSettings: IBoardSettings, sourceTeamSettings: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
+    public async applySettingsAsync(targetTeamName: string, sourceTeamName: string, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
         let result: Boolean = false;
 
-        result = await this.applyTeamSettingsAsync(targetTeamSettings, sourceTeamSettings, selectedMappings);
+        let sourceSettings = await this.getCurrentConfigurationAsync(sourceTeamName);
+        let targetSettings = await this.getCurrentConfigurationAsync(targetTeamName);
+
+        result = await this.applyTeamSettingsAsync(targetSettings, sourceSettings, selectedMappings);
         return result;
     }
 
