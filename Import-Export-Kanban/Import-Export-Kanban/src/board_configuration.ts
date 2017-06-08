@@ -49,6 +49,7 @@ export class BoardConfiguration {
     private static WiqlRootArea = "@RootArea";
     private static WiqlIteration = "@RootIteration";
     private static WiqlWorkItemColumnField = "@WITField";
+    private static DefaultRowId = "00000000-0000-0000-0000-000000000000";
 
     /**
      * Figures out the differences in board column mappings
@@ -241,7 +242,7 @@ export class BoardConfiguration {
         let process = await workClient.getProcessConfiguration(context.project);
         let allBacklogs: WorkContracts.CategoryConfiguration[] = [];
         allBacklogs = process.portfolioBacklogs;
-        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
+        // allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
         allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
@@ -304,7 +305,6 @@ export class BoardConfiguration {
                 console.log(`Processing backlog [${backlogSettingToApply.boardName}]`);
                 let cardSettings = await workClient.updateBoardCardSettings(backlogSettingToApply.cardSettings, context, backlogSettingToApply.boardName);
                 let cardRules = await workClient.updateBoardCardRuleSettings(backlogSettingToApply.cardRules, context, backlogSettingToApply.boardName);
-                // let rows = await workClient.updateBoardRows(backlogSetting.rows, context, backlogSetting.boardName);
                 let columnsToApply: WorkContracts.BoardColumn[] = new Array();
 
                 let oldBoard: IBacklogBoardSettings;
@@ -322,6 +322,13 @@ export class BoardConfiguration {
                 });
 
                 let uniqueNameifier = Date.now().toString() + "-";
+
+                let newRows = await this._applyNewRows(oldBoard.rows, backlogSettingToApply.rows, uniqueNameifier, backlogSettingToApply.boardName, context, workClient);
+                let newDefaultRow = this._getDefaultRow(newRows);
+                let newDefaultRowName: string = null;
+                if (newDefaultRow) {
+                    newDefaultRowName = newDefaultRow.name;
+                }
 
                 let oldActiveColumns = oldBoard.columns.filter(c => c.columnType === WorkContracts.BoardColumnType.InProgress);
 
@@ -391,6 +398,7 @@ export class BoardConfiguration {
                 });
 
                 let boardColumnField = oldBoard.fields.columnField.referenceName;
+                let boardRowField = oldBoard.fields.rowField.referenceName;
 
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemTypes, workItemTypes);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlIteration, teamSettings.backlogIteration.name);
@@ -438,6 +446,13 @@ export class BoardConfiguration {
                                     "value": newColumnFieldValue
                                 }
                             ];
+                            if (newDefaultRowName && newDefaultRowName.length > 0) {
+                                patch.push({
+                                    "op": "replace",
+                                    "path": `/fields/${boardRowField}`,
+                                    "value": newDefaultRowName
+                                });
+                            }
                             console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
                             await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
                         }
@@ -445,6 +460,8 @@ export class BoardConfiguration {
                 } else {
                     console.log("No work items found");
                 }
+
+                newRows = await this._cleanUpRows(newRows, backlogSettingToApply.rows, uniqueNameifier, backlogSettingToApply.boardName, context, workClient);
 
                 // Delete old columns
                 columnsToApply = new Array();
@@ -471,6 +488,64 @@ export class BoardConfiguration {
         }
         console.log("Finish apply");
         return result;
+    }
+
+    private async _applyNewRows(outgoingRows: WorkContracts.BoardRow[], incomingRows: WorkContracts.BoardRow[], uniqueNameifier: string, boardName: string, context: CoreContracts.TeamContext, client: WorkClient.WorkHttpClient2_3): Promise<WorkContracts.BoardRow[]> {
+        let outgoingDefaultRow = this._getDefaultRow(outgoingRows);
+        let incomingDefaultRow = this._getDefaultRow(incomingRows);
+        if (!outgoingDefaultRow || !incomingDefaultRow) {
+            return;
+        }
+        outgoingDefaultRow.name = incomingDefaultRow.name;
+        let desiredRows = outgoingRows;
+        incomingRows.forEach(row => {
+            if (row.id !== BoardConfiguration.DefaultRowId) {
+                let newRow: WorkContracts.BoardRow = {
+                    name: uniqueNameifier + row.name,
+                    id: ""
+                };
+                desiredRows.push(newRow);
+            }
+        });
+        let allRows = await client.updateBoardRows(desiredRows, context, boardName);
+        return allRows;
+    }
+
+    private async _cleanUpRows(currentRows: WorkContracts.BoardRow[], incomingRows: WorkContracts.BoardRow[], uniqueNameifier: string, boardName: string, context: CoreContracts.TeamContext, client: WorkClient.WorkHttpClient2_3): Promise<WorkContracts.BoardRow[]> {
+        let finalRows: WorkContracts.BoardRow[] = [];
+        currentRows.forEach(row => {
+            if (row.id === BoardConfiguration.DefaultRowId) {
+                finalRows.push(row);
+            } else {
+                let uniqueIndex = row.name.lastIndexOf(uniqueNameifier);
+                if (uniqueIndex >= 0) {
+                    let rowName = row.name.substring(uniqueNameifier.length);
+                    row.name = rowName;
+                    finalRows.push(row);
+                }
+            }
+        });
+        // let originalDefaultRow = this._getDefaultRow(incomingRows);
+        // let newDefaultRow = this._getDefaultRow(finalRows);
+        // if (originalDefaultRow && newDefaultRow) {
+        //     let originalIndex = incomingRows.indexOf(originalDefaultRow);
+        //     let newIndex = finalRows.indexOf(newDefaultRow);
+        //     if (originalIndex !== newIndex) {
+        //         finalRows = finalRows.splice(newIndex, 1);
+        //         finalRows = finalRows.splice(originalIndex, 0, newDefaultRow);
+        //     }
+        // }
+
+        finalRows = await client.updateBoardRows(finalRows, context, boardName);
+        return finalRows;
+    }
+
+    private _getDefaultRow(rows: WorkContracts.BoardRow[]): WorkContracts.BoardRow {
+        let defaultRows = rows.filter(row => row.id === BoardConfiguration.DefaultRowId);
+        if (defaultRows && defaultRows.length > 0) {
+            return defaultRows[0];
+        }
+        return null;
     }
 
     private _compareColumnStateMappings(c1: WorkContracts.BoardColumn, c2: WorkContracts.BoardColumn): boolean {
