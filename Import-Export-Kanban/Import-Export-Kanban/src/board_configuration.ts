@@ -324,7 +324,7 @@ export class BoardConfiguration {
                 backlogSetting.columns.forEach(columnToCreate => {
                     if (columnToCreate.columnType !== WorkContracts.BoardColumnType.InProgress) {
                         // keep id the same to avoid creating a new column (should only change name)
-                        columnToCreate.id = selectedMapping.mappings.filter(c => c.sourceColumn === columnToCreate)[0].targetColumn.id;
+                        columnToCreate.id = selectedMapping.mappings.filter(c => c.sourceColumn.id === columnToCreate.id)[0].targetColumn.id;
                         columnsToApply.push(columnToCreate);
                     } else {
                         // empty id to force new column creation
