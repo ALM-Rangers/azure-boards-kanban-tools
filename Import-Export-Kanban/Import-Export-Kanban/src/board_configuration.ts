@@ -18,6 +18,7 @@ export interface IBacklogBoardSettings {
     cardRules: WorkContracts.BoardCardRuleSettings;
     columns: WorkContracts.BoardColumn[];
     rows: WorkContracts.BoardRow[];
+    fields: WorkContracts.BoardFields;
 }
 
 export interface IBoardSettings {
@@ -41,12 +42,14 @@ export interface IBoardColumnDifferences {
 
 export class BoardConfiguration {
     private static BaseWiql = "SELECT [System.Id],[System.WorkItemType],[System.Title] FROM workitems WHERE [System.TeamProject] = @project " +
-    "AND [System.WorkItemType] in (@WorkItemTypes) AND [System.BoardColumn] in (@OldBoardColumns) and [System.AreaPath] UNDER '@RootArea' and System.IterationPath UNDER '@RootIteration'";
+    "AND [System.WorkItemType] in (@WorkItemTypes) AND [@WITField] in (@OldBoardColumns) and (@RootArea) and System.IterationPath UNDER '@RootIteration'";
 
     private static WiqlWorkItemTypes = "@WorkItemTypes";
     private static WiqlBoardColumns = "@OldBoardColumns";
     private static WiqlRootArea = "@RootArea";
     private static WiqlIteration = "@RootIteration";
+    private static WiqlWorkItemColumnField = "@WITField";
+    private static DefaultRowId = "00000000-0000-0000-0000-000000000000";
 
     /**
      * Figures out the differences in board column mappings
@@ -152,11 +155,76 @@ export class BoardConfiguration {
         return settings;
     }
 
-    public async applySettingsAsync(targetTeamSettings: IBoardSettings, sourceTeamSettings: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
+    public async applySettingsAsync(targetTeamName: string, sourceTeamName: string, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
         let result: Boolean = false;
 
-        result = await this.applyTeamSettingsAsync(targetTeamSettings, sourceTeamSettings, selectedMappings);
+        let sourceSettings = await this.getCurrentConfigurationAsync(sourceTeamName);
+        let targetSettings = await this.getCurrentConfigurationAsync(targetTeamName);
+
+        result = await this.applyTeamSettingsAsync(targetSettings, sourceSettings, selectedMappings);
         return result;
+    }
+
+    private async sleep(ms) {
+        console.log("Waiting " + ms + " milliseconds...");
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Initializes a board that hasn't been visited before. It does this by opening it in an invisible window.
+     *
+     * @param context The context of the team to initialize the board for
+     * @param backlog The board to initialize
+     */
+    private async initializeBoard(context: CoreContracts.TeamContext, backlog: WorkContracts.CategoryConfiguration) {
+        let fakepage: JQuery = $("#fakepage");
+        let collectionUri: string = VSS.getWebContext().collection.uri;
+        let url = encodeURI(collectionUri + context.project + "/" + context.team + "/_backlogs/board/" + backlog.name);
+
+        let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
+        let teamSettings = await workClient.getTeamSettings(context);
+
+        let backlogVisible: boolean = teamSettings.backlogVisibilities[backlog.referenceName];
+        if (backlogVisible === false) {
+            // If the backlog is not visible, we won't be able to fake the displaying of it. So, we'll temporarily enable it.
+            console.log("Temporarily enabling backlog " + backlog.referenceName + " for team " + context.team);
+            let backlogVisibilities: { [key: string]: boolean } = {};
+            backlogVisibilities[backlog.referenceName] = true;
+
+            let updateSettings: WorkContracts.TeamSettingsPatch = {
+                backlogIteration: null,
+                backlogVisibilities: backlogVisibilities,
+                bugsBehavior: null,
+                workingDays: null,
+                defaultIteration: null,
+                defaultIterationMacro: null
+            };
+            await workClient.updateTeamSettings(updateSettings, context);
+        }
+
+        console.log("Faking visit to: " + url);
+        fakepage.show();
+        fakepage.html("<object data=\"" + url + "\" />");
+        await this.sleep(5000); // Wait 5 seconds. I'd love a better solution for this, but there doesn't seem to be a way to check the content an <object> tag that is loaded with the data property
+        fakepage.hide();
+
+        if (backlogVisible === false) {
+            // If the backlog was not visible, we'll hide it again.
+            console.log("Disabling backlog " + backlog.referenceName + " for team " + context.team);
+            let backlogVisibilities: { [key: string]: boolean } = {};
+            backlogVisibilities[backlog.referenceName] = false;
+
+            let updateSettings: WorkContracts.TeamSettingsPatch = {
+                backlogIteration: null,
+                backlogVisibilities: backlogVisibilities,
+                bugsBehavior: null,
+                workingDays: null,
+                defaultIteration: null,
+                defaultIterationMacro: null
+            };
+            await workClient.updateTeamSettings(updateSettings, context);
+        }
+
     }
 
     private async getTeamSettingsAsync(context: CoreContracts.TeamContext): Promise<IBoardSettings> {
@@ -172,13 +240,34 @@ export class BoardConfiguration {
 
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
         let process = await workClient.getProcessConfiguration(context.project);
-        // TEMP to simplify debugging
-        // let allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Features");
-        let allBacklogs = process.portfolioBacklogs;
+        let allBacklogs: WorkContracts.CategoryConfiguration[] = [];
+        allBacklogs = process.portfolioBacklogs;
+        // allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
         allBacklogs.push(process.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
+                console.log("Getting settings for board " + backlog.name + " (" + backlog.referenceName + ") of team " + context.team);
+                let success: boolean = false;
+                let tries: number = 0;
+                let board: WorkContracts.Board = null;
+                while (success === false && tries <= 10) {
+                    try {
+                        board = await workClient.getBoard(context, backlog.name);
+                        console.log("Successfully got board!");
+                        success = true;
+                    } catch (e) {
+                        console.log("Failed to get board!: " + e);
+                        let errormessage: string = e.message;
+                        if (errormessage.indexOf("The board does not exist.") !== -1) {
+                            // This board has not yet been visited by anyone, so it doesn't exist in the VSTS backend yet. This will make subsequent API calls fail
+                            // We'll try to fake a visit to this board here
+                            await this.initializeBoard(context, backlog);
+                            board = await workClient.getBoard(context, backlog.name);
+                        }
+                        tries++;
+                    }
+                }
                 let cardSettings = await workClient.getBoardCardSettings(context, backlog.name);
                 let cardRules = await workClient.getBoardCardRuleSettings(context, backlog.name);
                 let columns = await workClient.getBoardColumns(context, backlog.name);
@@ -189,7 +278,8 @@ export class BoardConfiguration {
                     cardRules: cardRules,
                     cardSettings: cardSettings,
                     columns: columns,
-                    rows: rows
+                    rows: rows,
+                    fields: board !== null ? board.fields : null
                 };
                 settings.backlogSettings.push(boardSettings);
             }
@@ -199,43 +289,54 @@ export class BoardConfiguration {
         }
     }
 
-    private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settings: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
+    private async applyTeamSettingsAsync(oldSettings: IBoardSettings, settingsToApply: IBoardSettings, selectedMappings: IBoardColumnDifferences[]): Promise<Boolean> {
         let result: Boolean = false;
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
         let witClient = WitClient.getClient();
 
         let context = oldSettings.context;
+        console.log("Old settings");
+        console.log(oldSettings);
+        console.log("Settings to apply");
+        console.log(settingsToApply);
         try {
-            for (let backlogIndex = 0; backlogIndex < settings.backlogSettings.length; backlogIndex++) {
-                let backlogSetting = settings.backlogSettings[backlogIndex];
-                let cardSettings = await workClient.updateBoardCardSettings(backlogSetting.cardSettings, context, backlogSetting.boardName);
-                let cardRules = await workClient.updateBoardCardRuleSettings(backlogSetting.cardRules, context, backlogSetting.boardName);
-                let rows = await workClient.updateBoardRows(backlogSetting.rows, context, backlogSetting.boardName);
+            for (let backlogIndex = 0; backlogIndex < settingsToApply.backlogSettings.length; backlogIndex++) {
+                let backlogSettingToApply = settingsToApply.backlogSettings[backlogIndex];
+                console.log(`Processing backlog [${backlogSettingToApply.boardName}]`);
+                let cardSettings = await workClient.updateBoardCardSettings(backlogSettingToApply.cardSettings, context, backlogSettingToApply.boardName);
+                let cardRules = await workClient.updateBoardCardRuleSettings(backlogSettingToApply.cardRules, context, backlogSettingToApply.boardName);
                 let columnsToApply: WorkContracts.BoardColumn[] = new Array();
 
                 let oldBoard: IBacklogBoardSettings;
                 oldSettings.backlogSettings.forEach(board => {
-                    if (board.boardName === backlogSetting.boardName) {
+                    if (board.boardName === backlogSettingToApply.boardName) {
                         oldBoard = board;
                     }
                 });
 
                 let selectedMapping: IBoardColumnDifferences;
                 selectedMappings.forEach(cd => {
-                    if (cd.backlog === backlogSetting.boardName) {
+                    if (cd.backlog === backlogSettingToApply.boardName) {
                         selectedMapping = cd;
                     }
                 });
 
                 let uniqueNameifier = Date.now().toString() + "-";
 
+                let newRows = await this._applyNewRows(oldBoard.rows, backlogSettingToApply.rows, uniqueNameifier, backlogSettingToApply.boardName, context, workClient);
+                let newDefaultRow = this._getDefaultRow(newRows);
+                let newDefaultRowName: string = null;
+                if (newDefaultRow) {
+                    newDefaultRowName = newDefaultRow.name;
+                }
+
                 let oldActiveColumns = oldBoard.columns.filter(c => c.columnType === WorkContracts.BoardColumnType.InProgress);
 
                 // Create new colums first
-                backlogSetting.columns.forEach(columnToCreate => {
+                backlogSettingToApply.columns.forEach(columnToCreate => {
                     if (columnToCreate.columnType !== WorkContracts.BoardColumnType.InProgress) {
                         // keep id the same to avoid creating a new column (should only change name)
-                        columnToCreate.id = selectedMapping.mappings.filter(c => c.sourceColumn === columnToCreate)[0].targetColumn.id;
+                        columnToCreate.id = selectedMapping.mappings.filter(c => c.sourceColumn.id === columnToCreate.id)[0].targetColumn.id;
                         columnsToApply.push(columnToCreate);
                     } else {
                         // empty id to force new column creation
@@ -259,8 +360,9 @@ export class BoardConfiguration {
                 });
 
                 columnsToApply.push(outgoingColumn);
-
-                let currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
+                console.log("Creating intermediate board with columns:");
+                console.log(columnsToApply);
+                let intermediateColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSettingToApply.boardName);
 
                 // Move work items to new mappings
                 // Get work items for current board
@@ -272,10 +374,10 @@ export class BoardConfiguration {
                 let teamFieldValues = await workClient.getTeamFieldValues(context);
 
                 // Get work items for the right backlog level
-                let workItemTypes = "'" + backlogSetting.boardWorkItemTypes[0] + "'";
-                if (backlogSetting.boardWorkItemTypes.length > 1) {
-                    for (let workItemTypeIndex = 1; workItemTypeIndex < backlogSetting.boardWorkItemTypes.length; workItemTypeIndex++) {
-                        workItemTypes += ", '" + backlogSetting.boardWorkItemTypes[workItemTypeIndex] + "'";
+                let workItemTypes = "'" + backlogSettingToApply.boardWorkItemTypes[0] + "'";
+                if (backlogSettingToApply.boardWorkItemTypes.length > 1) {
+                    for (let workItemTypeIndex = 1; workItemTypeIndex < backlogSettingToApply.boardWorkItemTypes.length; workItemTypeIndex++) {
+                        workItemTypes += ", '" + backlogSettingToApply.boardWorkItemTypes[workItemTypeIndex] + "'";
                     }
                 }
 
@@ -288,10 +390,21 @@ export class BoardConfiguration {
                     }
                 }
 
+                let areaQuery = "";
+                teamFieldValues.values.forEach((areaPath, index, values) => {
+                    let operator = areaPath.includeChildren ? "UNDER" : "=";
+                    let pathQuery = `[System.AreaPath] ${operator} "${areaPath.value}"`;
+                    areaQuery += index > 0 ? ` OR ${pathQuery}` : pathQuery;
+                });
+
+                let boardColumnField = oldBoard.fields.columnField.referenceName;
+                let boardRowField = oldBoard.fields.rowField.referenceName;
+
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemTypes, workItemTypes);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlIteration, teamSettings.backlogIteration.name);
-                wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, teamFieldValues.defaultValue);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlRootArea, areaQuery);
                 wiql.query = wiql.query.replace(BoardConfiguration.WiqlBoardColumns, wiqlColumns);
+                wiql.query = wiql.query.replace(BoardConfiguration.WiqlWorkItemColumnField, boardColumnField);
 
                 let witIds: number[] = new Array();
                 console.log("query by wiql " + wiql.query);
@@ -305,31 +418,54 @@ export class BoardConfiguration {
                         let wit = wits[witIndex];
                         let fieldNames = Object.keys(wit.fields);
                         fieldNames.sort();
-                        let columnFields = fieldNames.filter(f => /WEF_.*_Kanban.Column$/.test(f));
+                        let columnFields = fieldNames.filter(f => boardColumnField === f);
                         let columnField = "";
                         if (columnFields && columnFields.length > 0) {
                             columnField = columnFields[0];
+                        } else {
+                            console.log("No column field found");
                         }
                         let witColumn = wit.fields[columnField];
                         let matchedColumns = selectedMapping.mappings.filter(m => m.targetColumn.name === witColumn);
                         if (matchedColumns && matchedColumns.length > 0) {
                             let mappedColumn = matchedColumns[0];
+                            console.log("Using column mapping:");
+                            console.log(mappedColumn);
+
+                            // If the intermediate columns contains a temporary column for our source column, we should move our items there
+                            let newColumnFieldValue: string = mappedColumn.sourceColumn.name;
+                            let tempColumnNameToFind = uniqueNameifier + mappedColumn.sourceColumn.name;
+                            if (intermediateColumns.some(c => c.name === tempColumnNameToFind)) {
+                                newColumnFieldValue = intermediateColumns.filter(c => c.name === tempColumnNameToFind)[0].name;
+                            }
+
                             let patch = [
                                 {
                                     "op": "replace",
                                     "path": `/fields/${columnField}`,
-                                    "value": mappedColumn.sourceColumn.name
+                                    "value": newColumnFieldValue
                                 }
                             ];
+                            if (newDefaultRowName && newDefaultRowName.length > 0) {
+                                patch.push({
+                                    "op": "replace",
+                                    "path": `/fields/${boardRowField}`,
+                                    "value": newDefaultRowName
+                                });
+                            }
                             console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
                             await witClient.updateWorkItem(patch, wits[witIndex].id, false, true);
                         }
                     }
+                } else {
+                    console.log("No work items found");
                 }
+
+                newRows = await this._cleanUpRows(newRows, backlogSettingToApply.rows, uniqueNameifier, backlogSettingToApply.boardName, context, workClient);
 
                 // Delete old columns
                 columnsToApply = new Array();
-                currentColumns.forEach(column => {
+                intermediateColumns.forEach(column => {
                     if (column.columnType === WorkContracts.BoardColumnType.InProgress) {
                         // remove unique indentifier from column name
                         let uniqueIndex = column.name.lastIndexOf(uniqueNameifier);
@@ -343,7 +479,7 @@ export class BoardConfiguration {
                         columnsToApply.push(column);
                     }
                 });
-                currentColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSetting.boardName);
+                let finalColumns = await workClient.updateBoardColumns(columnsToApply, context, backlogSettingToApply.boardName);
             }
             result = true;
         } catch (ex) {
@@ -352,6 +488,64 @@ export class BoardConfiguration {
         }
         console.log("Finish apply");
         return result;
+    }
+
+    private async _applyNewRows(outgoingRows: WorkContracts.BoardRow[], incomingRows: WorkContracts.BoardRow[], uniqueNameifier: string, boardName: string, context: CoreContracts.TeamContext, client: WorkClient.WorkHttpClient2_3): Promise<WorkContracts.BoardRow[]> {
+        let outgoingDefaultRow = this._getDefaultRow(outgoingRows);
+        let incomingDefaultRow = this._getDefaultRow(incomingRows);
+        if (!outgoingDefaultRow || !incomingDefaultRow) {
+            return;
+        }
+        outgoingDefaultRow.name = incomingDefaultRow.name;
+        let desiredRows = outgoingRows;
+        incomingRows.forEach(row => {
+            if (row.id !== BoardConfiguration.DefaultRowId) {
+                let newRow: WorkContracts.BoardRow = {
+                    name: uniqueNameifier + row.name,
+                    id: ""
+                };
+                desiredRows.push(newRow);
+            }
+        });
+        let allRows = await client.updateBoardRows(desiredRows, context, boardName);
+        return allRows;
+    }
+
+    private async _cleanUpRows(currentRows: WorkContracts.BoardRow[], incomingRows: WorkContracts.BoardRow[], uniqueNameifier: string, boardName: string, context: CoreContracts.TeamContext, client: WorkClient.WorkHttpClient2_3): Promise<WorkContracts.BoardRow[]> {
+        let finalRows: WorkContracts.BoardRow[] = [];
+        incomingRows.forEach(row => {
+            if (row.id === BoardConfiguration.DefaultRowId) {
+                finalRows.push(row);
+            } else {
+                let currentRow = this._getRowByName(currentRows, uniqueNameifier + row.name);
+                if (currentRow) {
+                    let finalRow: WorkContracts.BoardRow = {
+                        name: row.name,
+                        id: currentRow.id
+                    };
+                    finalRows.push(finalRow);
+                }
+            }
+        });
+
+        finalRows = await client.updateBoardRows(finalRows, context, boardName);
+        return finalRows;
+    }
+
+    private _getRowByName(rows: WorkContracts.BoardRow[], name: string): WorkContracts.BoardRow {
+        let namedRow = rows.filter(row => row.name === name);
+        if (namedRow && namedRow.length > 0) {
+            return namedRow[0];
+        }
+        return null;
+    }
+
+    private _getDefaultRow(rows: WorkContracts.BoardRow[]): WorkContracts.BoardRow {
+        let defaultRows = rows.filter(row => row.id === BoardConfiguration.DefaultRowId);
+        if (defaultRows && defaultRows.length > 0) {
+            return defaultRows[0];
+        }
+        return null;
     }
 
     private _compareColumnStateMappings(c1: WorkContracts.BoardColumn, c2: WorkContracts.BoardColumn): boolean {
