@@ -110,8 +110,14 @@ export class CopySettingsWizard {
 
         // Create the required pages
         this._workItemMappingPage = new WorkItemMappingPage();
-        this._workItemMappingPage.OnMappingValidated = ((validationResult) => {
+        this._workItemMappingPage.OnMappingValidated = ((validationResult, failedBacklog) => {
             this._navigationControl.setButtonState(NavigationControl.NavigationButtonType.NEXT, { isEnabled: validationResult, isVisible: true });
+
+            if (!validationResult) {
+                this._showError(`Mapping for backlog "${failedBacklog}" is invalid. Please correct the configured mapping.`);
+            } else {
+                this._hideError();
+            }
         });
 
         // Create the navigation control
@@ -148,6 +154,11 @@ export class CopySettingsWizard {
         let _errorMessageBar: JQuery = $("#errorMessageBar");
         _errorMessageBar.find(".ms-MessageBar-text").text(errorMessage);
         _errorMessageBar.show();
+    }
+
+    private _hideError() {
+        let _errorMessageBar: JQuery = $("#errorMessageBar");
+        _errorMessageBar.hide();
     }
 
     /**
