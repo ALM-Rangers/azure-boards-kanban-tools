@@ -176,7 +176,7 @@ export class BoardConfiguration {
      * @param context The context of the team to initialize the board for
      * @param backlog The board to initialize
      */
-    private async initializeBoard(context: CoreContracts.TeamContext, backlog: WorkContracts.CategoryConfiguration) {
+    private async initializeBoard(context: CoreContracts.TeamContext, backlog: WorkContracts.BacklogLevelConfiguration) {
         let fakepage: JQuery = $("#fakepage");
         let collectionUri: string = VSS.getWebContext().collection.uri;
         let url = encodeURI(collectionUri + context.project + "/" + context.team + "/_backlogs/board/" + backlog.name);
@@ -184,12 +184,12 @@ export class BoardConfiguration {
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
         let teamSettings = await workClient.getTeamSettings(context);
 
-        let backlogVisible: boolean = teamSettings.backlogVisibilities[backlog.referenceName];
+        let backlogVisible: boolean = teamSettings.backlogVisibilities[backlog.id];
         if (backlogVisible === false) {
             // If the backlog is not visible, we won't be able to fake the displaying of it. So, we'll temporarily enable it.
-            console.log("Temporarily enabling backlog " + backlog.referenceName + " for team " + context.team);
+            console.log("Temporarily enabling backlog " + backlog.id + " for team " + context.team);
             let backlogVisibilities: { [key: string]: boolean } = {};
-            backlogVisibilities[backlog.referenceName] = true;
+            backlogVisibilities[backlog.id] = true;
 
             let updateSettings: WorkContracts.TeamSettingsPatch = {
                 backlogIteration: null,
@@ -210,9 +210,9 @@ export class BoardConfiguration {
 
         if (backlogVisible === false) {
             // If the backlog was not visible, we'll hide it again.
-            console.log("Disabling backlog " + backlog.referenceName + " for team " + context.team);
+            console.log("Disabling backlog " + backlog.id + " for team " + context.team);
             let backlogVisibilities: { [key: string]: boolean } = {};
-            backlogVisibilities[backlog.referenceName] = false;
+            backlogVisibilities[backlog.id] = false;
 
             let updateSettings: WorkContracts.TeamSettingsPatch = {
                 backlogIteration: null,
@@ -239,15 +239,15 @@ export class BoardConfiguration {
         };
 
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
-        let process = await workClient.getProcessConfiguration(context.project);
-        let allBacklogs: WorkContracts.CategoryConfiguration[] = [];
-        allBacklogs = process.portfolioBacklogs;
+        let backlogs = await workClient.getBacklogConfigurations(context);
+        let allBacklogs: WorkContracts.BacklogLevelConfiguration[] = [];
+        allBacklogs = backlogs.portfolioBacklogs;
         // allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
-        allBacklogs.push(process.requirementBacklog);
+        allBacklogs.push(backlogs.requirementBacklog);
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
-                console.log("Getting settings for board " + backlog.name + " (" + backlog.referenceName + ") of team " + context.team);
+                console.log("Getting settings for board " + backlog.name + " (" + backlog.id + ") of team " + context.team);
                 let success: boolean = false;
                 let tries: number = 0;
                 let board: WorkContracts.Board = null;
