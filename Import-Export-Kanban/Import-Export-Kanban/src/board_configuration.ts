@@ -244,6 +244,9 @@ export class BoardConfiguration {
         allBacklogs = backlogs.portfolioBacklogs;
         // allBacklogs = process.portfolioBacklogs.filter(b => b.name === "Epics");
         allBacklogs.push(backlogs.requirementBacklog);
+        allBacklogs = allBacklogs.sort((a, b) => {
+            return b.rank - a.rank;
+        });
         try {
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
