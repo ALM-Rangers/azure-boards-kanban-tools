@@ -19,6 +19,11 @@
       "id": "Microsoft.VisualStudio.Services"
     }
   ],
+  "content": {
+    "details": {
+      "path": "marketplace/overview.md"
+    }
+  },
   "tags": [
     "Agile",
     "Board",
@@ -67,9 +72,8 @@
       "type": "ms.vss-web.action",
       "description": "Import-Export Kanban Config",
       "properties": {
-        "text": "Import-Export Kanban Config",
         "title": "Allows you to import/export your Kanban config from/to another team",
-        "icon": "img/show-properties.png",
+        "icon": "img/brush.svg",
         "uri": "src/import-export.html",
         "group": "actions",
         "registeredObjectId": "import-export-kanban-menu"
