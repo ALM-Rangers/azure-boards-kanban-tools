@@ -22,7 +22,7 @@ export class ImportExportKanbanAction {
 
             let hostDialogOptions: IHostDialogOptions = {
                 title: "Copy Kanban board settings",
-                width: 500,
+                width: 700,
                 height: 500,
                 // We have our own navigation controls, since built in buttons are not flexible enough for our needs, so we disable all buttons
                 buttons: null

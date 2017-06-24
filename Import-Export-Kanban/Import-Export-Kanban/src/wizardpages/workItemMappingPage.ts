@@ -209,10 +209,9 @@ export class WorkItemMappingPage {
      * @memberof CopySettingsWizard
      */
     private _createDropdown(backlog: string, targetColumnId: string, options: WorkContracts.BoardColumn[]): JQuery {
-        let $div = $("<div />").addClass("ms-Dropdown").attr("tabindex", 0);
-        // $("<label />").addClass("ms-Label").text("").appendTo($div);
-        $("<i />").addClass("ms-Dropdown-caretDown ms-Icon ms-Icon--ChevronDown").appendTo($div);
-        let $select = $("<select />").addClass("ms-Dropdown-select");
+        let $div = $("<div />"); // .addClass("ms-Dropdown").attr("tabindex", 0);
+        $("<i />").addClass("mapping-dropDown-caretDown ms-Icon ms-Icon--ChevronDown").appendTo($div);
+        let $select = $("<select />").addClass("mapping-dropDown");
         if (options.length > 0) {
             options.forEach(item => {
                 $("<option />").val(item.id).text(item.name).appendTo($select);
