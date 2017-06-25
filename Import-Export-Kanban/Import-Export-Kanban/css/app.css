@@ -10,6 +10,10 @@
     width: 100%;
 }
 
+li.ms-Pivot-link {
+    outline: 0;
+}
+
 #errorMessageBar {
     margin-bottom: 10px;
 }
