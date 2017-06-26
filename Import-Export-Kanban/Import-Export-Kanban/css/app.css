@@ -98,3 +98,59 @@
     display: inline-block;
     box-sizing: border-box;
 }
+
+
+/* dropdown */
+
+.mapping-dropDown {
+    width: 100%;
+    font-family: 'Segoe UI WestEuropean', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    color: #333333;
+    font-size: 14px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    position: relative;
+    outline: 0;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    text-indent: 0.01px;
+    text-overflow: '';
+    background: #ffffff;
+    border: 1px solid #c8c8c8;
+    cursor: pointer;
+    display: block;
+    height: 32px;
+    padding: 5px 32px 0 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+    .mapping-dropDown:focus {
+        border-color: #0078d7;
+    }
+
+.mapping-dropDown-caretDown {
+    color: #212121;
+    font-size: 12px;
+    position: absolute;
+    right: 13px;
+    bottom: 13px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.mapping-dropDown option {
+    box-shadow: none;
+    overflow-y: auto;
+    padding-top: 4px;
+    max-height: 100%;
+    padding: 7px 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

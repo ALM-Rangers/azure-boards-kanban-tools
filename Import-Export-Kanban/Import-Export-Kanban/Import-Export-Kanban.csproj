@@ -89,6 +89,7 @@
     <TypeScriptCompile Include="src\select_team_dialog.ts" />
     <TypeScriptCompile Include="src\TelemetryClient.ts" />
     <TypeScriptCompile Include="src\NavigationControl.ts" />
+    <TypeScriptCompile Include="src\wizardpages\workItemMappingPage.ts" />
     <TypeScriptCompile Include="typings\globals\applicationinsights-js\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\jquery\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\knockout\index.d.ts" />
