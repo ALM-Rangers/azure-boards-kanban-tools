@@ -12,7 +12,7 @@
     <AssemblyName>Import-Export-Kanban</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TypeScriptToolsVersion>1.8</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>2.2</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort>44300</IISExpressSSLPort>
     <IISExpressAnonymousAuthentication />
@@ -50,7 +50,6 @@
     <Content Include="scripts\packageRelease.js" />
     <Content Include="src\import-export.html" />
     <Content Include="src\copy-settings-wizard.html" />
-    <Content Include="src\select-team-dialog.html" />
     <Content Include="web.config" />
     <Content Include="tsconfig.json" />
     <Content Include="typings.json" />
@@ -86,9 +85,9 @@
     <TypeScriptCompile Include="src\import_export.ts" />
     <TypeScriptCompile Include="src\copySettingsWizard.ts" />
     <TypeScriptCompile Include="src\TeamSelectorControl.ts" />
-    <TypeScriptCompile Include="src\select_team_dialog.ts" />
-    <TypeScriptCompile Include="src\TelemetryClient.ts" />
     <TypeScriptCompile Include="src\NavigationControl.ts" />
+    <TypeScriptCompile Include="src\telemetryClientSettings.ts" />
+    <TypeScriptCompile Include="src\utils.ts" />
     <TypeScriptCompile Include="src\wizardpages\workItemMappingPage.ts" />
     <TypeScriptCompile Include="typings\globals\applicationinsights-js\index.d.ts" />
     <TypeScriptCompile Include="typings\globals\jquery\index.d.ts" />

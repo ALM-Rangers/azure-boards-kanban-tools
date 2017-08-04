@@ -2,16 +2,8 @@
     font-family: 'Segoe UI', sans-serif;
 }
 
-.ms-SearchBox {
-    width: 100%;
-}
-
-.ms-SearchBox-field {
-    width: 100%;
-}
-
-li.ms-Pivot-link {
-    outline: 0;
+.team-filter {
+    width: 350px;
 }
 
 #errorMessageBar {
