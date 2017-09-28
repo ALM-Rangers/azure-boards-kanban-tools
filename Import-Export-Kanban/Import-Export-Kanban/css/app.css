@@ -45,10 +45,13 @@
 }
 
 /* Navigation */
+.ms-Pivot{
+    height: 83vh;
+    overflow-y: auto;
+}
 .wizardNavigation {
     position: absolute;
     right: 0px;
-    bottom: 10px;
 }
 
 /* Team Selector */
@@ -94,7 +97,9 @@
     display: inline-block;
     box-sizing: border-box;
 }
-
+.ms-ChoiceFieldGroup{
+    height: 83vh;
+}
 
 /* dropdown */
 
