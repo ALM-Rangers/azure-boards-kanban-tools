@@ -73,7 +73,7 @@
       "description": "Import-Export Kanban Config",
       "properties": {
         "title": "Allows you to import/export your Kanban config from/to another team",
-        "icon": "img/brush.svg",
+        "icon": "img/brush.png",
         "uri": "src/import-export.html",
         "group": "actions",
         "registeredObjectId": "import-export-kanban-menu"
