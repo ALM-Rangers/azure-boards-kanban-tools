@@ -182,7 +182,7 @@ export class WorkItemMappingPage {
             let $row = $("<div />").addClass("ms-Grid-row");
             let $left = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
             $("<label />")
-                .addClass("ms-Label")
+                .addClass("ms-Label").addClass("mapping-label")
                 .text(differences.mappings[index].targetColumn.name)
                 .appendTo($left);
             let $right = $("<div />").addClass("ms-Grid-col ms-u-sm6 ms-u-md6");
@@ -212,10 +212,16 @@ export class WorkItemMappingPage {
         let $div = $("<div />"); // .addClass("ms-Dropdown").attr("tabindex", 0);
         $("<i />").addClass("mapping-dropDown-caretDown ms-Icon ms-Icon--ChevronDown").appendTo($div);
         let $select = $("<select />").addClass("mapping-dropDown");
-        if (options.length > 0) {
+        if (options.length > 1) {
             options.forEach(item => {
                 $("<option />").val(item.id).text(item.name).appendTo($select);
             });
+        } else if (options.length === 1) {
+            let label = $("<label />")
+                .addClass("ms-Label")
+                .addClass("mapping-label")
+                .text(options[0].name);
+            return label;
         } else {
             // Add an empty option
             $("<option />").appendTo($select);
