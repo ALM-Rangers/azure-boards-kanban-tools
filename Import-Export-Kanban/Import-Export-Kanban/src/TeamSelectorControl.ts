@@ -313,6 +313,16 @@ export class TeamSelectorControl extends UIControls.BaseControl {
         if (isVisible) {
             this._element.find("#" + this._getTeamId(team)).show();
         } else {
+            if (this._selectedTeam && this._selectedTeam.team.id === team.id) {
+                this._element.find("input[name='" + this._getInputName() + "']").each((idx, element) => {
+                    if ((<any>(element)).value === team.id && element.checked) {
+                        let labels: NodeListOf<HTMLElement> = (<any>element).labels;
+                        let label = labels[0];
+                        label.classList.remove("is-checked");
+                        this._onChanged(null);
+                    }
+                });
+            }
             this._element.find("#" + this._getTeamId(team)).hide();
         }
     }
@@ -334,7 +344,10 @@ export class TeamSelectorControl extends UIControls.BaseControl {
      */
     private _onChanged(event: JQueryEventObject) {
         let numberSelectedTeams = this.getNumberSelectedTeams();
-        let teamId = getCheckedValue(event);
+        let teamId = null;
+        if (event) {
+            teamId = getCheckedValue(event);
+        }
 
         this._setNumberSelectedTeamsCounter(numberSelectedTeams);
 
