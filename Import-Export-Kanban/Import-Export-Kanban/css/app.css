@@ -97,6 +97,12 @@
     display: inline-block;
     box-sizing: border-box;
 }
+
+.mapping-label {
+    margin-top: 5px;
+    padding: 0px 0px 16px 0px;
+}
+
 .ms-ChoiceFieldGroup{
     height: 83vh;
 }
