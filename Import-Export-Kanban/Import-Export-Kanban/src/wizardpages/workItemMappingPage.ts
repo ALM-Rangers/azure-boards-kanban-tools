@@ -31,11 +31,10 @@ export class WorkItemMappingPage {
         let rootContainer = $("#itemMappings");
         let waitControlOptions: StatusIndicator.IWaitControlOptions = {
             cancellable: false,
-            backgroundColor: "#ffffff",
             message: "Loading...."
         };
 
-        let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
+        let waitControl = Controls.create(StatusIndicator.WaitControlO, rootContainer, waitControlOptions);
 
         if (this.RefreshBoardDifferences) {
             waitControl.startWait();
