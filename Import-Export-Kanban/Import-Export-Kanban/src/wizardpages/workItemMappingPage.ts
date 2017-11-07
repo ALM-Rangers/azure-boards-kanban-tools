@@ -34,7 +34,7 @@ export class WorkItemMappingPage {
             message: "Loading...."
         };
 
-        let waitControl = Controls.create(StatusIndicator.WaitControlO, rootContainer, waitControlOptions);
+        let waitControl = Controls.create(StatusIndicator.WaitControl, rootContainer, waitControlOptions);
 
         if (this.RefreshBoardDifferences) {
             waitControl.startWait();
