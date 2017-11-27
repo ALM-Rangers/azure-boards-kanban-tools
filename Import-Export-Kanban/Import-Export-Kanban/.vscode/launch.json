@@ -11,14 +11,6 @@
             "trace": true,
             "smartStep": true,
             "userDataDir": "${workspaceRoot}/out/chrome"
-        },
-        {
-            "name": "Attach to Chrome, with sourcemaps",
-            "type": "chrome",
-            "request": "attach",
-            "port": 9222,
-            "sourceMaps": true,
-            "webRoot": "${workspaceRoot}"
         }
     ]
 }
