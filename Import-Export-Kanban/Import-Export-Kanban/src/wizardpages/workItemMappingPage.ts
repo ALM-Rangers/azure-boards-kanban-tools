@@ -31,7 +31,6 @@ export class WorkItemMappingPage {
         let rootContainer = $("#itemMappings");
         let waitControlOptions: StatusIndicator.IWaitControlOptions = {
             cancellable: false,
-            backgroundColor: "#ffffff",
             message: "Loading...."
         };
 
