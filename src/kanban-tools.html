@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF8">
+    <title>Kanban Board Tools</title>
+    <script src="../3rdParty/es6-promise.min.js"></script>
+    <script src="../3rdParty/VSS.SDK.min.js"></script>
+    <script src="common_chunks.js"></script>
+</head>
+
+<body>
+    <script>
+        VSS.init({
+            setupModuleLoader: true,
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true,
+            usePlatformStyles: true,
+            moduleLoaderConfig: {
+                paths: {
+                    Scripts: 'scripts'
+                }
+            }
+        });
+
+        VSS.ready(function () {
+            require(['./src/kanban'], function (kanban) {
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+</body>
+
+</html>
