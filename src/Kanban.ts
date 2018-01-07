@@ -1,8 +1,8 @@
 /// <reference types="vss-web-extension-sdk" />
 
 import { Dialog, ModalDialogO } from "VSS/Controls/Dialogs";
-import { KanbanDialog } from "./KanbanDialog";
-import * as Constants from "./Constants";
+import { KanbanDialog } from "src/KanbanDialog";
+import * as Constants from "src/Shared/Constants";
 
 export class KanbanBoardToolsAction {
     private _dialogControlInstance: KanbanDialog;
@@ -19,8 +19,9 @@ export class KanbanBoardToolsAction {
                 width: 700,
                 height: 500,
                 close: this._closeDialog,
-                // We have our own navigation controls, since built in buttons are not flexible enough for our needs, so we disable all buttons
-                buttons: null
+                okText: "Ok",
+                resizable: true,
+                modal: true
             };
 
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then(dialog => {
@@ -30,37 +31,40 @@ export class KanbanBoardToolsAction {
                 dialog.getContributionInstance("kanban-wizard").then(dialogControlInstance => {
 
                     this._dialogControlInstance = <KanbanDialog>dialogControlInstance;
+                    this._dialogControlInstance.onValidationUpdated(isValid => {
+                        this._dialog.updateOkButton(isValid);
+                    });
                     this._dialogControlInstance.show();
 
-                //     this._dialogControlInstance.onCancel(() => {
-                //         this._dialog.close();
-                //     });
+                    //     this._dialogControlInstance.onCancel(() => {
+                    //         this._dialog.close();
+                    //     });
 
-                //     this._dialogControlInstance.onTitleChange((title) => {
-                //         this._dialog.setTitle(title);
-                //     });
+                    //     this._dialogControlInstance.onTitleChange((title) => {
+                    //         this._dialog.setTitle(title);
+                    //     });
 
-                //     this._dialogControlInstance.onCopy((copySettings: CopySettingsWizard.CopySettings) => {
+                    //     this._dialogControlInstance.onCopy((copySettings: CopySettingsWizard.CopySettings) => {
 
-                //         // TODO: inline for now. should be move to it's own function later on to perform the copy and drive the UI
+                    //         // TODO: inline for now. should be move to it's own function later on to perform the copy and drive the UI
 
-                //         this._dialog.close();
+                    //         this._dialog.close();
 
-                //         VSS.getService<IHostNavigationService>(VSS.ServiceIds.Navigation).then(navigationService => {
-                //             navigationService.reload();
-                //         });
+                    //         VSS.getService<IHostNavigationService>(VSS.ServiceIds.Navigation).then(navigationService => {
+                    //             navigationService.reload();
+                    //         });
 
-                //         // let board = new Board.BoardConfiguration();
-                //         // board.getCurrentConfiguration(copySettings.source.team.name).then((settings) => {
-                //         //     board.applySettings(webContext.team.name, settings).then((result) => {
-                //         //         console.log("settings applied");
-                //         //     }).catch((reason) => {
-                //         //         console.log("apply failed - " + reason);
-                //         //     });
-                //         // });
+                    //         // let board = new Board.BoardConfiguration();
+                    //         // board.getCurrentConfiguration(copySettings.source.team.name).then((settings) => {
+                    //         //     board.applySettings(webContext.team.name, settings).then((result) => {
+                    //         //         console.log("settings applied");
+                    //         //     }).catch((reason) => {
+                    //         //         console.log("apply failed - " + reason);
+                    //         //     });
+                    //         // });
 
-                //         // TODO: do work and show progress bar
-                //     });
+                    //         // TODO: do work and show progress bar
+                    //     });
                 });
             });
         });

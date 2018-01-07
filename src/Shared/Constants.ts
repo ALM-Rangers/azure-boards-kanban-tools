@@ -9,6 +9,11 @@ export const CopyToTeamLabel: string = "Select a team to copy settings to";
 export const CopyFromTeamLabel: string = "Select a team to copy settings from";
 export const SelectTeamPlaceholder: string = "Select a team";
 
-export const ApplySettingsLevelsLabel: string = "Apply settings at levels";
+export const ApplySettingsLevelsLabel: string = "Apply settings at the following levels";
 
 export const SettingsToCopyLabel: string = "Select settings to copy";
+export const EnableAdvancedMappings: string = "Customize column mappings";
+export const MappingsHeader: string = "Column mappings";
+
+export const LoadingTeamsLabel: string = "Loading teams";
+export const LoadingBacklogsLabel: string = "Updating backlogs";

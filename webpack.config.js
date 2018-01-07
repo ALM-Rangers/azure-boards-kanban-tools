@@ -6,7 +6,7 @@ module.exports = {
     target: "web",
     entry: {
         kanban: "./src/Kanban.ts",
-        copySettingsWizard: "./src/KanbanDialog.tsx"
+        kanbanDialog: "./src/KanbanDialog.tsx"
     },
     output: {
         filename: "src/[name].js",
@@ -22,12 +22,18 @@ module.exports = {
     ],
     devtool: "inline-source-map",
     resolve: {
+        moduleExtensions: ["-loader"],
         extensions: [
             ".webpack.js",
             ".web.js",
             ".ts",
             ".tsx",
-            ".js"]
+            ".js"],
+        alias: {
+            "OfficeFabric": path.resolve(__dirname, "node_modules/office-ui-fabric-react/lib"),
+            "VSSUI": path.resolve(__dirname, "node_modules/vss-ui")
+        },
+        modules: [path.resolve("."), "node_modules"]
     },
     module: {
         rules: [
@@ -42,20 +48,17 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
-                loader: "ts-loader"
+                loader: "ts-loader",
             },
             {
                 test: /\.s?css$/,
-                loaders: ["style", "css", "sass"]
+                loaders: ["style-loader", "css-loader", "sass-loader"]
             },
             {
                 test: /\.(otf|eot|svg|ttf|woff|woff2|gif)(\?.+)?$/,
                 use: "url-loader?limit=4096&name=[name].[ext]"
             }
         ]
-    },
-    devServer: {
-        https: true
     },
     plugins: [
         new webpack.optimize.CommonsChunkPlugin({

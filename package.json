@@ -6,7 +6,7 @@
   "scripts": {
     "clean:vsix": "rimraf *.vsix",
     "clean": "npm run clean:vsix && rimraf dist",
-    "dev": "webpack-dev-server --hot --progress --colors --https --port 9090",
+    "dev": "webpack-dev-server -d --hot --progress --colors --https --content-base ./src/ --port 9090",
     "lint": "tslint -c tslint.json \"src/*.ts",
     "package:dev": "npm run clean:vsix && node ./scripts/packageDev",
     "publish:dev": "npm run package:dev && node ./scripts/packageDev",
@@ -20,6 +20,7 @@
     "@types/jquery": "~3.2.17",
     "copy-webpack-plugin": "^4.3.0",
     "cpx": "^1.5.0",
+    "css-loader": "^0.28.8",
     "file-loader": "^1.1.6",
     "node-sass": "^4.7.2",
     "rimraf": "^2.6.2",
