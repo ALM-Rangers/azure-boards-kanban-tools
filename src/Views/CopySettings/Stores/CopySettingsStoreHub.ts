@@ -24,6 +24,7 @@ export class CopySettingsStoreHub implements IDisposable {
         this._copySettingsActionsHub.setSelectedBacklogLevels.addListener(store.onSetSelectedBacklogLevels);
         this._copySettingsActionsHub.setCanDoAdvancedMapping.addListener(store.onSetCanDoAdvancedMapping);
         this._copySettingsActionsHub.setShowAdvancedMapping.addListener(store.onSetShowAdvancedMapping);
+        this._copySettingsActionsHub.setCurrentMappings.addListener(store.onCurrentMappingsUpdated);
         return store;
     }
 
@@ -36,6 +37,7 @@ export class CopySettingsStoreHub implements IDisposable {
             this._copySettingsActionsHub.setSelectedBacklogLevels.removeListener(this.copySettingsStore.onSetSelectedBacklogLevels);
             this._copySettingsActionsHub.setCanDoAdvancedMapping.removeListener(this.copySettingsStore.onSetCanDoAdvancedMapping);
             this._copySettingsActionsHub.setShowAdvancedMapping.removeListener(this.copySettingsStore.onSetShowAdvancedMapping);
+            this._copySettingsActionsHub.setCurrentMappings.addListener(this.copySettingsStore.onCurrentMappingsUpdated);
         }
     }
 

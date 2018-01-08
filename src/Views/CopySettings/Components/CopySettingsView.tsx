@@ -21,15 +21,17 @@ export interface ICopySettingsViewProps {
 export class CopySettingsView extends React.Component<ICopySettingsViewProps, CopyState> {
     private _copySettingsActionsCreator: CopySettingsActionsCreator;
     private _copySettingsStoreHub: CopySettingsStoreHub;
+    private _servicesClient: ServicesClient;
 
     constructor(props: ICopySettingsViewProps) {
         super(props);
 
         const copySettingsActionsHub = new CopySettingsActionsHub();
         this._copySettingsStoreHub = new CopySettingsStoreHub(copySettingsActionsHub);
+        this._servicesClient = new ServicesClient();
         this._copySettingsActionsCreator = new CopySettingsActionsCreator(
             copySettingsActionsHub,
-            new ServicesClient(),
+            this._servicesClient,
             this._copySettingsStoreHub.getCopyState
         );
 
@@ -38,11 +40,16 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
 
     public componentDidMount() {
         this._copySettingsStoreHub.copySettingsStore.addChangedListener(this._updateCopyState);
+        this._servicesClient.setViewState(this.props.sharedState.dialogState.view);
         this._copySettingsActionsCreator.loadTeams();
     }
 
     public componentWillUnmount() {
         this._copySettingsStoreHub.copySettingsStore.removeChangedListener(this._updateCopyState);
+    }
+
+    public componentWillUpdate(nextProps: ICopySettingsViewProps, nextState: CopyState) {
+        this._servicesClient.setViewState(nextProps.sharedState.dialogState.view);
     }
 
     public render() {
@@ -82,6 +89,7 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
                         show={this.state.copySettingsState.showAdvancedMappings}
                         headerText={Constants.MappingsHeader}
                         onClosed={this._onAdvancedMappingClosed}
+                        mappings={this.state.copySettingsState.currentMappings}
                         selectedLevels={this.state.copySettingsState.selectedBacklogLevels} />
                 </div>
             </div>

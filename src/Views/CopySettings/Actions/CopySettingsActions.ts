@@ -1,6 +1,6 @@
 import { Action } from "VSS/Flux/Action";
 import * as CoreContracts from "TFS/Core/Contracts";
-import { IBoardSettings } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
+import { IBoardSettings, IBoardColumnDifferences } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
 
 export class CopySettingsActionsHub {
     public setTeamsLoading = new Action<boolean>();
@@ -10,4 +10,5 @@ export class CopySettingsActionsHub {
     public setSelectedBacklogLevels = new Action<string[]>();
     public setCanDoAdvancedMapping = new Action<boolean>();
     public setShowAdvancedMapping = new Action<boolean>();
+    public setCurrentMappings = new Action<IBoardColumnDifferences[]>();
 }

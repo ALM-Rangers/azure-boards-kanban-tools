@@ -9,6 +9,7 @@ export interface CopySettingsState {
     selectedBacklogLevels: string[];
     canToggleMappings: boolean;
     showAdvancedMappings: boolean;
+    currentMappings: IBoardColumnDifferences[];
 }
 
 export interface IBacklogBoardSettings {

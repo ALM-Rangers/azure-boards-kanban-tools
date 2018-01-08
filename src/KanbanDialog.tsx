@@ -4,6 +4,7 @@ import * as ReactDOM from "react-dom";
 import { initializeIcons } from "@uifabric/icons";
 
 import { DialogView } from "src/Views/Dialog/Components/DialogView";
+import "./KanbanDialog.scss";
 
 export interface KanbanDialogOptions {
     onClose?: () => void;

@@ -4,6 +4,9 @@ import { Dialog, ModalDialogO } from "VSS/Controls/Dialogs";
 import { KanbanDialog } from "src/KanbanDialog";
 import * as Constants from "src/Shared/Constants";
 
+import * as tc from "TelemetryClient";
+import { telemetrySettings } from "src/TelemetryClientSettings";
+
 export class KanbanBoardToolsAction {
     private _dialogControlInstance: KanbanDialog;
     private _dialog: IExternalDialog;
@@ -27,7 +30,7 @@ export class KanbanBoardToolsAction {
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then(dialog => {
 
                 this._dialog = dialog;
-                // tc.TelemetryClient.getClient(telemetryClientSettings.settings).trackEvent("Main dialog opened");
+                tc.TelemetryClient.getClient(telemetrySettings).trackEvent("Dialog opened");
                 dialog.getContributionInstance("kanban-wizard").then(dialogControlInstance => {
 
                     this._dialogControlInstance = <KanbanDialog>dialogControlInstance;

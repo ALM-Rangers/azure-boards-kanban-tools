@@ -1,7 +1,7 @@
 import * as VSSStore from "VSS/Flux/Store";
 import * as CoreContracts from "TFS/Core/Contracts";
 import { CopySettingsState } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
-import { IBoardSettings } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
+import { IBoardSettings, IBoardColumnDifferences } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
 
 export class CopySettingsStore extends VSSStore.Store {
     public state: CopySettingsState = {
@@ -11,7 +11,8 @@ export class CopySettingsStore extends VSSStore.Store {
         commonBacklogLevels: null,
         selectedBacklogLevels: null,
         canToggleMappings: false,
-        showAdvancedMappings: false
+        showAdvancedMappings: false,
+        currentMappings: null
     };
 
     public onSetTeamsLoading = (loading: boolean) => {
@@ -46,6 +47,11 @@ export class CopySettingsStore extends VSSStore.Store {
 
     public onSetShowAdvancedMapping = (flag: boolean) => {
         this.state.showAdvancedMappings = flag;
+        this.emitChanged();
+    }
+
+    public onCurrentMappingsUpdated = (mappings: IBoardColumnDifferences[]) => {
+        this.state.currentMappings = mappings;
         this.emitChanged();
     }
 }

@@ -7,12 +7,13 @@ import * as WorkContracts from "TFS/Work/Contracts";
 import * as WitContracts from "TFS/WorkItemTracking/Contracts";
 
 import * as Models from "src/Views/CopySettings/Models/CopySettingsInterfaces";
-import { IBoardSettings } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
+import { ViewState } from "src/Views/Dialog/Models/DialogInterfaces";
+import { IBoardColumnDifferences } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
 
 interface TeamProperties {
     team: CoreContracts.WebApiTeam;
     context: CoreContracts.TeamContext;
-    settings: IBoardSettings;
+    settings: Models.IBoardSettings;
 }
 
 export class ServicesClient {
@@ -30,6 +31,11 @@ export class ServicesClient {
     private _currentTeamProperties: TeamProperties;
     private _secondaryTeamProperties: TeamProperties[];
     private _commonBacklogLevels: string[];
+    private _viewState: ViewState;
+
+    private _sourceTeamSettings: Models.IBoardSettings;
+    private _destinationTeamSettings: Models.IBoardSettings[];
+    private _currentMappings: IBoardColumnDifferences[];
 
     constructor() {
         this._currentTeamProperties = {
@@ -38,6 +44,40 @@ export class ServicesClient {
             settings: null
         };
         this._secondaryTeamProperties = [];
+        this._viewState = null;
+    }
+
+    public setViewState(viewState: ViewState): boolean {
+        if (this._viewState !== viewState) {
+            this._viewState = viewState;
+            this._updateSourceDestinationSettings();
+            return true;
+        }
+        return false;
+    }
+
+    private _updateSourceDestinationSettings() {
+        if (this._currentTeamProperties.team === null || this._secondaryTeamProperties.length === 0) {
+            return;
+        }
+
+        if (this._viewState === ViewState.CopySettingsToTeam) {
+            this._sourceTeamSettings = this._currentTeamProperties.settings;
+            this._destinationTeamSettings = [];
+            this._secondaryTeamProperties.forEach(secTeam => {
+                this._destinationTeamSettings.push(secTeam.settings);
+            });
+            this._currentMappings = this.getTeamColumnDifferences(this._sourceTeamSettings, this._destinationTeamSettings[0]);
+        } else if (this._viewState === ViewState.CopySettingsFromTeam) {
+            this._sourceTeamSettings = this._secondaryTeamProperties[0].settings;
+            this._destinationTeamSettings = [];
+            this._destinationTeamSettings.push(this._currentTeamProperties.settings);
+            this._currentMappings = this.getTeamColumnDifferences(this._sourceTeamSettings, this._destinationTeamSettings[0]);
+        }
+    }
+
+    public get currentMappings(): IBoardColumnDifferences[] {
+        return this._currentMappings;
     }
 
     public async loadCurrentTeam(): Promise<void> {
@@ -65,6 +105,7 @@ export class ServicesClient {
         } else {
         }
         this._secondaryTeamProperties.push(properties);
+        this._updateSourceDestinationSettings();
     }
 
     public removeSelectedTeam(teamName: string) {
