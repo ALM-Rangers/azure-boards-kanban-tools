@@ -1,4 +1,5 @@
 import { CopySettingsActionsHub } from "src/Views/CopySettings/Actions/CopySettingsActions";
+import { DialogActionsCreator } from "src/Views/Dialog/Actions/DialogActionsCreator";
 import { ServicesClient } from "src/Shared/ServicesClient";
 import { CopyState } from "src/Views/CopySettings/Stores/CopySettingsStoreHub";
 import { ViewState } from "src/Views/Dialog/Models/DialogInterfaces";
@@ -6,30 +7,37 @@ import { ViewState } from "src/Views/Dialog/Models/DialogInterfaces";
 export class CopySettingsActionsCreator {
     constructor(
         private _copySettingsActionsHub: CopySettingsActionsHub,
+        private _dialogActionsCreator: DialogActionsCreator,
         private _client: ServicesClient,
         private _getState: () => CopyState
     ) { }
 
     public loadTeams() {
         this._copySettingsActionsHub.setTeamsLoading.invoke(true);
+        this._validateUI();
         this._client.loadCurrentTeam().then(() => {
             return this._client.getTeamsAsync(true);
         }).then(teams => {
             this._copySettingsActionsHub.setAvailableTeams.invoke(teams);
             this._copySettingsActionsHub.setTeamsLoading.invoke(false);
+            this._validateUI();
         });
     }
 
     public selectTeam(teamName: string) {
         this._copySettingsActionsHub.setBacklogsLoading.invoke(true);
+        this._validateUI();
         this._client.loadSelectedTeam(teamName).then(() => {
             let commonLevels = this._client.commonBackgroundLevels;
             let mappings = this._client.currentMappings;
             this._copySettingsActionsHub.setAvailableBacklogLevels.invoke(commonLevels);
-            this._copySettingsActionsHub.setSelectedBacklogLevels.invoke(this._copyArray(commonLevels));
+            let defaultBoardLevel = [];
+            defaultBoardLevel.push(this._client.currentBacklogLevel);
+            this._copySettingsActionsHub.setSelectedBacklogLevels.invoke(defaultBoardLevel);
             this._copySettingsActionsHub.setCurrentMappings.invoke(mappings);
             this._copySettingsActionsHub.setCanDoAdvancedMapping.invoke(this._canEnableAdvancedMapping());
             this._copySettingsActionsHub.setBacklogsLoading.invoke(false);
+            this._validateUI();
         });
     }
 
@@ -46,16 +54,19 @@ export class CopySettingsActionsCreator {
             this._copySettingsActionsHub.setSelectedBacklogLevels.invoke(currentLevels);
         }
         this._copySettingsActionsHub.setCanDoAdvancedMapping.invoke(this._canEnableAdvancedMapping());
+        this._validateUI();
     }
 
     public enabledAdvancedMappings(enabled: boolean) {
         this._copySettingsActionsHub.setCanDoAdvancedMapping.invoke(this._canEnableAdvancedMapping() && !enabled);
         this._copySettingsActionsHub.setShowAdvancedMapping.invoke(enabled);
+        this._validateUI();
     }
 
     public updateViewState(viewState: ViewState) {
         if (this._client.setViewState(viewState)) {
-
+            this._copySettingsActionsHub.setCurrentMappings.invoke(this._client.currentMappings);
+            this._validateUI();
         }
     }
 
@@ -70,5 +81,19 @@ export class CopySettingsActionsCreator {
             newArray[i] = array[i];
         }
         return newArray;
+    }
+
+    private _validateUI() {
+        const state = this._getState();
+        let isValid = false;
+        if (!state.copySettingsState.backlogsLoading &&
+            !state.copySettingsState.teamsLoading &&
+            !state.copySettingsState.showAdvancedMappings &&
+            state.copySettingsState.selectedBacklogLevels &&
+            state.copySettingsState.selectedBacklogLevels.length >= 1
+        ) {
+            isValid = true;
+        }
+        this._dialogActionsCreator.setDialogIsValid(isValid);
     }
 }

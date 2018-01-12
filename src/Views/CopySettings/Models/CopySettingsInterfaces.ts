@@ -19,6 +19,7 @@ export interface IBacklogBoardSettings {
     cardRules: WorkContracts.BoardCardRuleSettings;
     columns: WorkContracts.BoardColumn[];
     rows: WorkContracts.BoardRow[];
+    boardId: string;
     fields: WorkContracts.BoardFields;
 }
 

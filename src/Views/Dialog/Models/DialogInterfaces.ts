@@ -5,6 +5,7 @@ export enum ViewState {
 }
 
 export interface DialogState {
+    currentBoardId: string;
     isDialogValid: boolean;
     view: ViewState;
 }

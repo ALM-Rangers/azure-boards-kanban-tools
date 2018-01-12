@@ -10,13 +10,14 @@ export class DialogStoreHub implements IDisposable {
     public dialogStore: DialogStore;
 
     constructor(
-        private _dialogActionsHub: DialogActionsHub
+        private _dialogActionsHub: DialogActionsHub,
+        private _initialBoard: string
     ) {
         this.dialogStore = this._createDialogStore();
     }
 
     private _createDialogStore() {
-        const dialogStore = new DialogStore();
+        const dialogStore = new DialogStore(this._initialBoard);
         this._dialogActionsHub.selectViewState.addListener(dialogStore.onSetViewState);
         this._dialogActionsHub.setDialogValidState.addListener(dialogStore.onSetDialogValid);
         return dialogStore;

@@ -8,7 +8,10 @@ import { DialogContent } from "src/Views/Dialog/Components/DialogContent";
 
 import "./DialogView.scss";
 
-export interface IDialogViewProps { }
+export interface IDialogViewProps {
+    id: string;
+    onIsValidUpdated: (isValid: boolean) => void;
+}
 
 export class DialogView extends React.Component<IDialogViewProps, CommonDialogState> {
     private _dialogActionsCreator: DialogActionsCreator;
@@ -18,7 +21,7 @@ export class DialogView extends React.Component<IDialogViewProps, CommonDialogSt
         super(props);
 
         const dialogActionsHub = new DialogActionsHub();
-        this._dialogStoreHub = new DialogStoreHub(dialogActionsHub);
+        this._dialogStoreHub = new DialogStoreHub(dialogActionsHub, props.id);
         this._dialogActionsCreator = new DialogActionsCreator(dialogActionsHub);
 
         this.state = this._dialogStoreHub.state;
@@ -30,6 +33,12 @@ export class DialogView extends React.Component<IDialogViewProps, CommonDialogSt
 
     public componentWillUnmount() {
         this._dialogStoreHub.dialogStore.removeChangedListener(this._updateDialogState);
+    }
+
+    public componentDidUpdate(prevProps: IDialogViewProps, prevState: CommonDialogState) {
+        if (this.state != null) {
+            this.props.onIsValidUpdated(this.state.dialogState.isDialogValid);
+        }
     }
 
     public render() {

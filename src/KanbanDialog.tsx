@@ -6,17 +6,15 @@ import { initializeIcons } from "@uifabric/icons";
 import { DialogView } from "src/Views/Dialog/Components/DialogView";
 import "./KanbanDialog.scss";
 
-export interface KanbanDialogOptions {
-    onClose?: () => void;
-}
-
 export class KanbanDialog {
     private _onValidationUpdated: (isValid: boolean) => void;
     private kanbanDialogNode: HTMLElement;
 
-    public show(options?: KanbanDialogOptions) {
+    public show() {
+        const configuration = VSS.getConfiguration();
+        const boardId = configuration.id;
         this.kanbanDialogNode = document.getElementById("dialogContent");
-        ReactDOM.render(<DialogView {...options} />, this.kanbanDialogNode);
+        ReactDOM.render(<DialogView id={boardId} onIsValidUpdated={this._onValidationUpdated} />, this.kanbanDialogNode);
     }
 
     public close() {
@@ -35,6 +33,12 @@ export class KanbanDialog {
 
     public onValidationUpdated(callback: (isValid: boolean) => void) {
         this._onValidationUpdated = callback;
+    }
+
+    private _onIsValidUpdate = (isValid: boolean) => {
+        if (this._onValidationUpdated) {
+            this._onValidationUpdated(isValid);
+        }
     }
 }
 

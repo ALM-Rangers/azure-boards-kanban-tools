@@ -13,6 +13,7 @@ export interface IAdvancedItemMappingProps {
     show: boolean;
     headerText: string;
     onClosed: () => void;
+    onMappingChanged: (id: string) => void;
     mappings: IBoardColumnDifferences[];
     selectedLevels: string[];
 }
@@ -94,9 +95,14 @@ export class AdvancedItemMapping extends React.Component<IAdvancedItemMappingPro
                 <Dropdown
                     options={dropdownOptions}
                     selectedKey={item.sourceColumn.id}
-                    label={item.targetColumn.name} />
+                    label={item.targetColumn.name}
+                    onChanged={this._onMappingChanged} />
             </div>
         );
+    }
+
+    private _onMappingChanged = (item: IDropdownOption) => {
+        this.props.onMappingChanged(item.key.toString());
     }
 
     private _onRenderGroupHeader = (props: IGroupDividerProps): JSX.Element => {

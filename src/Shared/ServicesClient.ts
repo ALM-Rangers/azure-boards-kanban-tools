@@ -36,8 +36,9 @@ export class ServicesClient {
     private _sourceTeamSettings: Models.IBoardSettings;
     private _destinationTeamSettings: Models.IBoardSettings[];
     private _currentMappings: IBoardColumnDifferences[];
+    private _currentBacklogLevel: string;
 
-    constructor() {
+    constructor(private _defaultBacklogLevel: string) {
         this._currentTeamProperties = {
             team: null,
             context: null,
@@ -84,6 +85,17 @@ export class ServicesClient {
         this._currentTeamProperties.team = await this.getTeam();
         this._currentTeamProperties.context = this.getTeamContext();
         this._currentTeamProperties.settings = await this.getTeamSettingsAsync(this._currentTeamProperties.context);
+        for (let backlogIndex = 0; backlogIndex < this._currentTeamProperties.settings.backlogSettings.length; backlogIndex++) {
+            const backlog = this._currentTeamProperties.settings.backlogSettings[backlogIndex];
+            if (backlog.boardId === this._defaultBacklogLevel) {
+                this._currentBacklogLevel = backlog.boardName;
+                break;
+            }
+        }
+    }
+
+    public get currentBacklogLevel(): string {
+        return this._currentBacklogLevel;
     }
 
     public async loadSelectedTeam(teamName: string, isMultiselect: boolean = false): Promise<void> {
@@ -322,6 +334,7 @@ export class ServicesClient {
                         cardSettings: cardSettings,
                         columns: columns,
                         rows: rows,
+                        boardId: board.id,
                         fields: board !== null ? board.fields : null
                     };
                     settings.backlogSettings.push(boardSettings);

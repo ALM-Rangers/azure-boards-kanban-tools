@@ -28,13 +28,13 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
 
         const copySettingsActionsHub = new CopySettingsActionsHub();
         this._copySettingsStoreHub = new CopySettingsStoreHub(copySettingsActionsHub);
-        this._servicesClient = new ServicesClient();
+        this._servicesClient = new ServicesClient(props.sharedState.dialogState.currentBoardId);
         this._copySettingsActionsCreator = new CopySettingsActionsCreator(
             copySettingsActionsHub,
+            props.sharedActions,
             this._servicesClient,
             this._copySettingsStoreHub.getCopyState
         );
-
         this.state = this._copySettingsStoreHub.state;
     }
 
@@ -49,7 +49,8 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
     }
 
     public componentWillUpdate(nextProps: ICopySettingsViewProps, nextState: CopyState) {
-        this._servicesClient.setViewState(nextProps.sharedState.dialogState.view);
+        this._copySettingsActionsCreator.updateViewState(nextProps.sharedState.dialogState.view);
+        // this._servicesClient.setViewState(nextProps.sharedState.dialogState.view);
     }
 
     public render() {
@@ -90,6 +91,7 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
                         headerText={Constants.MappingsHeader}
                         onClosed={this._onAdvancedMappingClosed}
                         mappings={this.state.copySettingsState.currentMappings}
+                        onMappingChanged={this._onMappingChanged}
                         selectedLevels={this.state.copySettingsState.selectedBacklogLevels} />
                 </div>
             </div>
@@ -114,5 +116,9 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
 
     private _onAdvancedMappingClosed = () => {
         this._copySettingsActionsCreator.enabledAdvancedMappings(false);
+    }
+
+    private _onMappingChanged = (id: string) => {
+
     }
 }

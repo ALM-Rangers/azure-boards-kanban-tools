@@ -3,10 +3,16 @@ import { DialogActionsHub } from "src/Views/Dialog/Actions/DialogActions";
 import { DialogState, ViewState } from "src/Views/Dialog/Models/DialogInterfaces";
 
 export class DialogStore extends VSSStore.Store {
-    public state: DialogState = {
-        isDialogValid: false,
-        view: ViewState.Start
-    };
+    public state: DialogState = null;
+
+    constructor(defaultBoard: string) {
+        super();
+        this.state = {
+            isDialogValid: false,
+            view: ViewState.Start,
+            currentBoardId: defaultBoard
+        };
+    }
 
     onSetDialogValid = (isValid: boolean) => {
         this.state.isDialogValid = isValid;

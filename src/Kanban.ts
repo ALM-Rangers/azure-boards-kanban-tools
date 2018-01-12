@@ -27,7 +27,7 @@ export class KanbanBoardToolsAction {
                 modal: true
             };
 
-            hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions).then(dialog => {
+            hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions, context).then(dialog => {
 
                 this._dialog = dialog;
                 tc.TelemetryClient.getClient(telemetrySettings).trackEvent("Dialog opened");
@@ -81,7 +81,11 @@ export class KanbanBoardToolsAction {
     }
 }
 
-VSS.register("kanban-board-tools-menu", (context) => {
-    let action = new KanbanBoardToolsAction();
-    return action;
-});
+const kanbanMenuHandler = {
+    execute: (actionContext) => {
+        let action = new KanbanBoardToolsAction();
+        action.execute(actionContext);
+    }
+};
+
+VSS.register("kanban-board-tools-menu", kanbanMenuHandler);
