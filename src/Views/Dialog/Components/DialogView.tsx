@@ -10,7 +10,8 @@ import "./DialogView.scss";
 
 export interface IDialogViewProps {
     id: string;
-    onIsValidUpdated: (isValid: boolean) => void;
+    // onIsValidUpdated: (isValid: boolean) => void;
+    onCanceled: () => void;
 }
 
 export class DialogView extends React.Component<IDialogViewProps, CommonDialogState> {
@@ -35,19 +36,26 @@ export class DialogView extends React.Component<IDialogViewProps, CommonDialogSt
         this._dialogStoreHub.dialogStore.removeChangedListener(this._updateDialogState);
     }
 
-    public componentDidUpdate(prevProps: IDialogViewProps, prevState: CommonDialogState) {
-        if (this.state != null) {
-            this.props.onIsValidUpdated(this.state.dialogState.isDialogValid);
-        }
-    }
+    // public componentDidUpdate(prevProps: IDialogViewProps, prevState: CommonDialogState) {
+    //     if (this.state != null) {
+    //         this.props.onIsValidUpdated(this.state.dialogState.isDialogValid);
+    //     }
+    // }
 
     public render() {
         return (
-            <DialogContent dialogActionsCreator={this._dialogActionsCreator} state={this._dialogStoreHub.state} />
+            <DialogContent
+                dialogActionsCreator={this._dialogActionsCreator}
+                state={this._dialogStoreHub.state}
+                onDialogCanceled={this._onCloseDialog} />
         );
     }
 
     private _updateDialogState = () => {
         this.setState(this._dialogStoreHub.state);
+    }
+
+    private _onCloseDialog = () => {
+        this.props.onCanceled();
     }
 }

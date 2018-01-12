@@ -5,26 +5,40 @@ import { ViewState, DialogState } from "src/Views/Dialog/Models/DialogInterfaces
 import { SelectAction, IActionOption } from "src/Views/Dialog/Components/SelectAction";
 import { CommonDialogState } from "src/Views/Dialog/Stores/DialogStoreHub";
 import { CopySettingsView } from "src/Views/CopySettings/Components/CopySettingsView";
+import { DialogButtons } from "src/Views/Dialog/Components/DialogButtons";
+import { css } from "office-ui-fabric-react/lib/Utilities";
 import * as Constants from "src/Shared/Constants";
 
 export interface IDialogContentProps {
     dialogActionsCreator: DialogActionsCreator;
     state: CommonDialogState;
+    onDialogCanceled: () => void;
 }
 
 export class DialogContent extends React.Component<IDialogContentProps, {}> {
-    private test: string;
-
     constructor(props: IDialogContentProps) {
         super(props);
     }
 
     public render() {
-        this.test = "test";
         return (
-            <div className="dialogContent fullHeight">
-                {this._renderActions()}
-                {this._renderDialogContent()}
+            <div className="dialog-container fullHeight">
+                <div className={css("dialog-body")}>
+                    {this._renderActions()}
+                    {this._renderDialogContent()}
+                </div>
+                {this._renderDialogButtons()}
+            </div>
+        );
+    }
+
+    private _renderDialogButtons() {
+        return (
+            <div className={css("dialog-button-pane")}>
+                <DialogButtons
+                    enabled={this.props.state.dialogState.isDialogValid}
+                    okButtonClicked={this._onDialogOkClicked}
+                    cancelButtonClicked={this._onDialogCancelClicked}/>
             </div>
         );
     }
@@ -54,5 +68,13 @@ export class DialogContent extends React.Component<IDialogContentProps, {}> {
 
     private _onSelectDialogAction = (action: string) => {
         this.props.dialogActionsCreator.setCurrentView(action);
+    }
+
+    private _onDialogOkClicked = () => {
+
+    }
+
+    private _onDialogCancelClicked = () => {
+        this.props.onDialogCanceled();
     }
 }

@@ -22,9 +22,9 @@ export class KanbanBoardToolsAction {
                 width: 700,
                 height: 500,
                 close: this._closeDialog,
-                okText: "Ok",
                 resizable: true,
-                modal: true
+                modal: true,
+                buttons: null
             };
 
             hostDialogService.openDialog(dialogControlContributionId, hostDialogOptions, context).then(dialog => {
@@ -39,9 +39,11 @@ export class KanbanBoardToolsAction {
                     });
                     this._dialogControlInstance.show();
 
-                    //     this._dialogControlInstance.onCancel(() => {
-                    //         this._dialog.close();
-                    //     });
+                    this._dialogControlInstance.onCancel(() => {
+                        if (this._dialog) {
+                            this._dialog.close();
+                        }
+                    });
 
                     //     this._dialogControlInstance.onTitleChange((title) => {
                     //         this._dialog.setTitle(title);

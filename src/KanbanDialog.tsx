@@ -8,13 +8,14 @@ import "./KanbanDialog.scss";
 
 export class KanbanDialog {
     private _onValidationUpdated: (isValid: boolean) => void;
+    private _onCancel: () => void;
     private kanbanDialogNode: HTMLElement;
 
     public show() {
         const configuration = VSS.getConfiguration();
         const boardId = configuration.id;
         this.kanbanDialogNode = document.getElementById("dialogContent");
-        ReactDOM.render(<DialogView id={boardId} onIsValidUpdated={this._onValidationUpdated} />, this.kanbanDialogNode);
+        ReactDOM.render(<DialogView id={boardId} onCanceled={this._onDialogCanceled} />, this.kanbanDialogNode);
     }
 
     public close() {
@@ -35,9 +36,19 @@ export class KanbanDialog {
         this._onValidationUpdated = callback;
     }
 
-    private _onIsValidUpdate = (isValid: boolean) => {
-        if (this._onValidationUpdated) {
-            this._onValidationUpdated(isValid);
+    public onCancel(callback: () => void) {
+        this._onCancel = callback;
+    }
+
+    // private _onIsValidUpdate = (isValid: boolean) => {
+    //     if (this._onValidationUpdated) {
+    //         this._onValidationUpdated(isValid);
+    //     }
+    // }
+
+    private _onDialogCanceled = () => {
+        if (this._onCancel) {
+            this._onCancel();
         }
     }
 }

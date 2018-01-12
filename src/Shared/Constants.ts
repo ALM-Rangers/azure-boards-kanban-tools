@@ -18,3 +18,6 @@ export const MappingsDescription: string = "The following columns have multiple 
 
 export const LoadingTeamsLabel: string = "Loading teams";
 export const LoadingBacklogsLabel: string = "Updating backlogs";
+
+export const DefaultOkButton: string = "Ok";
+export const DefaultCancelButton: string = "Cancel";
