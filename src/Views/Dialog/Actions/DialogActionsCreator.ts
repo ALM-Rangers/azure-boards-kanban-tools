@@ -20,6 +20,14 @@ export class DialogActionsCreator {
                 this._dialogActionsHub.selectViewState.invoke(ViewState.CopySettingsFromTeam);
                 break;
             }
+            case ViewState.IsPerformingAction.toString(): {
+                this._dialogActionsHub.selectViewState.invoke(ViewState.IsPerformingAction);
+                break;
+            }
+            case ViewState.ActionComplete.toString(): {
+                this._dialogActionsHub.selectViewState.invoke(ViewState.ActionComplete);
+                break;
+            }
         }
     }
 }

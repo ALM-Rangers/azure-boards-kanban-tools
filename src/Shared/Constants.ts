@@ -21,3 +21,8 @@ export const LoadingBacklogsLabel: string = "Updating backlogs";
 
 export const DefaultOkButton: string = "Ok";
 export const DefaultCancelButton: string = "Cancel";
+export const DoneButton: string = "Done";
+
+export const CopySettingsMessage: string = "Applying settings";
+export const CopySettingsSubtitle: string = "This will only take a moment";
+export const AllDoneMessage: string = "All done";

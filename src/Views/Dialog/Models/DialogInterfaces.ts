@@ -1,7 +1,9 @@
 export enum ViewState {
     Start,
     CopySettingsToTeam,
-    CopySettingsFromTeam
+    CopySettingsFromTeam,
+    IsPerformingAction,
+    ActionComplete
 }
 
 export interface DialogState {

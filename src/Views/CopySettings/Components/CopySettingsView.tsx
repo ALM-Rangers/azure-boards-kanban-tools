@@ -98,6 +98,10 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
         );
     }
 
+    public startCopy() {
+        this.props.sharedActions.setCurrentView(ViewState.IsPerformingAction.toString());
+    }
+
     private _updateCopyState = () => {
         this.setState(this._copySettingsStoreHub.state);
     }
