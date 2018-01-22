@@ -13,11 +13,12 @@ import { ProgressView } from "src/Views/Progress/Components/ProgressView";
 export interface IDialogContentProps {
     dialogActionsCreator: DialogActionsCreator;
     state: CommonDialogState;
-    onDialogCanceled: () => void;
+    onDialogCanceled: (refresh?: boolean) => void;
 }
 
 export class DialogContent extends React.Component<IDialogContentProps, {}> {
     private _copySettingsRef: CopySettingsView;
+    private _refreshView: boolean;
 
     constructor(props: IDialogContentProps) {
         super(props);
@@ -128,9 +129,12 @@ export class DialogContent extends React.Component<IDialogContentProps, {}> {
     private _onDialogOkClicked = () => {
         switch (this.props.state.dialogState.view) {
             case ViewState.ActionComplete:
-                this.props.onDialogCanceled();
+                this.props.onDialogCanceled(this._refreshView);
                 break;
             case ViewState.CopySettingsFromTeam:
+                this._refreshView = true;
+                this._copySettingsRef.startCopy();
+                break;
             case ViewState.CopySettingsToTeam:
                 this._copySettingsRef.startCopy();
                 break;
@@ -138,6 +142,6 @@ export class DialogContent extends React.Component<IDialogContentProps, {}> {
     }
 
     private _onDialogCancelClicked = () => {
-        this.props.onDialogCanceled();
+        this.props.onDialogCanceled(false);
     }
 }

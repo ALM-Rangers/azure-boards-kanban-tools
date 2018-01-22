@@ -39,37 +39,16 @@ export class KanbanBoardToolsAction {
                     });
                     this._dialogControlInstance.show();
 
-                    this._dialogControlInstance.onCancel(() => {
+                    this._dialogControlInstance.onCancel((refresh?: boolean) => {
                         if (this._dialog) {
                             this._dialog.close();
                         }
+                        if (refresh !== null && refresh === true) {
+                            VSS.getService<IHostNavigationService>(VSS.ServiceIds.Navigation).then(navigationService => {
+                                navigationService.reload();
+                            });
+                        }
                     });
-
-                    //     this._dialogControlInstance.onTitleChange((title) => {
-                    //         this._dialog.setTitle(title);
-                    //     });
-
-                    //     this._dialogControlInstance.onCopy((copySettings: CopySettingsWizard.CopySettings) => {
-
-                    //         // TODO: inline for now. should be move to it's own function later on to perform the copy and drive the UI
-
-                    //         this._dialog.close();
-
-                    //         VSS.getService<IHostNavigationService>(VSS.ServiceIds.Navigation).then(navigationService => {
-                    //             navigationService.reload();
-                    //         });
-
-                    //         // let board = new Board.BoardConfiguration();
-                    //         // board.getCurrentConfiguration(copySettings.source.team.name).then((settings) => {
-                    //         //     board.applySettings(webContext.team.name, settings).then((result) => {
-                    //         //         console.log("settings applied");
-                    //         //     }).catch((reason) => {
-                    //         //         console.log("apply failed - " + reason);
-                    //         //     });
-                    //         // });
-
-                    //         // TODO: do work and show progress bar
-                    //     });
                 });
             });
         });

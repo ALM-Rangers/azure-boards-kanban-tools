@@ -1,6 +1,6 @@
 import * as React from "react";
 import { autobind } from "office-ui-fabric-react/lib/Utilities";
-import { DialogState } from "src/Views/Dialog/Models/DialogInterfaces";
+import { DialogState, ViewState } from "src/Views/Dialog/Models/DialogInterfaces";
 import { DialogStoreHub, CommonDialogState } from "src/Views/Dialog/Stores/DialogStoreHub";
 import { DialogActionsCreator } from "src/Views/Dialog/Actions/DialogActionsCreator";
 import { DialogActionsHub } from "src/Views/Dialog/Actions/DialogActions";
@@ -10,8 +10,7 @@ import "./DialogView.scss";
 
 export interface IDialogViewProps {
     id: string;
-    // onIsValidUpdated: (isValid: boolean) => void;
-    onCanceled: () => void;
+    onCanceled: (refresh?: boolean) => void;
 }
 
 export class DialogView extends React.Component<IDialogViewProps, CommonDialogState> {
@@ -36,12 +35,6 @@ export class DialogView extends React.Component<IDialogViewProps, CommonDialogSt
         this._dialogStoreHub.dialogStore.removeChangedListener(this._updateDialogState);
     }
 
-    // public componentDidUpdate(prevProps: IDialogViewProps, prevState: CommonDialogState) {
-    //     if (this.state != null) {
-    //         this.props.onIsValidUpdated(this.state.dialogState.isDialogValid);
-    //     }
-    // }
-
     public render() {
         return (
             <DialogContent
@@ -55,7 +48,7 @@ export class DialogView extends React.Component<IDialogViewProps, CommonDialogSt
         this.setState(this._dialogStoreHub.state);
     }
 
-    private _onCloseDialog = () => {
-        this.props.onCanceled();
+    private _onCloseDialog = (refresh?: boolean) => {
+        this.props.onCanceled(refresh);
     }
 }

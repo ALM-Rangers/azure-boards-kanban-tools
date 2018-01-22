@@ -8,7 +8,7 @@ import "./KanbanDialog.scss";
 
 export class KanbanDialog {
     private _onValidationUpdated: (isValid: boolean) => void;
-    private _onCancel: () => void;
+    private _onCancel: (refresh?: boolean) => void;
     private kanbanDialogNode: HTMLElement;
 
     public show() {
@@ -36,19 +36,13 @@ export class KanbanDialog {
         this._onValidationUpdated = callback;
     }
 
-    public onCancel(callback: () => void) {
+    public onCancel(callback: (refresh?: boolean) => void) {
         this._onCancel = callback;
     }
 
-    // private _onIsValidUpdate = (isValid: boolean) => {
-    //     if (this._onValidationUpdated) {
-    //         this._onValidationUpdated(isValid);
-    //     }
-    // }
-
-    private _onDialogCanceled = () => {
+    private _onDialogCanceled = (refreshPage?: boolean) => {
         if (this._onCancel) {
-            this._onCancel();
+            this._onCancel(refreshPage);
         }
     }
 }
