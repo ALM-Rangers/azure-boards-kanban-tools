@@ -63,11 +63,41 @@ export class CopySettingsActionsCreator {
         this._validateUI();
     }
 
+    public updateStateMapping(selectedColumnId: string, columnId: string) {
+        let currentMapping = this._getState().copySettingsState.currentMappings;
+        let found = false;
+        for (let backlogIndex = 0; backlogIndex < currentMapping.length; backlogIndex++) {
+            let backlog = currentMapping[backlogIndex];
+            for (let mappingIndex = 0; mappingIndex < backlog.mappings.length; mappingIndex++) {
+                let mapping = backlog.mappings[mappingIndex];
+                if (mapping.targetColumn && mapping.targetColumn.id === columnId) {
+                    const newMapping = mapping.potentialMatches.filter(m => m.id === selectedColumnId)[0];
+                    mapping.sourceColumn = newMapping;
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        this._copySettingsActionsHub.setCurrentMappings.invoke(currentMapping);
+        this._validateUI();
+    }
+
     public updateViewState(viewState: ViewState) {
         if (this._client.setViewState(viewState)) {
             this._copySettingsActionsHub.setCurrentMappings.invoke(this._client.currentMappings);
             this._validateUI();
         }
+    }
+
+    public copySettings() {
+        const levels = this._getState().copySettingsState.selectedBacklogLevels;
+        this._dialogActionsCreator.setCurrentView(ViewState.IsPerformingAction.toString());
+        this._client.applyTeamSettingsAsync(levels).then(result => {
+            this._dialogActionsCreator.setCurrentView(ViewState.ActionComplete.toString());
+        });
     }
 
     private _canEnableAdvancedMapping(): boolean {

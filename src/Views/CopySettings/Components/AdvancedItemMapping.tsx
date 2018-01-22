@@ -13,7 +13,7 @@ export interface IAdvancedItemMappingProps {
     show: boolean;
     headerText: string;
     onClosed: () => void;
-    onMappingChanged: (id: string) => void;
+    onMappingChanged: (selectedId: string, sourceId) => void;
     mappings: IBoardColumnDifferences[];
     selectedLevels: string[];
 }
@@ -83,7 +83,8 @@ export class AdvancedItemMapping extends React.Component<IAdvancedItemMappingPro
         item.potentialMatches.forEach(match => {
             dropdownOptions.push({
                 key: match.id,
-                text: match.name
+                text: match.name,
+                data: item.targetColumn.id
             });
         });
         let className = "";
@@ -102,7 +103,7 @@ export class AdvancedItemMapping extends React.Component<IAdvancedItemMappingPro
     }
 
     private _onMappingChanged = (item: IDropdownOption) => {
-        this.props.onMappingChanged(item.key.toString());
+        this.props.onMappingChanged(item.key.toString(), item.data.toString());
     }
 
     private _onRenderGroupHeader = (props: IGroupDividerProps): JSX.Element => {

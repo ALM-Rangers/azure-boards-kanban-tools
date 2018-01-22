@@ -346,19 +346,20 @@ export class ServicesClient {
         }
     }
 
-    public async applyTeamSettingsAsync(oldSettings: Models.IBoardSettings, settingsToApply: Models.IBoardSettings, selectedMappings: Models.IBoardColumnDifferences[], selectedBacklogLevels: string[]): Promise<Boolean> {
+    // public async applyTeamSettingsAsync(oldSettings: Models.IBoardSettings, settingsToApply: Models.IBoardSettings, selectedMappings: Models.IBoardColumnDifferences[], selectedBacklogLevels: string[]): Promise<Boolean> {
+    public async applyTeamSettingsAsync(selectedBacklogLevels: string[]): Promise<Boolean> {
         let result: Boolean = false;
         let workClient: WorkClient.WorkHttpClient2_3 = WorkClient.getClient();
         let witClient = WitClient.getClient();
 
-        let context = oldSettings.context;
+        let context = this._destinationTeamSettings[0].context;
         console.log("Old settings");
-        console.log(oldSettings);
+        console.log(this._destinationTeamSettings[0]);
         console.log("Settings to apply");
-        console.log(settingsToApply);
+        console.log(this._sourceTeamSettings);
         try {
-            for (let backlogIndex = 0; backlogIndex < settingsToApply.backlogSettings.length; backlogIndex++) {
-                let backlogSettingToApply = settingsToApply.backlogSettings[backlogIndex];
+            for (let backlogIndex = 0; backlogIndex < this._sourceTeamSettings.backlogSettings.length; backlogIndex++) {
+                let backlogSettingToApply = this._sourceTeamSettings.backlogSettings[backlogIndex];
                 if (selectedBacklogLevels.indexOf(backlogSettingToApply.boardName) < 0) {
                     continue;
                 }
@@ -368,14 +369,14 @@ export class ServicesClient {
                 let columnsToApply: WorkContracts.BoardColumn[] = new Array();
 
                 let oldBoard: Models.IBacklogBoardSettings;
-                oldSettings.backlogSettings.forEach(board => {
+                this._destinationTeamSettings[0].backlogSettings.forEach(board => {
                     if (board.boardName === backlogSettingToApply.boardName) {
                         oldBoard = board;
                     }
                 });
 
                 let selectedMapping: Models.IBoardColumnDifferences;
-                selectedMappings.forEach(cd => {
+                this._currentMappings.forEach(cd => {
                     if (cd.backlog === backlogSettingToApply.boardName) {
                         selectedMapping = cd;
                     }

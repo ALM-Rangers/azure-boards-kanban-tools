@@ -99,7 +99,7 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
     }
 
     public startCopy() {
-        this.props.sharedActions.setCurrentView(ViewState.IsPerformingAction.toString());
+        this._copySettingsActionsCreator.copySettings();
     }
 
     private _updateCopyState = () => {
@@ -122,7 +122,7 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
         this._copySettingsActionsCreator.enabledAdvancedMappings(false);
     }
 
-    private _onMappingChanged = (id: string) => {
-
+    private _onMappingChanged = (selectedId: string, sourceId: string) => {
+        this._copySettingsActionsCreator.updateStateMapping(selectedId, sourceId);
     }
 }
