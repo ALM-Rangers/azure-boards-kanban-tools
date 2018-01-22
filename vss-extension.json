@@ -8,7 +8,7 @@
     "vso.work",
     "vso.work_write"
   ],
-  "description": "This extension will allow you to easily import and/or export Kanban board settings to a team, from another team",
+  "description": "A set of tools for interacting with and enhancing the Kanban board.",
   "publisher": "",
   "public": false,
   "icons": {
@@ -64,7 +64,7 @@
       "type": "ms.vss-web.action",
       "description": "Kanban Board Tools Actions",
       "properties": {
-        "title": "Allows you to import/export your Kanban config from/to another team",
+        "title": "A set of tools for enhancing your interactions with the Kanban board.",
         "icon": "img/brush.png",
         "uri": "src/kanban-tools.html",
         "group": "actions",

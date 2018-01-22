@@ -66,14 +66,14 @@ module.exports = {
             filename: "./src/common_chunks.js"
         }),
         new CopyWebpackPlugin([
-            { from: "./node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js", to: "3rdParty/VSS.SDK.min.js" },
-            { from: "./node_modules/es6-promise/dist/es6-promise.min.js", to: "3rdParty/es6-promise.min.js" },
-            { from: "./node_modules/office-ui-fabric-react/dist/css/fabric.min.css", to: "3rdParty/fabric.min.css" },
+            { from: "./node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js", to: "src/3rdParty/VSS.SDK.min.js" },
+            { from: "./node_modules/es6-promise/dist/es6-promise.min.js", to: "src/3rdParty/es6-promise.min.js" },
+            { from: "./node_modules/office-ui-fabric-react/dist/css/fabric.min.css", to: "src/3rdParty/fabric.min.css" },
 
             { from: "./src/*.html", to: "./" },
             { from: "./marketplace", to: "marketplace" },
             { from: "./img", to: "img" },
-            { from: "./vss-extension.json", to: "vss-extension-release.json" }
+            { from: "./vss-extension.json", to: "vss-extension.json" }
         ])
     ]
 }
