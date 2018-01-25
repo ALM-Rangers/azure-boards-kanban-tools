@@ -384,8 +384,8 @@ export class ServicesClient {
 
                 let uniqueNameifier = Date.now().toString() + "-";
 
-                let newRows = await this._applyNewRows(oldBoard.rows, backlogSettingToApply.rows, uniqueNameifier, backlogSettingToApply.boardName, context, workClient);
-                let newDefaultRow = this._getDefaultRow(newRows);
+                let newRows: WorkContracts.BoardRow[] = await this._applyNewRows(oldBoard.rows, backlogSettingToApply.rows, uniqueNameifier, backlogSettingToApply.boardName, context, workClient);
+                let newDefaultRow: WorkContracts.BoardRow = this._getDefaultRow(newRows);
                 let newDefaultRowName: string = null;
                 if (newDefaultRow) {
                     newDefaultRowName = newDefaultRow.name;
@@ -507,11 +507,22 @@ export class ServicesClient {
                                     "value": newColumnFieldValue
                                 }
                             ];
-                            if (newDefaultRowName && newDefaultRowName.length > 0) {
+
+                            // If the target board has a row name that is exactly the same as a row in the source board, we update work items to stay in that row.
+                            // Otherwise, we'll move them to the default row. This way we avoid having to do a complete mapping exercise, while still having some intelligent behavior.
+                            let currentRowValue: string = wit.fields[boardRowField];
+                            let shouldUpdateRowName: boolean = currentRowValue != null && newRows.filter(r => r.name === uniqueNameifier + currentRowValue).length > 0;
+                            if (shouldUpdateRowName) {
                                 patch.push({
                                     "op": "replace",
                                     "path": `/fields/${boardRowField}`,
-                                    "value": newDefaultRowName
+                                    "value": `${uniqueNameifier}${currentRowValue}`
+                                });
+                            } else {
+                                patch.push({
+                                    "op": "remove",
+                                    "path": `/fields/${boardRowField}`,
+                                    "value": null
                                 });
                             }
                             console.log("Updating work item from column: " + witColumn + " to column: " + JSON.stringify(patch));
