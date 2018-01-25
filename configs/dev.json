@@ -1,0 +1,7 @@
+{
+    "public": false,
+    "baseUri": "https://localhost:9090",
+    "name": "Dev: Kanban Board Tools",
+    "publisher": "chrismason",
+    "version": "0.0.2"
+}

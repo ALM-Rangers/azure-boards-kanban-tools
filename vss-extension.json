@@ -1,0 +1,84 @@
+{
+  "manifestVersion": 1,
+  "id": "kanban-board-tools",
+  "version": "0.0.0",
+  "name": "Kanban Board Tools",
+  "scopes": [
+    "vso.profile",
+    "vso.work",
+    "vso.work_write"
+  ],
+  "description": "A set of tools for interacting with and enhancing the Kanban board.",
+  "publisher": "",
+  "public": false,
+  "icons": {
+    "default": "marketplace/logo.png"
+  },
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "content": {
+    "details": {
+      "path": "marketplace/overview.md"
+    }
+  },
+  "tags": [
+    "Agile",
+    "Board",
+    "Kanban"
+  ],
+  "links": {
+    "support": {
+      "uri": "http://aka.ms/vsarcontact"
+    }
+  },
+  "branding": {
+    "color": "rgb(51,65,133)",
+    "theme": "dark"
+  },
+  "files": [
+    {
+      "path": "img",
+      "addressable": true
+    },
+    {
+      "path": "src",
+      "addressable": true
+    },
+    {
+      "path": "marketplace",
+      "addressable": true
+    }
+  ],
+  "categories": [
+    "Plan and track"
+  ],
+  "contributions": [
+    {
+      "id": "kanban-board-tools",
+      "targets": [
+        "ms.vss-work-web.backlog-board-pivot-filter-menu"
+      ],
+      "type": "ms.vss-web.action",
+      "description": "Kanban Board Tools Actions",
+      "properties": {
+        "title": "A set of tools for enhancing your interactions with the Kanban board.",
+        "icon": "img/brush.png",
+        "uri": "src/kanban-tools.html",
+        "group": "actions",
+        "registeredObjectId": "kanban-board-tools-menu"
+      }
+    },
+    {
+      "id": "kanban-wizard",
+      "type": "ms.vss-web.control",
+      "description": "The control to copy settings from one team to one or more teams.",
+      "targets": [],
+      "properties": {
+        "uri": "src/kanban-wizard.html"
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/bin": true,
+        "**/obj": true,
+        "**/node_modules": true,
+        "**/.tscache": true,
+        "**/out": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "typescript.tsdk": "./node_modules/typescript/lib"
+}
