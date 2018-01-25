@@ -22,7 +22,7 @@ export class ProgressView extends React.Component<IProgressViewProps, {}> {
             <div>
                 <div className="formContent">
                     <ZeroData
-                        imagePath={"../img/brush.svg"}
+                        imagePath={"../img/brush-large.svg"}
                         primaryText={this.props.message}
                         secondaryText={this.props.submessage}
                         imageAltText={null} />
