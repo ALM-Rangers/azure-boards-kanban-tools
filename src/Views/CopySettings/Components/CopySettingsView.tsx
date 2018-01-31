@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as TC from "TelemetryClient";
 
 import { CopySettingsActionsCreator } from "src/Views/CopySettings/Actions/CopySettingsActionsCreator";
 import { DialogActionsCreator } from "src/Views/Dialog/Actions/DialogActionsCreator";
@@ -12,6 +13,7 @@ import { SelectTeam } from "src/Views/CopySettings/Components/SelectTeam";
 import * as Constants from "src/Shared/Constants";
 import { ServicesClient } from "src/Shared/ServicesClient";
 import { PrimaryButton } from "office-ui-fabric-react/lib/Button";
+import { Telemetry } from "src/TelemetryClientSettings";
 
 export interface ICopySettingsViewProps {
     sharedActions: DialogActionsCreator;
@@ -115,6 +117,7 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
     }
 
     private _onOpenAdvancedMappings = () => {
+        Telemetry.Client().trackEvent(Constants.TelemetryAdvancedMapping);
         this._copySettingsActionsCreator.enabledAdvancedMappings(true);
     }
 

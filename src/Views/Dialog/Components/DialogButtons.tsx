@@ -1,7 +1,10 @@
 import * as React from "react";
+import * as TC from "TelemetryClient";
+
 import { PrimaryButton, DefaultButton } from "office-ui-fabric-react/lib/Button";
 import { css } from "office-ui-fabric-react/lib/Utilities";
 import * as Constants from "src/Shared/Constants";
+import { Telemetry } from "src/TelemetryClientSettings";
 
 export interface IDialogButtonsProps {
     enabled: boolean;
@@ -32,10 +35,12 @@ export class DialogButtons extends React.Component<IDialogButtonsProps, {}> {
     }
 
     private _onPrimaryButtonClicked = () => {
+        Telemetry.Client().trackEvent(Constants.TelemetryCopyCompleted);
         this.props.okButtonClicked();
     }
 
     private _onCancelButtonClicked = () => {
+        Telemetry.Client().trackEvent(Constants.TelemetryDialogCancelled);
         this.props.cancelButtonClicked();
     }
 }

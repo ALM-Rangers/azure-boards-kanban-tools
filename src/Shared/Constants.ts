@@ -26,3 +26,8 @@ export const DoneButton: string = "Done";
 export const CopySettingsMessage: string = "Applying settings";
 export const CopySettingsSubtitle: string = "This will only take a moment";
 export const AllDoneMessage: string = "All done";
+
+export const TelemetryDialogOpened: string = "Dialog opened";
+export const TelemetryCopyCompleted: string = "Copy Completed";
+export const TelemetryDialogCancelled: string = "Dialog Cancelled";
+export const TelemetryAdvancedMapping: string = "Advanced mapping selected";
