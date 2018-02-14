@@ -9,6 +9,7 @@ export interface IActionOption {
 
 export interface ISelectActionProps {
     availableOptions: IActionOption[];
+    selectedAction?: IActionOption;
     onSelectAction: (selectedAction: string) => void;
     label: string;
     disabled?: boolean;
@@ -16,8 +17,6 @@ export interface ISelectActionProps {
 }
 
 export class SelectAction extends React.Component<ISelectActionProps, {}> {
-    private test: string = "test";
-
     public render() {
         let options: IDropdownOption[] = [];
         if (this.props.availableOptions) {
@@ -30,11 +29,14 @@ export class SelectAction extends React.Component<ISelectActionProps, {}> {
             });
         }
 
+        const selectedActionKey = this.props.selectedAction ? this.props.selectedAction.key : null;
+
         return (
             <div className="formContent">
                 <Dropdown
                     label={this.props.label}
                     options={options}
+                    selectedKey={selectedActionKey}
                     placeHolder={this.props.placeHolder}
                     disabled={this.props.disabled}
                     onChanged={this._onActionSelected} />

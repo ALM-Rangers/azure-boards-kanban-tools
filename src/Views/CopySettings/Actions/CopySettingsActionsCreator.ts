@@ -26,6 +26,7 @@ export class CopySettingsActionsCreator {
 
     public selectTeam(teamName: string) {
         this._copySettingsActionsHub.setBacklogsLoading.invoke(true);
+        this.enabledAdvancedMappings(false);
         this._validateUI();
         this._client.loadSelectedTeam(teamName).then(() => {
             let commonLevels = this._client.commonBackgroundLevels;
@@ -58,7 +59,7 @@ export class CopySettingsActionsCreator {
     }
 
     public enabledAdvancedMappings(enabled: boolean) {
-        this._copySettingsActionsHub.setCanDoAdvancedMapping.invoke(this._canEnableAdvancedMapping() && !enabled);
+        this._copySettingsActionsHub.setCanDoAdvancedMapping.invoke(this._canEnableAdvancedMapping());
         this._copySettingsActionsHub.setShowAdvancedMapping.invoke(enabled);
         this._validateUI();
     }
@@ -102,7 +103,7 @@ export class CopySettingsActionsCreator {
 
     private _canEnableAdvancedMapping(): boolean {
         let state = this._getState();
-        return state.copySettingsState.selectedBacklogLevels.length > 0;
+        return state.copySettingsState.selectedBacklogLevels && state.copySettingsState.selectedBacklogLevels.length > 0;
     }
 
     private _copyArray(array: any[]): any[] {

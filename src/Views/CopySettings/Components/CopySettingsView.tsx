@@ -7,12 +7,13 @@ import { CommonDialogState } from "src/Views/Dialog/Stores/DialogStoreHub";
 import { ViewState } from "src/Views/Dialog/Models/DialogInterfaces";
 import { CopySettingsActionsHub } from "src/Views/CopySettings/Actions/CopySettingsActions";
 import { CopySettingsStoreHub, CopyState } from "src/Views/CopySettings/Stores/CopySettingsStoreHub";
-import { AdvancedItemMapping } from "src/Views/CopySettings/Components/AdvancedItemMapping";
+import { AdvancedItemMapping } from "src/Views/CopySettings/Components/AdvancedItemMapping2";
 import { SelectBacklogLevels } from "src/Views/CopySettings/Components/SelectBacklogLevels";
+import { SettingsToCopy } from "src/Views/CopySettings/Components/SettingsToCopy";
 import { SelectTeam } from "src/Views/CopySettings/Components/SelectTeam";
 import * as Constants from "src/Shared/Constants";
 import { ServicesClient } from "src/Shared/ServicesClient";
-import { PrimaryButton } from "office-ui-fabric-react/lib/Button";
+import { Toggle } from "office-ui-fabric-react/lib/Toggle";
 import { Telemetry } from "src/TelemetryClientSettings";
 
 export interface ICopySettingsViewProps {
@@ -52,7 +53,6 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
 
     public componentWillUpdate(nextProps: ICopySettingsViewProps, nextState: CopyState) {
         this._copySettingsActionsCreator.updateViewState(nextProps.sharedState.dialogState.view);
-        // this._servicesClient.setViewState(nextProps.sharedState.dialogState.view);
     }
 
     public render() {
@@ -81,11 +81,11 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
                         onBacklogLevelSelected={this._onSelectBacklogLevel} />
                 </div>
                 <div className="formContent">
-                    <PrimaryButton
-                        onClick={this._onOpenAdvancedMappings}
-                        disabled={!this._copySettingsStoreHub.copySettingsStore.state.canToggleMappings}>
-                        {Constants.EnableAdvancedMappings}
-                    </PrimaryButton>
+                    <Toggle
+                        checked={this.state.copySettingsState.showAdvancedMappings}
+                        onChanged={this._onOpenAdvancedMappings}
+                        label={Constants.EnableAdvancedMappings}
+                        disabled={!this._copySettingsStoreHub.copySettingsStore.state.canToggleMappings || this.state.copySettingsState.backlogsLoading} />
                 </div>
                 <div>
                     <AdvancedItemMapping
@@ -95,6 +95,10 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
                         mappings={this.state.copySettingsState.currentMappings}
                         onMappingChanged={this._onMappingChanged}
                         selectedLevels={this.state.copySettingsState.selectedBacklogLevels} />
+                </div>
+                <div>
+                    <SettingsToCopy
+                        selectedSettings={this.state.copySettingsState.settingsToCopy} />
                 </div>
             </div>
         );
@@ -116,9 +120,9 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
         this._copySettingsActionsCreator.selectBacklogLevel(level, isSelected);
     }
 
-    private _onOpenAdvancedMappings = () => {
+    private _onOpenAdvancedMappings = (checked: boolean) => {
         Telemetry.Client().trackEvent(Constants.TelemetryAdvancedMapping);
-        this._copySettingsActionsCreator.enabledAdvancedMappings(true);
+        this._copySettingsActionsCreator.enabledAdvancedMappings(checked);
     }
 
     private _onAdvancedMappingClosed = () => {

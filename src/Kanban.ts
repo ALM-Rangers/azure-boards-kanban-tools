@@ -20,7 +20,7 @@ export class KanbanBoardToolsAction {
             let hostDialogOptions: IHostDialogOptions = {
                 title: Constants.DefaultDialogTitle,
                 width: 700,
-                height: 500,
+                height: 550,
                 close: this._closeDialog,
                 resizable: true,
                 modal: true,

@@ -14,7 +14,8 @@ export const ApplySettingsLevelsLabel: string = "Apply settings at the following
 export const SettingsToCopyLabel: string = "Select settings to copy";
 export const EnableAdvancedMappings: string = "Customize column mappings";
 export const MappingsHeader: string = "Column mappings";
-export const MappingsDescription: string = "The following columns have multiple options available to move existing work items into.";
+export const MappingsDescription: string = "Columns here have multiple options available to move existing work items into.";
+export const NoMappingsAvailable: string = "No columns to be adjusted for this backlog level";
 
 export const LoadingTeamsLabel: string = "Loading teams";
 export const LoadingBacklogsLabel: string = "Updating backlogs";

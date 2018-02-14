@@ -10,6 +10,7 @@ export interface CopySettingsState {
     canToggleMappings: boolean;
     showAdvancedMappings: boolean;
     currentMappings: IBoardColumnDifferences[];
+    settingsToCopy: string[];
 }
 
 export interface IBacklogBoardSettings {
