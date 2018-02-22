@@ -12,7 +12,8 @@ export class CopySettingsStore extends VSSStore.Store {
         selectedBacklogLevels: null,
         canToggleMappings: false,
         showAdvancedMappings: false,
-        currentMappings: null
+        currentMappings: null,
+        settingsToCopy: ["card fields", "card rules", "board columns", "swimlanes"]
     };
 
     public onSetTeamsLoading = (loading: boolean) => {

@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import { Panel, PanelType } from "office-ui-fabric-react/lib/Panel";
-import { GroupedList, IGroup, IGroupDividerProps } from "office-ui-fabric-react/lib/GroupedList";
 import { css } from "office-ui-fabric-react/lib/Utilities";
 import { Dropdown, IDropdownOption } from "office-ui-fabric-react/lib/Dropdown";
 import { IBoardColumnDifferences, IColumnMapping } from "src/Views/CopySettings/Models/CopySettingsInterfaces";
+import { Pivot, PivotItem } from "office-ui-fabric-react/lib/Pivot";
+import { List } from "office-ui-fabric-react/lib/List";
 import * as Constants from "src/Shared/Constants";
 
 import "./AdvancedItemMapping.scss";
@@ -27,58 +27,59 @@ export class AdvancedItemMapping extends React.Component<IAdvancedItemMappingPro
     }
 
     public render() {
-        let groups: IGroup[] = [];
         let mappingItems: IColumnMapping[] = [];
         let startIndex = 0;
-        if (!this.props.mappings) {
+        if (!this.props.mappings || !this.props.show) {
             return null;
         }
+
+        let mappingsOfInterest: IBoardColumnDifferences[] = [];
+
         this.props.mappings.forEach(mapping => {
             if (this.props.selectedLevels.indexOf(mapping.backlog) >= 0) {
-                let multipleMappings = mapping.mappings.filter(m => m.potentialMatches.length > 1);
-                mappingItems = mappingItems.concat(multipleMappings);
-                groups.push({
-                    key: mapping.backlog,
-                    name: mapping.backlog,
-                    startIndex: startIndex,
-                    count: multipleMappings.length
-                });
-                startIndex = startIndex + multipleMappings.length;
+                mappingsOfInterest.push(mapping);
             }
         });
         this._itemsCount = mappingItems.length;
         return (
             <div>
-                <Panel
-                    hasCloseButton={true}
-                    isOpen={this.props.show}
-                    type={PanelType.extraLarge}
-                    headerText={this.props.headerText}
-                    isLightDismiss={false}
-                    onDismiss={this._onPanelDismissed}>
-                    <div>
-                        <div className={css("formContent", "ms-font-m")}>
-                            {Constants.MappingsDescription}
-                        </div>
-                        <div>
-                            <GroupedList
-                                items={mappingItems}
-                                groups={groups}
-                                onRenderCell={this._onRenderCell}
-                                groupProps={
-                                    {
-                                        onRenderHeader: this._onRenderGroupHeader
-                                    }
-                                }
-                            />
-                        </div>
-                    </div>
-                </Panel>
+                <div className={css("ms-font-m")}>
+                    {Constants.MappingsDescription}
+                </div>
+                <div>
+                    <Pivot>
+                        {mappingsOfInterest.map((mapping, mapIndex, allMappings) => {
+                            return (
+                                <PivotItem linkText={mapping.backlog}>
+                                    {this._renderPivotContent(mapping)}
+                                </PivotItem>
+                            );
+                        })}
+                    </Pivot>
+                </div>
             </div>
         );
     }
 
-    private _onRenderCell = (nestingDepth: number, item: IColumnMapping, itemIndex: number) => {
+    private _renderPivotContent(mapping: IBoardColumnDifferences): JSX.Element {
+        let content: JSX.Element;
+
+        let multipleMappings = mapping.mappings.filter(m => m.potentialMatches.length > 1);
+        if (multipleMappings.length === 0) {
+            content =
+                <div className={css("pivotContent", "ms-font-m")}>
+                    {Constants.NoMappingsAvailable}
+                </div>;
+        } else {
+            content =
+                <List
+                    items={multipleMappings}
+                    onRenderCell={this._onRenderCell} />;
+        }
+        return content;
+    }
+
+    private _onRenderCell = (item: IColumnMapping, itemIndex: number) => {
         let dropdownOptions: IDropdownOption[] = [];
         item.potentialMatches.forEach(match => {
             dropdownOptions.push({
@@ -104,17 +105,5 @@ export class AdvancedItemMapping extends React.Component<IAdvancedItemMappingPro
 
     private _onMappingChanged = (item: IDropdownOption) => {
         this.props.onMappingChanged(item.key.toString(), item.data.toString());
-    }
-
-    private _onRenderGroupHeader = (props: IGroupDividerProps): JSX.Element => {
-        return (
-            <div className={css("ms-font-xl")}>
-                {props.group.name}
-            </div>
-        );
-    }
-
-    private _onPanelDismissed = (): void => {
-        this.props.onClosed();
     }
 }

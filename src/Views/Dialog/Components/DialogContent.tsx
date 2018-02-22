@@ -113,9 +113,18 @@ export class DialogContent extends React.Component<IDialogContentProps, {}> {
             { key: ViewState.CopySettingsToTeam.toString(), value: Constants.CopySettingsToTeamLabel }
         ];
 
+        let selectedAction: IActionOption;
+        for (let actionIndex = 0; actionIndex < options.length; actionIndex++) {
+            if (this.props.state.dialogState.view.toString() === options[actionIndex].key) {
+                selectedAction = options[actionIndex];
+                break;
+            }
+        }
+
         return (
             <SelectAction
                 availableOptions={options}
+                selectedAction={selectedAction}
                 label={Constants.KanbanActionLabel}
                 placeHolder={Constants.KanbanActionPlaceholder}
                 onSelectAction={this._onSelectDialogAction} />
