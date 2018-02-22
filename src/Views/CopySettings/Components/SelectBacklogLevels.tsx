@@ -3,12 +3,14 @@ import * as React from "react";
 import { Dropdown, IDropdownOption } from "office-ui-fabric-react/lib/Dropdown";
 import { Spinner, SpinnerType } from "office-ui-fabric-react/lib/Spinner";
 import { Label } from "office-ui-fabric-react/lib/Label";
+import { SettingsToCopy } from "src/Views/CopySettings/Components/SettingsToCopy";
 import * as Constants from "src/Shared/Constants";
 
 export interface ISelectBacklogLevelsProps {
     availableLevels: string[];
     selectedLevels: string[];
     label: string;
+    selectedSettings: string[];
     isLoading: boolean;
     onBacklogLevelSelected: (team: string, isSelected: boolean) => void;
 }
@@ -55,7 +57,13 @@ export class SelectBacklogLevels extends React.Component<ISelectBacklogLevelsPro
         }
         return (
             <div>
-                {content}
+                <div>
+                    {content}
+                </div>
+                <div>
+                    <SettingsToCopy
+                        selectedSettings={this.props.selectedSettings} />
+                </div>
             </div>
         );
     }

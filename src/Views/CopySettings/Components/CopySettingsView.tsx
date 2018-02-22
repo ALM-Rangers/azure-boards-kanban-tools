@@ -7,7 +7,7 @@ import { CommonDialogState } from "src/Views/Dialog/Stores/DialogStoreHub";
 import { ViewState } from "src/Views/Dialog/Models/DialogInterfaces";
 import { CopySettingsActionsHub } from "src/Views/CopySettings/Actions/CopySettingsActions";
 import { CopySettingsStoreHub, CopyState } from "src/Views/CopySettings/Stores/CopySettingsStoreHub";
-import { AdvancedItemMapping } from "src/Views/CopySettings/Components/AdvancedItemMapping2";
+import { AdvancedItemMapping } from "src/Views/CopySettings/Components/AdvancedItemMapping";
 import { SelectBacklogLevels } from "src/Views/CopySettings/Components/SelectBacklogLevels";
 import { SettingsToCopy } from "src/Views/CopySettings/Components/SettingsToCopy";
 import { SelectTeam } from "src/Views/CopySettings/Components/SelectTeam";
@@ -77,6 +77,7 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
                         availableLevels={this.state.copySettingsState.commonBacklogLevels}
                         selectedLevels={this.state.copySettingsState.selectedBacklogLevels}
                         isLoading={this.state.copySettingsState.backlogsLoading}
+                        selectedSettings={this.state.copySettingsState.settingsToCopy}
                         label={Constants.ApplySettingsLevelsLabel}
                         onBacklogLevelSelected={this._onSelectBacklogLevel} />
                 </div>
@@ -95,10 +96,6 @@ export class CopySettingsView extends React.Component<ICopySettingsViewProps, Co
                         mappings={this.state.copySettingsState.currentMappings}
                         onMappingChanged={this._onMappingChanged}
                         selectedLevels={this.state.copySettingsState.selectedBacklogLevels} />
-                </div>
-                <div>
-                    <SettingsToCopy
-                        selectedSettings={this.state.copySettingsState.settingsToCopy} />
                 </div>
             </div>
         );
