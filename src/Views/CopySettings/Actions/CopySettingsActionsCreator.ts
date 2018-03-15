@@ -119,7 +119,6 @@ export class CopySettingsActionsCreator {
         let isValid = false;
         if (!state.copySettingsState.backlogsLoading &&
             !state.copySettingsState.teamsLoading &&
-            !state.copySettingsState.showAdvancedMappings &&
             state.copySettingsState.selectedBacklogLevels &&
             state.copySettingsState.selectedBacklogLevels.length >= 1
         ) {
