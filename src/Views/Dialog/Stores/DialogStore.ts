@@ -9,7 +9,7 @@ export class DialogStore extends VSSStore.Store {
         super();
         this.state = {
             isDialogValid: false,
-            view: ViewState.CopySettingsFromTeam,
+            view: ViewState.CopySettingsToTeam,
             currentBoardId: defaultBoard
         };
     }
