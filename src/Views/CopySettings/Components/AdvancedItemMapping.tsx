@@ -46,7 +46,7 @@ export class AdvancedItemMapping extends React.Component<IAdvancedItemMappingPro
                 <div className={css("ms-font-m")}>
                     {Constants.MappingsDescription}
                 </div>
-                <div>
+                <div className="formContent">
                     <Pivot>
                         {mappingsOfInterest.map((mapping, mapIndex, allMappings) => {
                             return (
@@ -88,7 +88,7 @@ export class AdvancedItemMapping extends React.Component<IAdvancedItemMappingPro
                 data: item.targetColumn.id
             });
         });
-        let className = "";
+        let className = css("listItem");
         if (itemIndex === this._itemsCount - 1) {
             className = css("lastItem");
         }
