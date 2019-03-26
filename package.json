@@ -29,7 +29,7 @@
     "sass-loader": "^6.0.6",
     "snyk": "^1.143.1",
     "style-loader": "^0.19.1",
-    "tfx-cli": "^0.4.16",
+    "tfx-cli": "^0.6.4",
     "ts-loader": "^3.2.0",
     "tslint": "^5.8.0",
     "tslint-loader": "^3.5.3",
