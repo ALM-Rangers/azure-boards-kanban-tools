@@ -15,18 +15,19 @@
     "test": "snyk test && karma start --single-run"
   },
   "devDependencies": {
+    "@types/jquery": "~3.2.17",
     "@types/react": "~16.0.31",
     "@types/react-dom": "~16.0.3",
-    "@types/jquery": "~3.2.17",
     "copy-webpack-plugin": "^4.3.0",
     "cpx": "^1.5.0",
     "css-loader": "^0.28.8",
     "file-loader": "^1.1.6",
     "node-sass": "^4.7.2",
-    "rimraf": "^2.6.2",
     "react": "~16.2.0",
     "react-dom": "~16.2.0",
+    "rimraf": "^2.6.2",
     "sass-loader": "^6.0.6",
+    "snyk": "^1.143.1",
     "style-loader": "^0.19.1",
     "tfx-cli": "^0.4.16",
     "ts-loader": "^3.2.0",
@@ -42,7 +43,7 @@
     "applicationinsights-js": "^1.0.14",
     "es6-promise": "^4.1.1",
     "office-ui-fabric-react": "~5.34.1",
-    "telemetryclient": "0.0.5",
+    "telemetryclient-team-services-extension": "^1.0.10",
     "vss-ui": "~3.127.3",
     "vss-web-extension-sdk": "~4.126.2"
   }
