@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as TC from "TelemetryClient";
+import * as TC from "telemetryclient-team-services-extension";
 
 import { PrimaryButton, DefaultButton } from "office-ui-fabric-react/lib/Button";
 import { css } from "office-ui-fabric-react/lib/Utilities";

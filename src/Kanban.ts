@@ -4,7 +4,7 @@ import { Dialog, ModalDialogO } from "VSS/Controls/Dialogs";
 import { KanbanDialog } from "src/KanbanDialog";
 import * as Constants from "src/Shared/Constants";
 
-import * as tc from "TelemetryClient";
+import * as tc from "telemetryclient-team-services-extension";
 import { telemetrySettings } from "src/TelemetryClientSettings";
 
 export class KanbanBoardToolsAction {

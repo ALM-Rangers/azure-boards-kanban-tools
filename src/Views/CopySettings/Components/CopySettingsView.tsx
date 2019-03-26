@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as TC from "TelemetryClient";
+import * as TC from "telemetryclient-team-services-extension";
 
 import { CopySettingsActionsCreator } from "src/Views/CopySettings/Actions/CopySettingsActionsCreator";
 import { DialogActionsCreator } from "src/Views/Dialog/Actions/DialogActionsCreator";

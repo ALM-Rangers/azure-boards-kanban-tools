@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as tc from "TelemetryClient";
+import * as tc from "telemetryclient-team-services-extension";
 
 import { initializeIcons } from "@uifabric/icons";
 
