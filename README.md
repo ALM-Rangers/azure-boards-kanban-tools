@@ -5,8 +5,10 @@ This extension will allow you to share your Kanban board with another team in yo
 
 ## Development
 Inside the .npmrc the NPM registry is set to the "Release" view of the ALM Rangers NPM registry. Before you can run "npm install" you will need to authenticate to that registry. To do so, execute the following:
-> npm install -g vsts-npm-auth --registry https://registry.npmjs.com
-> vsts-npm-auth -config .npmrc
+```
+npm install -g vsts-npm-auth --registry https://registry.npmjs.com
+vsts-npm-auth -config .npmrc
+```
 Enter your credentials for the ALM Rangers VSTS account, and you're good to go. This is a one-time action.
 
 ### Build
