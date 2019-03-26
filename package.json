@@ -7,7 +7,7 @@
     "clean:vsix": "rimraf *.vsix",
     "clean": "npm run clean:vsix && rimraf dist",
     "dev": "webpack-dev-server -d --hot --progress --colors --https --content-base ./src/ --port 9090",
-    "lint": "tslint -c tslint.json \"src/*.ts",
+    "lint": "tslint -c tslint.json \"src/*.ts\"",
     "package:dev": "npm run clean:vsix && node ./scripts/packageDev",
     "publish:dev": "npm run package:dev && node ./scripts/packageDev",
     "build:release": "npm run lint && npm run clean && mkdir dist && webpack --progress --colors --config webpack.prod.config.js --output-path ./dist -p",
