@@ -1,10 +1,10 @@
-# Import Export Kanban Boards
+# Azure Boards Kanban Tools
 
 ## About
 This extension will allow you to share your Kanban board with another team in your project. You will also be able to grab the settings from another team's board.
 
 ### Build
-To build this extension, in the **Import-Export-Kanban** folder, run the command
+To build this extension, in the **azure-boards-kanban-tools** folder, run the command
 
 ```
 npm install
