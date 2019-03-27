@@ -1,15 +1,15 @@
-# Kanban Board Tools
+# Azure Boards Kanban Tools
 
-This provides a set of tools to enhance Kanban board usage within TFS and VSTS.
+This provides a set of tools to enhance Kanban board usage within Azure DevOps and Azure DevOps Server.
 
 # Copy Kanban settings
-With TFS and VSTS, we see more and more teams switching to a single team project approach with teams being split based on a combination of iterations and areas. This can result in dozens of teams set up within the system. Once a team goes in and configures their Kanban board with their settings: card rules, swimlanes, column definitions, etc. they may want to share that setup with other teams. This extension allows teams to either grab settings from another team and apply them to their boards or to allow a team to copy their settings to another team.
+With Azure DevOps, we see more and more teams switching to a single team project approach with teams being split based on a combination of iterations and areas. This can result in dozens of teams set up within the system. Once a team goes in and configures their Kanban board with their settings: card rules, swimlanes, column definitions, etc. they may want to share that setup with other teams. This extension allows teams to either grab settings from another team and apply them to their boards or to allow a team to copy their settings to another team.
 
 ## Getting started
 
 1) From the Work hub, navigate to a backlog level such as *Epics*, *Features*, or *Backlog items*.
 2) From the backlog level, switch to the Kanban board view.
-3) Click the icon to launch the Kanban board tools dialog by clicking on the brush icons.
+3) Click the icon to launch the Azure Boards Kanban Tools dialog by clicking on the brush icons.
 4) Use options within the dialog to select the team to copy settings from or to another team.
 
 In this release, the following configurations will be copied for each backlog level within the process template:
@@ -43,7 +43,7 @@ We thank the following contributor(s) for this extension: Edward Fry, Jesse Houw
 
 We need your feedback! Here are some ways to connect with us:
 
-* Add a review below.
-* Send us an [email](mailto:mktdevlabs@microsoft.com/).
+* Add a review.
+* File an issue on [GitHub](https://github.com/ALM-Rangers/azure-boards-kanban-tools/issues).
 
 Review the [list of features and resolved issues of latest tools and extensions](https://aka.ms/vsarreleases) for information on the latest releases.

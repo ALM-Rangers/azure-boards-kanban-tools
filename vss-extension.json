@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "kanban-board-tools",
   "version": "0.0.0",
-  "name": "Kanban Board Tools",
+  "name": "Azure Boards Kanban Tools",
   "scopes": [
     "vso.profile",
     "vso.work",
@@ -66,7 +66,7 @@
         "ms.vss-work-web.backlog-board-pivot-filter-menu"
       ],
       "type": "ms.vss-web.action",
-      "description": "Kanban Board Tools Actions",
+      "description": "Azure Boards Kanban Tools Actions",
       "properties": {
         "title": "A set of tools for enhancing your interactions with the Kanban board.",
         "icon": "img/brush.png",

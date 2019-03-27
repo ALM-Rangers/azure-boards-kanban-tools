@@ -1,4 +1,4 @@
-export const DefaultDialogTitle: string = "Kanban Board Tools";
+export const DefaultDialogTitle: string = "Azure Boards Kanban Tools";
 
 export const KanbanActionLabel: string = "What would you like to do?";
 export const KanbanActionPlaceholder: string = "Select an action...";
