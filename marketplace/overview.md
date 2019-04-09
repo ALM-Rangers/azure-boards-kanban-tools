@@ -33,11 +33,9 @@ In this current version of the extension there are a few known limitiations and 
 # Learn more
 The source to this extension is available. Feel free to take, fork, and extend.
 
-> Microsoft DevLabs is an outlet for experiments from Microsoft, experiments that represent some of the latest ideas around developer tools. Solutions in this category are designed for broad usage, and you are encouraged to use and provide feedback on them; however, these extensions are not supported nor are any commitments made as to their longevity.
-
 # Contributors
 
-We thank the following contributor(s) for this extension: Edward Fry, Jesse Houwing, Chris Mason, Gregory Ott, Tiago Pascoal, Prasanna Ramkumar, Kees Verhaar.
+We thank the following contributor(s) for this extension: Edward Fry, [Jesse Houwing](https://github.com/jessehouwing), Chris Mason, Gregory Ott, Tiago Pascoal, Prasanna Ramkumar, Kees Verhaar.
 
 # Feedback
 
