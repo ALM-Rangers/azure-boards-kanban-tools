@@ -301,7 +301,8 @@ export class ServicesClient {
             teamName: context.team,
             version: "1.0",
             backlogSettings: new Array<Models.IBacklogBoardSettings>(),
-            context: context
+            context: context,
+            teamSettings: null
         };
 
         let boardCards: WorkContracts.BoardCardSettings[] = new Array();
@@ -313,6 +314,11 @@ export class ServicesClient {
             return b.rank - a.rank;
         });
         try {
+            let teams = await workClient.getTeamSettings(context);
+            settings.teamSettings = {
+                bugsBehavior: teams.bugsBehavior
+            };
+
             for (let backlogIndex = 0; backlogIndex < allBacklogs.length; backlogIndex++) {
                 let backlog = allBacklogs[backlogIndex];
                 console.log("Getting settings for board " + backlog.name + " (" + backlog.id + ") of team " + context.team);
@@ -337,6 +343,7 @@ export class ServicesClient {
                         boardId: board.id,
                         fields: board !== null ? board.fields : null
                     };
+
                     settings.backlogSettings.push(boardSettings);
                 }
             }
@@ -358,12 +365,16 @@ export class ServicesClient {
         console.log("Settings to apply");
         console.log(this._sourceTeamSettings);
         try {
+            let bugSettings: any = { bugsBehavior: this._sourceTeamSettings.teamSettings.bugsBehavior };
+            await workClient.updateTeamSettings(bugSettings, context);
+
             for (let backlogIndex = 0; backlogIndex < this._sourceTeamSettings.backlogSettings.length; backlogIndex++) {
                 let backlogSettingToApply = this._sourceTeamSettings.backlogSettings[backlogIndex];
                 if (selectedBacklogLevels.indexOf(backlogSettingToApply.boardName) < 0) {
                     continue;
                 }
                 console.log(`Processing backlog [${backlogSettingToApply.boardName}]`);
+
                 let cardSettings = await workClient.updateBoardCardSettings(backlogSettingToApply.cardSettings, context, backlogSettingToApply.boardName);
                 let cardRules = await workClient.updateBoardCardRuleSettings(backlogSettingToApply.cardRules, context, backlogSettingToApply.boardName);
                 let columnsToApply: WorkContracts.BoardColumn[] = new Array();

@@ -24,12 +24,17 @@ export interface IBacklogBoardSettings {
     fields: WorkContracts.BoardFields;
 }
 
+export interface ITeamSettings {
+    bugsBehavior: WorkContracts.BugsBehavior;
+}
+
 export interface IBoardSettings {
     version: string;
     name: string;
     teamName: string;
     context: CoreContracts.TeamContext;
     backlogSettings: IBacklogBoardSettings[];
+    teamSettings: ITeamSettings;
 }
 
 export interface IColumnMapping {
