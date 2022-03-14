@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "kanban-board-tools",
-  "version": "0.0.0",
+  "version": "1.1.145",
   "name": "Azure Boards Kanban Tools",
   "scopes": [
     "vso.profile",
@@ -9,7 +9,7 @@
     "vso.work_write"
   ],
   "description": "A set of tools for interacting with and enhancing the Kanban board.",
-  "publisher": "",
+  "publisher": "alm-devops-rangers",
   "public": false,
   "icons": {
     "default": "marketplace/logo.png"
@@ -60,7 +60,7 @@
     }
   ],
   "categories": [
-    "Plan and track"
+    "Azure Boards"
   ],
   "contributions": [
     {
@@ -80,11 +80,12 @@
     },
     {
       "id": "kanban-wizard",
-      "type": "ms.vss-web.control",
+      "type": "ms.vss-web.external-content",
       "description": "The control to copy settings from one team to one or more teams.",
       "targets": [],
       "properties": {
-        "uri": "src/kanban-wizard.html"
+        "uri": "src/kanban-wizard.html",
+        "registeredObjectId": "kanban-wizard"
       }
     }
   ]

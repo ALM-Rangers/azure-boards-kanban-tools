@@ -1,4 +1,6 @@
 {
-    "public": false,
-    "publisher": "alm-rangers"
+    "galleryFlags": [
+        "Public"
+    ],
+    "public": true
 }

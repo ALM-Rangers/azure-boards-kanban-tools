@@ -1,39 +1,19 @@
 {
-    "compilerOptions": {
-        "module": "es6",
-        "moduleResolution": "node",
-        "sourceMap": true,
-        "target": "es5",
-        "lib": [
-            "dom",
-            "es2015.promise",
-            "es5"
-        ],
-        "jsx": "react",
-        "experimentalDecorators": true,
-        "forceConsistentCasingInFileNames": true,
-        "baseUrl": ".",
-        "allowJs": true,
-        "noEmitHelpers": true,
-        "importHelpers": true,
-        "paths": {
-            "OfficeFabric/*": [
-                "node_modules/office-ui-fabric-react/lib/*"
-            ],
-            "VSSUI/*": [
-                "node_modules/vss-ui/*"
-            ]
-        },
-        "types": [
-            "q",
-            "knockout",
-            "requirejs",
-            "jquery",
-            "react",
-            "react-dom"
-        ]
-    },
-    "exclude": [
-        "node_modules"
-    ]
+  "compilerOptions": {
+    "module": "amd",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "noImplicitThis": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "target": "es6",
+    "rootDir": "src/",
+    "outDir": "dist/",
+    "jsx": "react",
+    "lib": ["es6", "dom"],
+    "types": ["react"],
+    "strictNullChecks": false
+  },
+  "exclude": ["node_modules", "typings"]
 }

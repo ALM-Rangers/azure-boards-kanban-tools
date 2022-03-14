@@ -47,28 +47,43 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
-                loader: "ts-loader",
+                use: "ts-loader"
             },
             {
-                test: /\.s?css$/,
-                loaders: ["style-loader", "css-loader", "sass-loader"]
+                test: /\.scss$/,
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    "azure-devops-ui/buildScripts/css-variables-loader",
+                    "sass-loader"
+                ]
             },
             {
-                test: /\.(otf|eot|svg|ttf|woff|woff2|gif)(\?.+)?$/,
-                use: "url-loader?limit=4096&name=[name].[ext]"
+                test: /\.css$/,
+                use: ["style-loader", "css-loader"]
+            },
+            {
+                test: /\.woff$/,
+                use: [
+                    {
+                        loader: "base64-inline-loader"
+                    }
+                ]
+            },
+            {
+                test: /\.(png|svg|jpg|gif|html)$/,
+                use: "file-loader"
             }
         ]
     },
     plugins: [
-        new CopyWebpackPlugin([
-            { from: "./node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js", to: "src/3rdParty/VSS.SDK.min.js" },
-            { from: "./node_modules/es6-promise/dist/es6-promise.min.js", to: "src/3rdParty/es6-promise.min.js" },
-            { from: "./node_modules/office-ui-fabric-react/dist/css/fabric.min.css", to: "src/3rdParty/fabric.min.css" },
-
-            { from: "./src/*.html", to: "./" },
-            { from: "./marketplace", to: "marketplace" },
-            { from: "./img", to: "img" },
-            { from: "./vss-extension.json", to: "vss-extension.json" }
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: "**/*.html", to: "./src", context: "src" },
+                { from: "**/*.png", to: "./img", context: "img" },
+                { from: "./marketplace", to: "./marketplace", context: "marketplace" },
+                { from: "./vss-extension.json", to: "vss-extension.json" }
+            ]
+        })
     ]
 }
