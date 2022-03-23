@@ -1,7 +1,6 @@
 {
     "public": false,
     "baseUri": "https://localhost:9090",
-    "name": "Dev: Azure Boards Kanban Tools",
-    "publisher": "chrismason",
-    "version": "0.0.2"
+    "id": "kanban-board-tools-dev",
+    "name": "Azure Boards Kanban Tools (dev)"
 }

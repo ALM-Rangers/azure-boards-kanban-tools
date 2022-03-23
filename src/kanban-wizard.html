@@ -4,33 +4,9 @@
 <head>
     <meta charset="UTF8">
     <title>Azure Boards Kanban Tools</title>
-    <script src="./3rdParty/es6-promise.min.js"></script>
-    <script src="./3rdParty/VSS.SDK.min.js"></script>
-    <script src="common_chunks.js"></script>
-    <link rel="stylesheet" type="text/css" href="./3rdParty/fabric.min.css">
 </head>
-
 <body>
-    <script>
-        VSS.init({
-            setupModuleLoader: true,
-            explicitNotifyLoaded: true,
-            usePlatformScripts: true,
-            usePlatformStyles: true,
-            moduleLoaderConfig: {
-                paths: {
-                    Scripts: 'scripts'
-                }
-            }
-        });
-
-        VSS.ready(function () {
-            require(['src/kanbanDialog'], function (dialog) {
-                VSS.notifyLoadSucceeded();
-            });
-        });
-    </script>
-    <div id="dialogContent" />
+    <div id="root"></div>
+    <script type="text/javascript" src="kanbanDialog.js" charset="utf-8"></script>
 </body>
-
 </html>

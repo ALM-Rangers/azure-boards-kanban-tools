@@ -4,34 +4,21 @@ var CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     target: "web",
+    mode: 'production',
     entry: {
         kanban: "./src/Kanban.ts",
-        kanbanDialog: "./src/KanbanDialog.tsx"
-    },
-    output: {
+        kanbanDialog: "./src/KanbanPanel.tsx"
+      },
+      output: {
         filename: "src/[name].js",
-        libraryTarget: "amd"
-    },
-    externals: [
-        {
-            "q": true,
-            "react": true,
-            "react-dom": true
-        },
-        /^VSS\/.*/, /^TFS\/.*/, /^q$/
-    ],
+        path:  path.resolve(__dirname, 'dist'),
+      },
     resolve: {
-        moduleExtensions: ["-loader"],
-        extensions: [
-            ".webpack.js",
-            ".web.js",
-            ".ts",
-            ".tsx",
-            ".js"],
-        alias: {
-            "OfficeFabric": path.resolve(__dirname, "node_modules/office-ui-fabric-react/lib"),
-            "VSSUI": path.resolve(__dirname, "node_modules/vss-ui")
-        },
+       extensions: [".ts", ".tsx", ".js"],
+    alias: {
+      "azure-devops-extension-sdk": path.resolve("node_modules/azure-devops-extension-sdk"),
+      "VSSUI": path.resolve(__dirname, "node_modules/azure-devops-ui")
+    },
         modules: [path.resolve("."), "node_modules"]
     },
     module: {
@@ -47,28 +34,43 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
-                loader: "ts-loader",
+                use: "ts-loader"
             },
             {
-                test: /\.s?css$/,
-                loaders: ["style-loader", "css-loader", "sass-loader"]
+                test: /\.scss$/,
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    "azure-devops-ui/buildScripts/css-variables-loader",
+                    "sass-loader"
+                ]
             },
             {
-                test: /\.(otf|eot|svg|ttf|woff|woff2|gif)(\?.+)?$/,
-                use: "url-loader?limit=4096&name=[name].[ext]"
+                test: /\.css$/,
+                use: ["style-loader", "css-loader"]
+            },
+            {
+                test: /\.woff$/,
+                use: [
+                    {
+                        loader: "base64-inline-loader"
+                    }
+                ]
+            },
+            {
+                test: /\.(png|svg|jpg|gif|html)$/,
+                use: "file-loader"
             }
         ]
     },
     plugins: [
-        new CopyWebpackPlugin([
-            { from: "./node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js", to: "src/3rdParty/VSS.SDK.min.js" },
-            { from: "./node_modules/es6-promise/dist/es6-promise.min.js", to: "src/3rdParty/es6-promise.min.js" },
-            { from: "./node_modules/office-ui-fabric-react/dist/css/fabric.min.css", to: "src/3rdParty/fabric.min.css" },
-
-            { from: "./src/*.html", to: "./" },
-            { from: "./marketplace", to: "marketplace" },
-            { from: "./img", to: "img" },
-            { from: "./vss-extension.json", to: "vss-extension.json" }
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: "**/*.html", to: "./src", context: "src" },
+                { from: "**/*.png", to: "./img", context: "img" },
+                { from: "./marketplace", to: "./marketplace", context: "./" },
+                { from: "./vss-extension.json", to: "vss-extension.json" }
+            ]
+        })
     ]
 }

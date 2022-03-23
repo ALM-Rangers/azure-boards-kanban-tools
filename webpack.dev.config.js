@@ -4,16 +4,21 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   target: "web",
+  mode: 'development',
   entry: {
     kanban: "./src/Kanban.ts",
     kanbanDialog: "./src/KanbanPanel.tsx"
   },
   output: {
     filename: "src/[name].js",
-    publicPath: "../dist",
-    // libraryTarget: "umd"
+    path:  path.resolve(__dirname, 'dist'),
   },
   devtool: "inline-source-map",
+  devServer: {
+    https: true,
+    port: 9090,
+    open: true
+  },
   resolve: {
     extensions: [".ts", ".tsx", ".js"],
     alias: {
@@ -21,6 +26,10 @@ module.exports = {
       "VSSUI": path.resolve(__dirname, "node_modules/azure-devops-ui")
     },
     modules: [path.resolve("."), "node_modules"]
+
+  },
+  stats: {
+    warnings: false
   },
   module: {
     rules: [
@@ -60,8 +69,6 @@ module.exports = {
       patterns: [
         { from: "**/*.html", to: "./src", context: "src" },
         { from: "**/*.png", to: "./img", context: "img" },
-        { from: "./marketplace", to: "./marketplace", context: "./" },
-        { from: "./vss-extension.json", to: "vss-extension.json" }
       ]
     })
   ]
