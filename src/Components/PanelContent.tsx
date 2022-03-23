@@ -61,20 +61,31 @@ export class PanelContent extends React.Component<
     );
   }
 
+  public _setCopySettingsLevels(levels: string[]) {
+    this.setState({ selectedBacklogLevels: levels });
+  }
+
+  public _copySettings() {
+    this.setPanelState(ViewState.IsPerformingAction.toString());
+    this.servicesClient
+      .applyTeamSettingsAsync(this.state.selectedBacklogLevels)
+      .then((result) => {
+        this.setPanelState(ViewState.ActionComplete.toString());
+      });
+  }
   private _renderProgressView() {
     let message = "";
     let submessage = "";
     let showSpinner = false;
-    if (
-      this.state.panelState !== ViewState.IsPerformingAction &&
-      this.state.panelState !== ViewState.ActionComplete
-    ) {
+    if (this.state.panelState !== ViewState.IsPerformingAction && this.state.panelState !== ViewState.ActionComplete ) {
       return null;
-    } else if (this.state.panelState === ViewState.IsPerformingAction) {
+    }
+    if (this.state.panelState === ViewState.IsPerformingAction) {
       message = Constants.CopySettingsMessage;
       submessage = Constants.CopySettingsSubtitle;
       showSpinner = true;
-    } else if (this.state.panelState === ViewState.ActionComplete) {
+    }
+    if (this.state.panelState === ViewState.ActionComplete) {
       message = Constants.AllDoneMessage;
     }
     return (
@@ -112,7 +123,7 @@ export class PanelContent extends React.Component<
                 },
               ]}
               selection={this.initialSelectedAction}
-              onSelect={this._onSelect}
+              onSelect={this.onSelect}
             />
           </div>
         </div>
@@ -130,7 +141,7 @@ export class PanelContent extends React.Component<
           boardId={this.props.boardId}
           selectedCopyAction={this.state.selectedAction}
           panelState={this.state.panelState}
-          setPanelState={this._setPanelState}
+          setPanelState={this.setPanelState}
           setCopySettingsLevels={this._setCopySettingsLevels}
           servicesClient={this.servicesClient}
         />
@@ -170,14 +181,14 @@ export class PanelContent extends React.Component<
           enabled={enabled}
           showCancelButton={showCancel}
           okButtonText={buttonText}
-          okButtonClicked={this._onDialogOkClicked}
-          cancelButtonClicked={this._onDialogCancelClicked}
+          okButtonClicked={this.onDialogOkClicked}
+          cancelButtonClicked={this.onDialogCancelClicked}
         />
       </div>
     );
   }
 
-  private _setPanelState = (panelState: string) => {
+  private setPanelState = (panelState: string) => {
     switch (panelState) {
       case ViewState.CopySettingsToTeam.toString(): {
         this.setState({ panelState: ViewState.CopySettingsToTeam });
@@ -196,29 +207,17 @@ export class PanelContent extends React.Component<
         break;
       }
     }
-  };
-  private _onSelect = (
+  }
+
+  private onSelect = (
     event: React.SyntheticEvent<HTMLElement>,
-    item: IListBoxItem<{}>
+    item: IListBoxItem<{}>,
   ) => {
-    this._setPanelState(item.text);
+    this.setPanelState(item.text);
     this.setState({ selectedAction: ViewState[item.id] || "" });
-  };
-
-  public _setCopySettingsLevels(levels: string[]) {
-    this.setState({ selectedBacklogLevels: levels });
   }
 
-  public _copySettings() {
-    this._setPanelState(ViewState.IsPerformingAction.toString());
-    this.servicesClient
-      .applyTeamSettingsAsync(this.state.selectedBacklogLevels)
-      .then((result) => {
-        this._setPanelState(ViewState.ActionComplete.toString());
-      });
-  }
-
-  private _onDialogOkClicked = () => {
+  private onDialogOkClicked = () => {
     switch (this.state.panelState) {
       case ViewState.ActionComplete:
         this.props.closeDialog(true);
@@ -230,9 +229,9 @@ export class PanelContent extends React.Component<
         this._copySettings();
         break;
     }
-  };
+  }
 
-  private _onDialogCancelClicked = () => {
+  private onDialogCancelClicked = () => {
     this.props.closeDialog(true);
-  };
+  }
 }

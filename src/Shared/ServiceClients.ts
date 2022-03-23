@@ -398,11 +398,11 @@ export class ServicesClient {
         let backlog = allBacklogs[backlogIndex];
         console.log(
           "Getting settings for board " +
-            backlog.name +
-            " (" +
-            backlog.id +
-            ") of team " +
-            context.team
+          backlog.name +
+          " (" +
+          backlog.id +
+          ") of team " +
+          context.team
         );
         let board: Board = null;
         try {
@@ -644,7 +644,7 @@ export class ServicesClient {
         let witQuery = await witrc.queryByWiql(
           wiql,
           context.project,
-          context.team
+          context.team,
         );
         witIds = witQuery.workItems.map((wit) => wit.id);
         console.log("get work items");
@@ -714,9 +714,9 @@ export class ServicesClient {
               }
               console.log(
                 "Updating work item from column: " +
-                  witColumn +
-                  " to column: " +
-                  JSON.stringify(patch)
+                witColumn +
+                " to column: " +
+                JSON.stringify(patch)
               );
               await witrc.updateWorkItem(
                 patch,

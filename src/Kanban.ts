@@ -6,49 +6,44 @@ import {
   PanelSize,
   IProjectPageService,
 } from "azure-devops-extension-api";
-import * as Constants from "./Shared/Constants"
+import * as Constants from "./Shared/Constants";
 
 export class KanbanBoardToolsAction {
   async getProjectInfo() {
-    const projectService = await SDK.getService<IProjectPageService>(
-      CommonServiceIds.ProjectPageService
-    );
+    const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
     const project = await projectService.getProject();
     return project;
   }
   public async execute(context: any) {
-    let project = await this.getProjectInfo();
+    const project = await this.getProjectInfo();
     SDK.getService<IHostPageLayoutService>(
-      CommonServiceIds.HostPageLayoutService
+      CommonServiceIds.HostPageLayoutService,
     ).then((hostDialogService) => {
-      let extensionContext = SDK.getExtensionContext();
-    
-      let dialogControlContributionId: string =
+      const extensionContext = SDK.getExtensionContext();
+
+      const dialogControlContributionId: string =
         extensionContext.publisherId +
         "." +
         extensionContext.extensionId +
         ".kanban-wizard";
 
-      let hostDialogOptions: IPanelOptions<{}> = {
+      const hostDialogOptions: IPanelOptions<{}> = {
         title: Constants.DefaultDialogTitle,
         onClose: this._closeDialog,
         size: PanelSize.Medium,
         configuration: {
           project: {
             id: project.id,
-            name: project.name
+            name: project.name,
           },
           team: {
             id: context.team.id,
-            name: context.team.name
-          }
+            name: context.team.name,
+          },
         },
       };
-     
-      hostDialogService.openPanel(
-        dialogControlContributionId,
-        hostDialogOptions
-      );
+
+      hostDialogService.openPanel(dialogControlContributionId, hostDialogOptions);
     });
   }
 
@@ -58,7 +53,7 @@ export class KanbanBoardToolsAction {
 }
 const kanbanMenuHandler = {
   execute: (actionContext: any) => {
-    let action = new KanbanBoardToolsAction();
+    const action = new KanbanBoardToolsAction();
     action.execute(actionContext);
   },
 };

@@ -5,7 +5,7 @@ export const telemetrySettings: tc.TelemetryClientSettings = {
     extensioncontext: "ImportExportKanban",
     disableTelemetry: "false",
     disableAjaxTracking: "false",
-    enableDebug: "false"
+    enableDebug: "false",
 };
 
 export class Telemetry {

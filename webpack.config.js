@@ -24,15 +24,6 @@ module.exports = {
   },
   module: {
     rules: [
-      // {
-      //     test: /\.tsx?$/,
-      //     loader: "tslint-loader",
-      //     enforce: "pre",
-      //     options: {
-      //         emitErrors: true,
-      //         failOnHint: true
-      //     }
-      // },
       {
         test: /\.tsx?$/,
         use: "ts-loader"

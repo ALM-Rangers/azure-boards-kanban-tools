@@ -12,7 +12,7 @@
     "package:dev": "npm run clean:vsix && node ./scripts/packageDev",
     "publish:dev": "npm run package:dev && node ./scripts/packageDev",
     "build:dev": "npm run lint && npm run clean && mkdir dist && webpack --mode development --progress --config webpack.config.js --output-path ./dist",
-    "build:release": "npm run lint && npm run clean && mkdir dist && webpack --progress --colors --config webpack.prod.config.js --output-path ./dist",
+    "build:release": "npm run lint && npm run clean && mkdir dist && webpack --progress --config webpack.prod.config.js --output-path ./dist",
     "compile:test": "npm run clean && webpack --progress --config webpack.config.js",
     "package:test": "npm run compile:test && node ./scripts/packageTest",
     "package:release": "npm run clean:vsix && npm run build:release && node ./scripts/packageRelease",
