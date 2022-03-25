@@ -69,7 +69,7 @@ module.exports = {
                 { from: "**/*.html", to: "./src", context: "src" },
                 { from: "**/*.png", to: "./img", context: "img" },
                 { from: "./marketplace", to: "./marketplace", context: "./" },
-                { from: "./vss-extension.json", to: "vss-extension.json" }
+                { from: "./azure-devops-extension.json", to: "azure-devops-extension.json" }
             ]
         })
     ]
