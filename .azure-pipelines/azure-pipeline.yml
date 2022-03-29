@@ -45,7 +45,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          [string] $buildName = "$(versionNumber)_$(Build.SourceBranchName)"
+          [string] $buildName = "$(versionNumber)"
           Write-Host "Setting the name of the build to '$buildName'."
           Write-Host "##vso[build.updatebuildnumber]$buildName"
 
