@@ -1,8 +1,6 @@
 variables:
-- name: major
-  value: '1'
-- name: minor
-  value: '1'
+- name: version.MajorMinor # Manually adjust the version number as needed for semantic versioning. Patch is auto-incremented.
+  value: '1.1'
 - name: extensionName
   value: 'kanban-board-tools'
 - name: marketplaceServiceConnection
@@ -11,8 +9,12 @@ variables:
   value: 'alm-devops-rangers'
 - name: publicExtensionName
   value: "Azure Boards Kanban Tools"
+- name: version.Patch
+  value: $[counter(variables['version.MajorMinor'],132)]
+- name: versionNumber
+  value: '$(version.MajorMinor).$(version.Patch)'
 
-name: $(major).$(minor)$(rev:.r)
+name: $(version.MajorMinor)$(rev:.r)
 
 trigger:
   branches:
@@ -36,6 +38,17 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+
+
+    - task: PowerShell@2
+      displayName: Set the name of the build (i.e. the Build.BuildNumber)
+      inputs:
+        targetType: 'inline'
+        script: |
+          [string] $buildName = "$(versionNumber)_$(Build.SourceBranchName)"
+          Write-Host "Setting the name of the build to '$buildName'."
+          Write-Host "##vso[build.updatebuildnumber]$buildName"
+
     - task: NodeTool@0
       inputs:
         versionSpec: '14.x'
