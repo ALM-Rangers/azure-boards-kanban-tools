@@ -1,4 +1,5 @@
 variables:
+- group: Extensions Patch Versions
 - name: version.MajorMinor # Manually adjust the version number as needed for semantic versioning. Patch is auto-incremented.
   value: '1.1'
 - name: extensionName
@@ -10,7 +11,7 @@ variables:
 - name: publicExtensionName
   value: "Azure Boards Kanban Tools"
 - name: version.Patch
-  value: $[counter(variables['version.MajorMinor'],132)]
+  value: $[counter(variables['version.MajorMinor'],variables['kanbanToolPatchVer'])]
 - name: versionNumber
   value: '$(version.MajorMinor).$(version.Patch)'
 
