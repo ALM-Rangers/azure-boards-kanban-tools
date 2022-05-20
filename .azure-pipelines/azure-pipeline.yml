@@ -2,7 +2,7 @@ variables:
 - name: version.MajorMinor # Manually adjust the version number as needed for semantic versioning. Patch is auto-incremented.
   value: '1.1'
 - name: extensionName
-  value: 'kanban-board-tools'
+  value: 'KanbanBoardTools'
 - name: marketplaceServiceConnection
   value: 'marketplaceServiceConnection'
 - name: publisherId
