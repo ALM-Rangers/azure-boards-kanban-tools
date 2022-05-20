@@ -57,6 +57,7 @@ stages:
       publisherId: $(publisherId)
       publicExtensionName: $(publicExtensionName)
       updateTaskVersion: true
+      repositoryName: 'ALM-Rangers/azure-boards-kanban-tools'
 
 - stage: 'DeployTest'
   displayName: 'Deploy to Test'
@@ -71,6 +72,7 @@ stages:
       publisherId: $(publisherId)
       publicExtensionName: $(publicExtensionName)
       updateTaskVersion: true
+      repositoryName: 'ALM-Rangers/azure-boards-kanban-tools'
 
 - stage: 'DeployRelease'
   displayName: 'Deploy Release'
@@ -86,3 +88,5 @@ stages:
       publicExtensionName: $(publicExtensionName)
       extensionVisibility: 'public'
       updateTaskVersion: true
+      repositoryName: 'ALM-Rangers/azure-boards-kanban-tools'
+
