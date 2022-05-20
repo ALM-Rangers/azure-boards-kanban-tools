@@ -15,7 +15,7 @@ name: $(version.MajorMinor)$(rev:.r)
 trigger:
   branches:
     include:
-    - main
+    - master
 
 pr: none
 
@@ -89,3 +89,4 @@ stages:
       extensionVisibility: 'public'
       updateTaskVersion: true
       repositoryName: 'ALM-Rangers/azure-boards-kanban-tools'
+
