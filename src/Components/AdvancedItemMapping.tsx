@@ -13,8 +13,9 @@ import { Tab, TabBar, TabSize } from "azure-devops-ui/Tabs";
 
 import "../Components/AdvancedItemMapping.scss";
 import { css } from "azure-devops-ui/Util";
-import { List, IListItemDetails } from "azure-devops-ui/List";
-import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
+import { IListItemDetails } from "azure-devops-ui/List";
+
+import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 
 export interface IAdvancedItemMappingProps {
   show: boolean;
@@ -30,6 +31,8 @@ export class AdvancedItemMapping extends React.Component<
   {}
 > {
   private selectedTabId: ObservableValue<string>;
+  private selectedLevelItem: ObservableValue<string>;
+
   private _itemsCount: number;
 
   constructor(props: IAdvancedItemMappingProps) {
@@ -40,6 +43,7 @@ export class AdvancedItemMapping extends React.Component<
   public render() {
     let initialSelectedTabId = this.props.selectedLevels[0];
     this.selectedTabId = new ObservableValue(initialSelectedTabId);
+    this.selectedLevelItem = new ObservableValue<string>("");
     let mappingItems: IColumnMapping[] = [];
     let startIndex = 0;
 
@@ -106,12 +110,38 @@ export class AdvancedItemMapping extends React.Component<
         </div>
       );
     } else {
-      content = (
-        <List
-          itemProvider={new ArrayItemProvider<IColumnMapping>(multipleMappings)}
-          renderRow={this._onRenderRow}
-        />
-      );
+      for (let index = 0; index < multipleMappings.length; index++) {
+        let item = multipleMappings[index];
+
+        let dropdownOptions: any[] = [];
+        item.potentialMatches.forEach((match) => {
+          dropdownOptions.push({
+            id: match.id,
+            text: match.name,
+            data: item.targetColumn.id,
+          });
+        });
+        let className = css("listItem");
+        console.log("itemsCount,", this._itemsCount)
+        if (index === this._itemsCount - 1) {
+          className = css("lastItem");
+        }
+        content = (
+          <div className={className}>
+            <Dropdown
+              items={dropdownOptions}
+              ariaLabel={item.targetColumn.name}
+              onSelect={this._onMappingChanged}
+            />
+            <Observer selectedItem={this.selectedLevelItem}>
+              {(props: { selectedItem: string }) => {
+                return <></>;
+              }}
+
+            </Observer>
+          </div>
+        );
+      };
     }
     return content;
   }
@@ -144,7 +174,9 @@ export class AdvancedItemMapping extends React.Component<
     );
   };
 
-  private _onMappingChanged = (item: any) => {
+
+  private _onMappingChanged = (e: any, item: any) => {
+    this.selectedLevelItem.value = item.text || "";
     this.props.onMappingChanged(item.id.toString(), item.data.toString());
   };
 }

@@ -68,31 +68,22 @@ export class ServicesClient {
   }
 
   private _updateSourceDestinationSettings() {
-    if (
-      this._currentTeamProperties.team === null ||
-      this._secondaryTeamProperties.length === 0
-    ) {
+    if (this._currentTeamProperties.team === null || this._secondaryTeamProperties.length === 0) {
       return;
     }
-
     if (this._viewState === ViewState.CopySettingsToTeam) {
       this._sourceTeamSettings = this._currentTeamProperties.settings;
       this._destinationTeamSettings = [];
       this._secondaryTeamProperties.forEach((secTeam) => {
         this._destinationTeamSettings.push(secTeam.settings);
       });
-      this._currentMappings = this.getTeamColumnDifferences(
-        this._sourceTeamSettings,
-        this._destinationTeamSettings[0]
-      );
+      this._currentMappings = this.getTeamColumnDifferences(this._sourceTeamSettings, this._destinationTeamSettings[0]);
+
     } else if (this._viewState === ViewState.CopySettingsFromTeam) {
       this._sourceTeamSettings = this._secondaryTeamProperties[0].settings;
       this._destinationTeamSettings = [];
       this._destinationTeamSettings.push(this._currentTeamProperties.settings);
-      this._currentMappings = this.getTeamColumnDifferences(
-        this._sourceTeamSettings,
-        this._destinationTeamSettings[0]
-      );
+      this._currentMappings = this.getTeamColumnDifferences(this._sourceTeamSettings, this._destinationTeamSettings[0]);
     }
   }
 
@@ -125,10 +116,7 @@ export class ServicesClient {
     return this._currentBacklogLevel;
   }
 
-  public async loadSelectedTeam(
-    teamName: string,
-    isMultiselect: boolean = false
-  ): Promise<void> {
+  public async loadSelectedTeam(teamName: string, isMultiselect: boolean = false): Promise<void> {
     let team = await this.getTeam(teamName);
     let context = await this.getContextForTeamAsync(teamName);
     let settings = await this.getTeamSettingsAsync(context);
@@ -445,9 +433,7 @@ export class ServicesClient {
   }
 
   // public async applyTeamSettingsAsync(oldSettings: Models.IBoardSettings, settingsToApply: Models.IBoardSettings, selectedMappings: Models.IBoardColumnDifferences[], selectedBacklogLevels: string[]): Promise<Boolean> {
-  public async applyTeamSettingsAsync(
-    selectedBacklogLevels: string[]
-  ): Promise<Boolean> {
+  public async applyTeamSettingsAsync(selectedBacklogLevels: string[]): Promise<Boolean> {
     let result: Boolean = false;
     let wrc = getClient(WorkRestClient);
     let witrc = getClient(WorkItemTrackingRestClient);
@@ -468,11 +454,8 @@ export class ServicesClient {
         backlogIndex < this._sourceTeamSettings.backlogSettings.length;
         backlogIndex++
       ) {
-        let backlogSettingToApply =
-          this._sourceTeamSettings.backlogSettings[backlogIndex];
-        if (
-          selectedBacklogLevels.indexOf(backlogSettingToApply.boardName) < 0
-        ) {
+        let backlogSettingToApply = this._sourceTeamSettings.backlogSettings[backlogIndex];
+        if (selectedBacklogLevels.indexOf(backlogSettingToApply.boardName) < 0) {
           continue;
         }
         console.log(`Processing backlog [${backlogSettingToApply.boardName}]`);
