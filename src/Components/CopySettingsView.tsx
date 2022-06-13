@@ -20,7 +20,6 @@ export interface ICopySettingsViewProps {
   servicesClient: ServicesClient;
 }
 interface ICopySettingsViewState {
-  selectedTeamName: string;
   commonBacklogLevels: string[];
   selectedBacklogLevels: string[];
   canToggleMappings: boolean;
@@ -39,7 +38,6 @@ export class CopySettingsView extends React.Component<
   constructor(props: ICopySettingsViewProps) {
     super(props);
     this.state = {
-      selectedTeamName: "",
       commonBacklogLevels: [],
       selectedBacklogLevels: [],
       canToggleMappings: false,
@@ -176,15 +174,14 @@ export class CopySettingsView extends React.Component<
     this.setState({ allProjectTeams: teams, loadingTeams: false });
   };
 
-  private _onSelectTeam = (
-    event: React.SyntheticEvent<HTMLElement>,
-    item: IListBoxItem<{}>
-  ) => {
+  private _onSelectTeam = (event: React.SyntheticEvent<HTMLElement>, item: IListBoxItem<{}>) => {
+
     let selectedTeam = item.text;
     if (selectedTeam) {
       this.setState({ backlogsLoading: true });
+
       this.props.servicesClient
-        .loadSelectedTeam(this.state.selectedTeamName)
+        .loadSelectedTeam(selectedTeam)
         .then(() => {
           let defaultBoardLevel = [];
           defaultBoardLevel.push(this.props.servicesClient.currentBacklogLevel);
@@ -271,6 +268,7 @@ export class CopySettingsView extends React.Component<
       }
       this.setState({ selectedBacklogLevels: currentLevels });
     }
+    this.props.setCopySettingsLevels(currentLevels);
     let canToggleMappings = this._canEnableAdvancedMapping();
     this.setState({ canToggleMappings: canToggleMappings });
   }

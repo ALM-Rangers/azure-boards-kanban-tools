@@ -61,7 +61,7 @@ export class PanelContent extends React.Component<
     );
   }
 
-  public _setCopySettingsLevels(levels: string[]) {
+  public _setCopySettingsLevels = (levels: string[]) =>  {
     this.setState({ selectedBacklogLevels: levels });
   }
 
