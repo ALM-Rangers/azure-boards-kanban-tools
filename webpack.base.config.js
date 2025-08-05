@@ -11,7 +11,7 @@ module.exports = {
   output: {
     filename: "src/[name].js",
     path:  path.resolve(__dirname, 'dist'),
-    publicPath: "../dist",
+    publicPath: "/dist/",
   },
   devtool: "inline-source-map",
   resolve: {
@@ -52,15 +52,17 @@ module.exports = {
       },
       {
         test: /\.woff$/,
-        use: [
-          {
-            loader: "base64-inline-loader"
-          }
-        ]
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name].[hash][ext]'
+        }
       },
       {
         test: /\.woff2$/,
-        use: "file-loader"
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name].[hash][ext]'
+        }
       },
       {
         test: /\.(png|svg|jpg|gif|html)$/,
