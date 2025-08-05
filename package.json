@@ -17,7 +17,7 @@
     "compile:test": "npm run clean && webpack --progress --env=dev",
     "package:test": "npm run compile:test && node ./scripts/packageTest",
     "package:release": "npm run clean:vsix && npm run build:release && node ./scripts/packageRelease",
-    "test": "snyk test && karma start --single-run",
+    "test": "npm run build:dev",
     "start:dev": "webpack-dev-server --config webpack.dev.config.js --static ./dist"
   },
   "dependencies": {

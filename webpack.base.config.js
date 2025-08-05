@@ -59,6 +59,10 @@ module.exports = {
         ]
       },
       {
+        test: /\.woff2$/,
+        use: "file-loader"
+      },
+      {
         test: /\.(png|svg|jpg|gif|html)$/,
         use: "file-loader"
       }
