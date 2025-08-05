@@ -51,18 +51,8 @@ module.exports = {
         use: ["style-loader", "css-loader"]
       },
       {
-        test: /\.woff$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[name].[hash][ext]'
-        }
-      },
-      {
-        test: /\.woff2$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[name].[hash][ext]'
-        }
+        test: /\.(woff|woff2)$/,
+        type: 'asset/inline'
       },
       {
         test: /\.(png|svg|jpg|gif|html)$/,
