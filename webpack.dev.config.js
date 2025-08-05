@@ -10,11 +10,22 @@ module.exports = merge(CommonConfig, {
     server: 'https',
     port: 9090,
     open: true,
+    static: [
+      {
+        directory: './dist',
+        publicPath: '/dist'
+      },
+      {
+        directory: './dist',
+        publicPath: '/'
+      }
+    ],
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
-    }
+    },
+    allowedHosts: 'all'
   },
   stats: {
     warnings: false
