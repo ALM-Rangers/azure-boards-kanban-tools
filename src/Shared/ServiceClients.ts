@@ -774,6 +774,7 @@ export class ServicesClient {
         let newRow: BoardRow = {
           name: uniqueNameifier + row.name,
           id: "",
+          color: null,
         };
         desiredRows.push(newRow);
       }
@@ -803,6 +804,7 @@ export class ServicesClient {
           let finalRow: BoardRow = {
             name: row.name,
             id: currentRow.id,
+            color: null,
           };
           finalRows.push(finalRow);
         }
