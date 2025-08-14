@@ -11,7 +11,7 @@ module.exports = {
   output: {
     filename: "src/[name].js",
     path:  path.resolve(__dirname, 'dist'),
-    publicPath: "../dist",
+    publicPath: "/dist/",
   },
   devtool: "inline-source-map",
   resolve: {
@@ -51,12 +51,8 @@ module.exports = {
         use: ["style-loader", "css-loader"]
       },
       {
-        test: /\.woff$/,
-        use: [
-          {
-            loader: "base64-inline-loader"
-          }
-        ]
+        test: /\.(woff|woff2)$/,
+        type: 'asset/inline'
       },
       {
         test: /\.(png|svg|jpg|gif|html)$/,
