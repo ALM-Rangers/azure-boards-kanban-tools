@@ -42,7 +42,7 @@
     "sass": "^1.89.2",
     "sass-loader": "^16.0.5",
     "style-loader": "^4.0.0",
-    "tfx-cli": "^0.21.1",
+    "tfx-cli": "^0.21.3",
     "ts-loader": "^9.5.2",
     "tslint": "^5.18.0",
     "tslint-loader": "^3.5.4",
