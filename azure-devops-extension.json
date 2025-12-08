@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "KanbanBoardTools",
   "version": "1.1.131",
-  "name": "Azure Boards Kanban Tools",
+  "name": "Kanban Tools for Boards",
   "scopes": [
     "vso.profile",
     "vso.work",
@@ -89,4 +89,5 @@
       }
     }
   ]
+
 }
