@@ -4,7 +4,7 @@ This extension will allow you to share your Kanban board with another team in yo
 
 # Documentation
 
-For instructions on using the Azure Boards Kanban Tools extension, please refer to the official documentation. You can access the the documentation from the [Marketplace](https://marketplace.visualstudio.com/items?itemName=alm-devops-rangers.KanbanBoardTools).
+For instructions on using the Azure Boards Kanban Tools extension, please refer to the official documentation. You can access the documentation from the [Marketplace](https://marketplace.visualstudio.com/items?itemName=alm-devops-rangers.KanbanBoardTools). A maintenance and dependency update complexity assessment is available in [design/maintenance-complexity.md](design/maintenance-complexity.md).
 
 # Support
 
