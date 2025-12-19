@@ -8,7 +8,7 @@ variables:
 - name: publisherId
   value: 'alm-devops-rangers'
 - name: publicExtensionName
-  value: "Azure Boards Kanban Tools"
+  value: "Kanban Tools for Boards"
 
 name: $(version.MajorMinor)$(rev:.r)
 
